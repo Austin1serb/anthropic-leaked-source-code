@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+:root {
+  /* Winebob Wine Palette */
+  --wine-burgundy: #722F37;
+  --wine-burgundy-light: #8B3A44;
+  --wine-burgundy-dark: #5A252C;
+  --wine-gold: #C9A96E;
+  --wine-gold-light: #D4BA88;
+  --wine-cream: #FDF6EC;
+  --wine-cream-dark: #F5EAD6;
+  --wine-charcoal: #2D2D2D;
+  --wine-rosé: #E8A0BF;
+  --wine-sage: #8B9E82;
+
+  --background: var(--wine-cream);
+  --foreground: var(--wine-charcoal);
+  --card-bg: #ffffff;
+  --card-border: #F0E6D6;
+  --muted: #A89F91;
+  --tab-inactive: #A89F91;
+  --tab-active: var(--wine-burgundy);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-wine-burgundy: var(--wine-burgundy);
+  --color-wine-burgundy-light: var(--wine-burgundy-light);
+  --color-wine-burgundy-dark: var(--wine-burgundy-dark);
+  --color-wine-gold: var(--wine-gold);
+  --color-wine-gold-light: var(--wine-gold-light);
+  --color-wine-cream: var(--wine-cream);
+  --color-wine-cream-dark: var(--wine-cream-dark);
+  --color-wine-charcoal: var(--wine-charcoal);
+  --color-wine-rosé: var(--wine-rosé);
+  --color-wine-sage: var(--wine-sage);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-muted: var(--muted);
+  --color-tab-inactive: var(--tab-inactive);
+  --color-tab-active: var(--tab-active);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: Georgia, 'Times New Roman', serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1A1214;
+    --foreground: #F5EAD6;
+    --card-bg: #2A1E22;
+    --card-border: #3D2E33;
+    --muted: #8A7E76;
+    --tab-inactive: #8A7E76;
+  }
+}
+
+/* iPhone-first base styles */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Safe area insets for iPhone notch/Dynamic Island */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Bottom tab bar safe area */
+.tab-bar-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+
+/* Touch-friendly minimum target sizes (44x44pt Apple HIG) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Smooth scrolling for iOS */
+.scroll-smooth {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Pull to refresh indicator area */
+.pull-refresh-area {
+  overscroll-behavior-y: contain;
+}
+
+/* Wine-themed gradient backgrounds */
+.bg-wine-gradient {
+  background: linear-gradient(135deg, var(--wine-burgundy) 0%, var(--wine-burgundy-dark) 100%);
+}
+
+.bg-warm-gradient {
+  background: linear-gradient(180deg, var(--wine-cream) 0%, var(--wine-cream-dark) 100%);
+}
+
+/* Card styling */
+.wine-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Toast/cheers animation */
+@keyframes cheers {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(-10deg); }
+  50% { transform: scale(1.3) rotate(10deg); }
+  75% { transform: scale(1.1) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.animate-cheers {
+  animation: cheers 0.6s ease-in-out;
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
