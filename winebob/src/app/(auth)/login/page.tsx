@@ -15,14 +15,14 @@ export default function LoginPage() {
           Winebob
         </h1>
         <p className="text-sm text-muted mt-2 text-center max-w-xs">
-          Your wine tasting social platform. Taste, compete, predict, discover.
+          Sign in to host blind tasting events for your friends.
         </p>
       </div>
 
       {/* Sign in buttons */}
       <div className="w-full max-w-sm space-y-3">
         <button
-          onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
+          onClick={() => signIn("google", { callbackUrl: "/arena" })}
           className="w-full py-4 bg-white border border-card-border rounded-2xl font-semibold text-sm flex items-center justify-center gap-3 active:scale-[0.98] transition-transform shadow-sm"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
@@ -47,7 +47,7 @@ export default function LoginPage() {
         </button>
 
         <button
-          onClick={() => signIn("apple", { callbackUrl: "/onboarding" })}
+          onClick={() => signIn("apple", { callbackUrl: "/arena" })}
           className="w-full py-4 bg-foreground text-background rounded-2xl font-semibold text-sm flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

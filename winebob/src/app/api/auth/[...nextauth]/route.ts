@@ -13,7 +13,7 @@ const handler = NextAuth({
   ],
   pages: {
     signIn: "/login",
-    newUser: "/onboarding",
+    newUser: "/arena",
   },
   callbacks: {
     session({ session, user }) {

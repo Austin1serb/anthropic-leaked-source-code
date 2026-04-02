@@ -1,129 +1,87 @@
-import { Settings, Share2 } from "lucide-react";
+import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth";
+import { Wine, Calendar, Users, LogOut } from "lucide-react";
 
-export default function ProfilePage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProfilePage() {
+  const session = await requireAuth();
+  const userId = session.user.id;
+
+  const [eventCount, totalGuests] = await Promise.all([
+    prisma.blindTastingEvent.count({ where: { hostId: userId } }),
+    prisma.guestParticipant.count({
+      where: { event: { hostId: userId } },
+    }),
+  ]);
+
   return (
     <div className="flex flex-col">
-      {/* Header */}
-      <header className="px-4 pt-4 pb-2 flex items-center justify-between">
+      <header className="px-4 pt-4 pb-2">
         <h1 className="text-2xl font-bold font-serif">Profile</h1>
-        <div className="flex items-center gap-2">
-          <button className="touch-target flex items-center justify-center">
-            <Share2 size={20} className="text-muted" />
-          </button>
-          <button className="touch-target flex items-center justify-center">
-            <Settings size={20} className="text-muted" />
-          </button>
-        </div>
       </header>
 
       {/* Profile card */}
       <section className="px-4 mt-2">
         <div className="wine-card p-5">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-wine-burgundy/20 flex items-center justify-center text-2xl">
-              🧑
+            <div className="w-16 h-16 rounded-full bg-wine-burgundy/20 flex items-center justify-center">
+              {session.user.image ? (
+                <img
+                  src={session.user.image}
+                  alt=""
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl">🧑</span>
+              )}
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-bold">Wine Enthusiast</h2>
-              <p className="text-sm text-muted">@winelover</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-xs px-2 py-0.5 rounded-full bg-wine-gold/20 text-wine-gold font-medium">
-                  🏅 Sommelier
-                </span>
-                <span className="text-xs text-muted">Level 8</span>
-              </div>
+              <h2 className="text-lg font-bold">
+                {session.user.name ?? "Host"}
+              </h2>
+              <p className="text-sm text-muted">{session.user.email}</p>
             </div>
           </div>
 
-          {/* Stats row */}
           <div className="flex items-center justify-around mt-4 pt-4 border-t border-card-border">
             <div className="text-center">
-              <p className="text-lg font-bold">87</p>
-              <p className="text-xs text-muted">Wines</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold">12</p>
-              <p className="text-xs text-muted">Following</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold">28</p>
-              <p className="text-xs text-muted">Followers</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-wine-gold">1,250</p>
-              <p className="text-xs text-muted">Rep</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Taste Profile Preview */}
-      <section className="px-4 mt-4">
-        <div className="wine-card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-sm">Your Taste Profile</h3>
-          </div>
-          {/* Simplified taste bars */}
-          {[
-            { label: "Body", value: 0.7 },
-            { label: "Tannin", value: 0.6 },
-            { label: "Acidity", value: 0.5 },
-            { label: "Sweetness", value: 0.2 },
-            { label: "Fruit", value: 0.8 },
-            { label: "Oak", value: 0.4 },
-          ].map((pref) => (
-            <div key={pref.label} className="flex items-center gap-2 mb-2">
-              <span className="text-xs text-muted w-16">{pref.label}</span>
-              <div className="flex-1 h-2 bg-wine-cream-dark rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-wine-burgundy rounded-full"
-                  style={{ width: `${pref.value * 100}%` }}
-                />
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Wine size={16} className="text-wine-burgundy" />
               </div>
+              <p className="text-lg font-bold">{eventCount}</p>
+              <p className="text-xs text-muted">Events</p>
             </div>
-          ))}
-          <p className="text-xs text-muted mt-2">
-            Top grapes: Nebbiolo, Pinot Noir, Syrah
-          </p>
-        </div>
-      </section>
-
-      {/* Badges */}
-      <section className="px-4 mt-4">
-        <div className="wine-card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-sm">Badges</h3>
-            <span className="text-xs text-muted">8 earned</span>
-          </div>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide">
-            {[
-              { emoji: "🍷", name: "First Sip" },
-              { emoji: "🔥", name: "7-Day Streak" },
-              { emoji: "🎯", name: "Sharp Nose" },
-              { emoji: "🌍", name: "Globe Trotter" },
-              { emoji: "🏆", name: "Arena Champ" },
-              { emoji: "🔮", name: "Oracle" },
-              { emoji: "📚", name: "Wine Scholar" },
-              { emoji: "👥", name: "Social Sipper" },
-            ].map((badge) => (
-              <div
-                key={badge.name}
-                className="flex flex-col items-center gap-1 flex-shrink-0"
-              >
-                <div className="w-12 h-12 rounded-full bg-wine-cream-dark flex items-center justify-center text-xl">
-                  {badge.emoji}
-                </div>
-                <span className="text-[10px] text-muted text-center w-14 truncate">
-                  {badge.name}
-                </span>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Users size={16} className="text-wine-burgundy" />
               </div>
-            ))}
+              <p className="text-lg font-bold">{totalGuests}</p>
+              <p className="text-xs text-muted">Total Guests</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Calendar size={16} className="text-wine-burgundy" />
+              </div>
+              <p className="text-lg font-bold">
+                {session.user.name ? "Active" : "—"}
+              </p>
+              <p className="text-xs text-muted">Status</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Spacer */}
-      <div className="mb-6" />
+      {/* Sign out */}
+      <section className="px-4 mt-4 mb-6">
+        <a
+          href="/api/auth/signout"
+          className="wine-card px-4 py-3.5 flex items-center gap-3 active:bg-wine-cream-dark/50 transition-colors"
+        >
+          <LogOut size={18} className="text-muted" />
+          <span className="text-sm font-medium">Sign Out</span>
+        </a>
+      </section>
     </div>
   );
 }

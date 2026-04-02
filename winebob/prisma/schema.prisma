@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
-// ============ AUTH & USER ============
+// ============ AUTH (hosts only) ============
 
 model User {
   id            String    @id @default(cuid())
@@ -16,29 +16,12 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  reputation    Int       @default(100)
-  xp            Int       @default(0)
-  level         Int       @default(1)
-  rank          String    @default("cork") // cork, sommelier, cellar_master, grand_cru
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   accounts      Account[]
   sessions      Session[]
-  reviews       WineReview[]
-  tasteProfile  TasteProfile?
-  activities    Activity[]
-  cellarItems   CellarItem[]
-  badges        UserBadge[]
-  collections   WineCollection[]
-  blindGuesses  BlindGuess[]
-  hostedEvents  BlindTastingEvent[] @relation("EventHost")
-  positions     Position[]
-  createdMarkets PredictionMarket[] @relation("MarketCreator")
-
-  // Social graph
-  following     Follow[]  @relation("Follower")
-  followers     Follow[]  @relation("Following")
+  hostedEvents  BlindTastingEvent[]
 }
 
 model Account {
@@ -75,317 +58,171 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ============ WINE ============
+// ============ WINES ============
 
 model Wine {
-  id           String   @id @default(cuid())
-  name         String
-  producer     String
-  vintage      Int?     // null = NV
-  grapes       String[] // array of grape varieties
-  region       String
-  country      String
-  appellation  String?
-  type         String   // red, white, rosé, sparkling, dessert, fortified, orange
-  avgRating    Float    @default(0)
-  totalRatings Int      @default(0)
-  priceMin     Float?
-  priceMax     Float?
-  currency     String?  @default("USD")
-  labelImage   String?
-  description  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  producer    String
+  vintage     Int?     // null = NV
+  grapes      String[]
+  region      String
+  country     String
+  appellation String?
+  type        String   // red, white, rosé, sparkling, dessert, fortified, orange
+  description String?
+  labelImage  String?
+  createdAt   DateTime @default(now())
 
-  reviews      WineReview[]
-  cellarItems  CellarItem[]
-  blindWines   BlindWine[]
-  collectionItems WineCollectionItem[]
+  blindWines  BlindWine[]
 
   @@index([name, producer])
   @@index([region, country])
-  @@index([type])
 }
 
-// ============ WINE CELLAR (VIVINO) ============
+// ============ EVENT TEMPLATES ============
 
-model WineReview {
-  id              String   @id @default(cuid())
-  wineId          String
-  userId          String
-  rating          Float    // 1-5, half-star increments
-  title           String?
-  notes           String
-  tags            String[] // smooth, tannic, fruity, complex, value
-  foodPairings    String[]
-  occasion        String?
-  purchasePrice   Float?
-  purchaseLocation String?
-  photos          String[]
-  upvotes         Int      @default(0)
-  verifiedUsage   Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  wine            Wine     @relation(fields: [wineId], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([wineId, userId])
-  @@index([wineId])
-  @@index([userId])
-}
-
-model TasteProfile {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  body             Float    @default(0.5) // 0=light, 1=full
-  tannin           Float    @default(0.5)
-  acidity          Float    @default(0.5)
-  sweetness        Float    @default(0.5)
-  fruitForward     Float    @default(0.5) // 0=earthy, 1=fruity
-  oakInfluence     Float    @default(0.5)
-  topGrapes        String[]
-  topRegions       String[]
-  exploredVarietals Int     @default(0)
-  exploredRegions  Int      @default(0)
-  profileVector    Float[]  // embedding for similarity matching
-  updatedAt        DateTime @updatedAt
-
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model WineCollection {
+model EventTemplate {
   id          String   @id @default(cuid())
   name        String
   description String?
-  userId      String
+  theme       String?  // e.g. "Bordeaux vs Burgundy", "Italian Reds", "New World vs Old World"
+  difficulty  String   @default("intermediate") // beginner, intermediate, advanced, master
+  wineCount   Int      @default(6)
+
+  // Flexible config: which fields guests guess on
+  guessFields String[] // e.g. ["grape", "region", "country", "vintage", "producer", "price"]
+
+  // Suggested wines (host can swap any)
+  suggestedWines Json? // array of { name, producer, vintage, region, country, type, grapes }
+
+  // Scoring weights per field (flexible per template)
+  scoringConfig Json?  // e.g. { "grape": 30, "region": 25, "vintage": 20, "country": 15, "producer": 10 }
+
+  // Metadata
+  category    String?  // region_vs_region, grape_deep_dive, price_guesser, freestyle, etc.
   isPublic    Boolean  @default(true)
-  followers   Int      @default(0)
-  tags        String[]
+  featured    Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdBy   String?  // null = system-curated, userId = host-created
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items       WineCollectionItem[]
+  events      BlindTastingEvent[]
+
+  @@index([category])
+  @@index([featured])
 }
 
-model WineCollectionItem {
-  id           String   @id @default(cuid())
-  collectionId String
-  wineId       String
-  addedAt      DateTime @default(now())
-  notes        String?
-
-  collection   WineCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  wine         Wine           @relation(fields: [wineId], references: [id], onDelete: Cascade)
-
-  @@unique([collectionId, wineId])
-}
-
-// ============ BLIND ARENA (KAHOOT) ============
+// ============ BLIND TASTING EVENTS ============
 
 model BlindTastingEvent {
-  id              String   @id @default(cuid())
-  hostId          String
-  title           String
-  type            String   // live, solo_practice, daily_challenge, duel
-  difficulty      String   // beginner, intermediate, advanced, master
-  maxParticipants Int?
-  timePerWine     Int      @default(120) // seconds
-  status          String   @default("draft") // draft, live, completed
-  startsAt        DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String   @id @default(cuid())
+  hostId      String
+  templateId  String?
 
-  host            User     @relation("EventHost", fields: [hostId], references: [id], onDelete: Cascade)
-  wines           BlindWine[]
-  guesses         BlindGuess[]
+  // Event basics
+  title       String
+  description String?
+  joinCode    String   @unique // 6-char code: e.g. "WINE42"
+  qrCodeUrl   String?
 
+  // Flexible config (copied from template, then customizable)
+  guessFields String[] // which fields guests guess on for THIS event
+  scoringConfig Json?  // scoring weights for THIS event
+  difficulty  String   @default("intermediate")
+  timePerWine Int?     // seconds, null = no timer (host controls pace)
+
+  // State
+  status      String   @default("draft") // draft, lobby, live, revealing, completed
+  currentWine Int      @default(0) // which wine is currently being tasted (0 = not started)
+  startsAt    DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  host        User             @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  template    EventTemplate?   @relation(fields: [templateId], references: [id])
+  wines       BlindWine[]
+  guests      GuestParticipant[]
+  guesses     BlindGuess[]
+
+  @@index([joinCode])
   @@index([status])
-  @@index([type])
+  @@index([hostId])
 }
 
 model BlindWine {
   id       String @id @default(cuid())
   eventId  String
   wineId   String
-  position Int    // flight order
-  hints    String[]
+  position Int    // flight order (1, 2, 3...)
+  hints    String[] // optional progressive hints host can reveal
+  revealed Boolean @default(false) // has the host revealed this wine?
 
   event    BlindTastingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  wine     Wine              @relation(fields: [wineId], references: [id], onDelete: Cascade)
+  wine     Wine              @relation(fields: [wineId], references: [id])
 
   @@unique([eventId, position])
+  @@index([eventId])
 }
+
+// ============ GUEST PARTICIPANTS (no account needed) ============
+
+model GuestParticipant {
+  id            String   @id @default(cuid())
+  eventId       String
+  displayName   String
+  birthYear     Int      // exact birth year for demographics
+  locationLat   Float?
+  locationLng   Float?
+  city          String?
+  country       String?
+  consentGiven  Boolean  @default(false)
+  consentAt     DateTime?
+  joinedAt      DateTime @default(now())
+
+  // Optional: link to a real account if they sign up after
+  userId        String?
+
+  event         BlindTastingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guesses       BlindGuess[]
+
+  @@index([eventId])
+  @@index([birthYear])
+  @@index([country])
+}
+
+// ============ GUESSES ============
 
 model BlindGuess {
   id              String   @id @default(cuid())
   eventId         String
-  userId          String
-  winePosition    Int
+  guestId         String   // GuestParticipant id
+  winePosition    Int      // which wine in the flight
+
+  // All guess fields are optional — only the ones configured for the event are used
   guessedGrape    String?
   guessedRegion   String?
   guessedCountry  String?
   guessedVintage  Int?
   guessedProducer String?
-  appearanceNotes String?
-  noseNotes       String?
-  palateNotes     String?
-  conclusionNotes String?
+  guessedType     String?  // red, white, rosé, etc.
+  guessedPrice    Float?   // price bracket guess
+
+  // Free-form tasting notes (always available)
+  notes           String?
+
+  // Scoring
   score           Int      @default(0)
-  timeElapsed     Int      @default(0) // seconds
+  timeElapsed     Int?     // seconds taken to submit
+
   submittedAt     DateTime @default(now())
 
   event           BlindTastingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guest           GuestParticipant  @relation(fields: [guestId], references: [id], onDelete: Cascade)
 
-  @@unique([eventId, userId, winePosition])
+  @@unique([eventId, guestId, winePosition])
   @@index([eventId])
-}
-
-// ============ VINE FUTURES (POLYMARKET) ============
-
-model PredictionMarket {
-  id                 String   @id @default(cuid())
-  question           String
-  category           String   // vintage, auction, blind_tasting, trend, critic, custom
-  resolutionCriteria String
-  resolvesAt         DateTime
-  status             String   @default("open") // open, resolved, cancelled
-  totalStaked        Int      @default(0)
-  createdBy          String
-  winningOptionId    String?
-  resolvedAt         DateTime?
-  evidence           String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  creator            User     @relation("MarketCreator", fields: [createdBy], references: [id], onDelete: Cascade)
-  options            MarketOption[]
-  positions          Position[]
-
-  @@index([status])
-  @@index([category])
-}
-
-model MarketOption {
-  id          String @id @default(cuid())
-  marketId    String
-  label       String
-  probability Float  @default(0.5)
-  totalStaked Int    @default(0)
-
-  market      PredictionMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  positions   Position[]
-}
-
-model Position {
-  id        String   @id @default(cuid())
-  userId    String
-  marketId  String
-  optionId  String
-  staked    Int
-  createdAt DateTime @default(now())
-
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  market    PredictionMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  option    MarketOption   @relation(fields: [optionId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([marketId])
-}
-
-// ============ WINE TRAIL (STRAVA) ============
-
-model Activity {
-  id          String   @id @default(cuid())
-  userId      String
-  type        String   // tasting, event, purchase, vineyard_visit, education, cellar_update
-  title       String
-  description String?
-  wineIds     String[] // referenced wine IDs
-  locationLat Float?
-  locationLng Float?
-  locationName String?
-  photos      String[]
-  date        DateTime @default(now())
-  duration    Int?     // minutes
-  isPublic    Boolean  @default(true)
-  likes       Int      @default(0)
-  createdAt   DateTime @default(now())
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comments    ActivityComment[]
-
-  @@index([userId])
-  @@index([type])
-  @@index([date])
-}
-
-model ActivityComment {
-  id         String   @id @default(cuid())
-  activityId String
-  userId     String
-  text       String
-  createdAt  DateTime @default(now())
-
-  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
-}
-
-model CellarItem {
-  id              String   @id @default(cuid())
-  userId          String
-  wineId          String
-  quantity        Int      @default(1)
-  purchaseDate    DateTime?
-  purchasePrice   Float?
-  storageLocation String?
-  drinkWindowFrom Int?     // year
-  drinkWindowTo   Int?     // year
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wine            Wine     @relation(fields: [wineId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, wineId])
-}
-
-// ============ GAMIFICATION ============
-
-model Badge {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String
-  icon        String
-  category    String   // arena, futures, cellar, trail
-  tier        String   // bronze, silver, gold
-  condition   String   // JSON condition for auto-unlock
-
-  users       UserBadge[]
-}
-
-model UserBadge {
-  id       String   @id @default(cuid())
-  userId   String
-  badgeId  String
-  earnedAt DateTime @default(now())
-
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, badgeId])
-}
-
-model Follow {
-  id          String   @id @default(cuid())
-  followerId  String
-  followingId String
-  createdAt   DateTime @default(now())
-
-  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
-
-  @@unique([followerId, followingId])
+  @@index([guestId])
 }

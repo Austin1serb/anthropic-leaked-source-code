@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Winebob",
   description:
-    "Your wine tasting social platform — blind tastings, predictions, ratings & tracking",
+    "Blind tasting made social. Join an event or host your own.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
