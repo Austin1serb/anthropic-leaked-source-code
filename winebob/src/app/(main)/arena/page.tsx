@@ -1,14 +1,11 @@
 import { Swords, Trophy, Clock, Users, ChevronRight } from "lucide-react";
-import Link from "next/link";
 
 export default function ArenaPage() {
   return (
     <div className="flex flex-col">
       {/* Header */}
       <header className="px-4 pt-4 pb-2">
-        <h1 className="text-2xl font-bold font-serif">
-          Blind Arena
-        </h1>
+        <h1 className="text-2xl font-bold font-serif">Blind Arena</h1>
         <p className="text-sm text-muted mt-0.5">
           Test your palate, challenge friends
         </p>
@@ -38,51 +35,33 @@ export default function ArenaPage() {
       {/* Quick actions */}
       <section className="px-4 mt-6">
         <div className="grid grid-cols-2 gap-3">
-          <Link
-            href="/arena/create"
-            className="wine-card p-4 flex flex-col items-center gap-2 active:scale-[0.98] transition-transform"
-          >
+          <div className="wine-card p-4 flex flex-col items-center gap-2 opacity-60">
             <div className="w-12 h-12 rounded-full bg-wine-burgundy/10 flex items-center justify-center">
               <Users size={22} className="text-wine-burgundy" />
             </div>
             <span className="text-sm font-medium text-center">
               Host Tasting
             </span>
-            <span className="text-xs text-muted text-center">
-              Create a blind tasting event
-            </span>
-          </Link>
+            <span className="text-xs text-muted text-center">Coming soon</span>
+          </div>
 
-          <Link
-            href="/arena/solo"
-            className="wine-card p-4 flex flex-col items-center gap-2 active:scale-[0.98] transition-transform"
-          >
+          <div className="wine-card p-4 flex flex-col items-center gap-2 opacity-60">
             <div className="w-12 h-12 rounded-full bg-wine-gold/20 flex items-center justify-center">
               <Swords size={22} className="text-wine-gold" />
             </div>
             <span className="text-sm font-medium text-center">
               Solo Practice
             </span>
-            <span className="text-xs text-muted text-center">
-              Sharpen your blind tasting
-            </span>
-          </Link>
+            <span className="text-xs text-muted text-center">Coming soon</span>
+          </div>
         </div>
       </section>
 
       {/* Upcoming events */}
       <section className="px-4 mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold font-serif">
-            Upcoming Events
-          </h2>
-          <Link
-            href="/arena/events"
-            className="text-sm text-wine-burgundy font-medium"
-          >
-            See all
-          </Link>
-        </div>
+        <h2 className="text-lg font-semibold font-serif mb-3">
+          Upcoming Events
+        </h2>
 
         <div className="space-y-3">
           {[
@@ -103,7 +82,7 @@ export default function ArenaPage() {
           ].map((event, i) => (
             <div
               key={i}
-              className="wine-card p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+              className="wine-card p-4 flex items-center gap-3"
             >
               <div className="w-12 h-12 rounded-xl bg-wine-cream-dark flex items-center justify-center text-xl">
                 🍷
@@ -130,17 +109,9 @@ export default function ArenaPage() {
 
       {/* Leaderboard preview */}
       <section className="px-4 mt-6 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold font-serif">
-            Leaderboard
-          </h2>
-          <Link
-            href="/arena/leaderboard"
-            className="text-sm text-wine-burgundy font-medium flex items-center gap-0.5"
-          >
-            <Trophy size={14} /> Full rankings
-          </Link>
-        </div>
+        <h2 className="text-lg font-semibold font-serif mb-3">
+          Leaderboard
+        </h2>
 
         <div className="wine-card divide-y divide-card-border">
           {[

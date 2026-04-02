@@ -1,24 +1,18 @@
-import { Settings, Share2, ChevronRight } from "lucide-react";
-import Link from "next/link";
+import { Settings, Share2 } from "lucide-react";
 
 export default function ProfilePage() {
   return (
     <div className="flex flex-col">
       {/* Header */}
       <header className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-serif">
-          Profile
-        </h1>
+        <h1 className="text-2xl font-bold font-serif">Profile</h1>
         <div className="flex items-center gap-2">
           <button className="touch-target flex items-center justify-center">
             <Share2 size={20} className="text-muted" />
           </button>
-          <Link
-            href="/profile/settings"
-            className="touch-target flex items-center justify-center"
-          >
+          <button className="touch-target flex items-center justify-center">
             <Settings size={20} className="text-muted" />
-          </Link>
+          </button>
         </div>
       </header>
 
@@ -68,12 +62,6 @@ export default function ProfilePage() {
         <div className="wine-card p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm">Your Taste Profile</h3>
-            <Link
-              href="/profile/taste"
-              className="text-xs text-wine-burgundy font-medium"
-            >
-              View full
-            </Link>
           </div>
           {/* Simplified taste bars */}
           {[
@@ -134,26 +122,8 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Menu items */}
-      <section className="px-4 mt-4 mb-6">
-        <div className="wine-card divide-y divide-card-border">
-          {[
-            { label: "My Collections", href: "/profile/collections" },
-            { label: "Cellar Inventory", href: "/trail/inventory" },
-            { label: "Prediction History", href: "/profile/predictions" },
-            { label: "Arena Stats", href: "/profile/arena-stats" },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex items-center justify-between px-4 py-3.5 active:bg-wine-cream-dark/50 transition-colors"
-            >
-              <span className="text-sm font-medium">{item.label}</span>
-              <ChevronRight size={18} className="text-muted" />
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* Spacer */}
+      <div className="mb-6" />
     </div>
   );
 }
