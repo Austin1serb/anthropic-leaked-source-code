@@ -1,5 +1,4 @@
 import { Flame, MapPin, Wine, CalendarDays } from "lucide-react";
-import Link from "next/link";
 
 export default function TrailPage() {
   return (
@@ -122,13 +121,13 @@ export default function TrailPage() {
         </div>
       </section>
 
-      {/* Log activity FAB */}
-      <Link
-        href="/trail/log"
+      {/* Log activity — links to check-in for now */}
+      <a
+        href="/cellar/checkin"
         className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-wine-burgundy text-white shadow-lg shadow-wine-burgundy/30 flex items-center justify-center active:scale-95 transition-transform z-40"
       >
         <span className="text-2xl">+</span>
-      </Link>
+      </a>
     </div>
   );
 }

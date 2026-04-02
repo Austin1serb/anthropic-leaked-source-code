@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronRight, ChevronLeft, Wine } from "lucide-react";
+import { useState, useTransition } from "react";
+import { ChevronRight, ChevronLeft, Wine, Loader2 } from "lucide-react";
+import { saveTasteProfile } from "@/lib/actions";
 
 type Question = {
   id: string;
@@ -78,7 +78,7 @@ const questions: Question[] = [
 ];
 
 export default function OnboardingPage() {
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number | string[]>>({});
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -97,8 +97,21 @@ export default function OnboardingPage() {
     }
 
     if (isLast) {
-      // TODO: Save taste profile to backend
-      router.push("/cellar");
+      const finalAnswers = { ...answers };
+      if (question.type === "slider") {
+        finalAnswers[question.id] = sliderValue;
+      } else if (question.type === "grid") {
+        finalAnswers[question.id] = selectedItems;
+      }
+      startTransition(async () => {
+        await saveTasteProfile({
+          body: (finalAnswers.body as number) ?? 50,
+          sweetness: (finalAnswers.sweetness as number) ?? 50,
+          grape: (finalAnswers.grape as string[]) ?? [],
+          region: (finalAnswers.region as string[]) ?? [],
+          adventure: (finalAnswers.adventure as number) ?? 50,
+        });
+      });
     } else {
       setStep((s) => s + 1);
       setSliderValue(50);
@@ -201,10 +214,25 @@ export default function OnboardingPage() {
       <div className="px-6 pb-8 safe-bottom">
         <button
           onClick={handleNext}
-          className="w-full py-4 bg-wine-burgundy text-white rounded-2xl font-semibold text-base flex items-center justify-center gap-2 active:bg-wine-burgundy-dark transition-colors"
+          disabled={isPending}
+          className="w-full py-4 bg-wine-burgundy text-white rounded-2xl font-semibold text-base flex items-center justify-center gap-2 active:bg-wine-burgundy-dark transition-colors disabled:opacity-60"
         >
-          {isLast ? "See My Taste Profile" : "Next"}
-          <ChevronRight size={20} />
+          {isPending ? (
+            <>
+              <Loader2 size={20} className="animate-spin" />
+              Saving your profile...
+            </>
+          ) : isLast ? (
+            <>
+              See My Taste Profile
+              <ChevronRight size={20} />
+            </>
+          ) : (
+            <>
+              Next
+              <ChevronRight size={20} />
+            </>
+          )}
         </button>
       </div>
     </div>
