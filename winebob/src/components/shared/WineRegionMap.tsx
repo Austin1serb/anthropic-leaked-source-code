@@ -41,60 +41,58 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
           "mapbox-dem": { type: "raster-dem", url: "mapbox://mapbox.mapbox-terrain-dem-v1", tileSize: 512, maxzoom: 14 },
         },
         layers: [
-          // Background
-          { id: "bg", type: "background", paint: { "background-color": "#110E0A" } },
-          // Water
-          { id: "water", type: "fill", source: "mapbox-streets", "source-layer": "water", paint: { "fill-color": "#141C28" } },
-          // Land use (parks, forests etc)
-          { id: "landuse", type: "fill", source: "mapbox-streets", "source-layer": "landuse", paint: { "fill-color": ["match", ["get", "class"], "park", "#141A10", "agriculture", "#16140E", "wood", "#121610", "#12100C"], "fill-opacity": 0.5 } },
-          // Buildings (subtle at zoom)
-          { id: "buildings", type: "fill", source: "mapbox-streets", "source-layer": "building", minzoom: 12, paint: { "fill-color": "#1A1814", "fill-opacity": 0.6 } },
+          // Background — warm butter
+          { id: "bg", type: "background", paint: { "background-color": "#F0E4CC" } },
+          // Water — soft blue
+          { id: "water", type: "fill", source: "mapbox-streets", "source-layer": "water", paint: { "fill-color": "#C0D0E0" } },
+          // Land use (parks, forests etc) — soft greens
+          { id: "landuse", type: "fill", source: "mapbox-streets", "source-layer": "landuse", paint: { "fill-color": ["match", ["get", "class"], "park", "#D8E4C8", "agriculture", "#E4DCC4", "wood", "#C8D8B8", "#E8DCC8"], "fill-opacity": 0.5 } },
+          // Buildings — subtle cream
+          { id: "buildings", type: "fill", source: "mapbox-streets", "source-layer": "building", minzoom: 12, paint: { "fill-color": "#E0D4BC", "fill-opacity": 0.6 } },
           // Roads — tertiary
-          { id: "roads-tertiary", type: "line", source: "mapbox-streets", "source-layer": "road", filter: ["in", "class", "street", "street_limited"], minzoom: 10, paint: { "line-color": "#1E1A14", "line-width": 0.5 } },
+          { id: "roads-tertiary", type: "line", source: "mapbox-streets", "source-layer": "road", filter: ["in", "class", "street", "street_limited"], minzoom: 10, paint: { "line-color": "#E8DCC4", "line-width": 0.5 } },
           // Roads — secondary
-          { id: "roads-secondary", type: "line", source: "mapbox-streets", "source-layer": "road", filter: ["in", "class", "secondary", "tertiary"], minzoom: 8, paint: { "line-color": "#221E16", "line-width": 0.8 } },
+          { id: "roads-secondary", type: "line", source: "mapbox-streets", "source-layer": "road", filter: ["in", "class", "secondary", "tertiary"], minzoom: 8, paint: { "line-color": "#DCD0B8", "line-width": 0.8 } },
           // Roads — primary
-          { id: "roads-primary", type: "line", source: "mapbox-streets", "source-layer": "road", filter: ["in", "class", "primary", "trunk"], paint: { "line-color": "#2A2418", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 10, 1.5] } },
+          { id: "roads-primary", type: "line", source: "mapbox-streets", "source-layer": "road", filter: ["in", "class", "primary", "trunk"], paint: { "line-color": "#D0C4A8", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 10, 1.5] } },
           // Roads — motorway
-          { id: "roads-motorway", type: "line", source: "mapbox-streets", "source-layer": "road", filter: ["==", "class", "motorway"], paint: { "line-color": "#302818", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 10, 2] } },
+          { id: "roads-motorway", type: "line", source: "mapbox-streets", "source-layer": "road", filter: ["==", "class", "motorway"], paint: { "line-color": "#C4B898", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 10, 2] } },
           // Admin boundaries
-          { id: "admin-0", type: "line", source: "mapbox-streets", "source-layer": "admin", filter: ["==", "admin_level", 0], paint: { "line-color": "#3A3020", "line-width": 0.8, "line-opacity": 0.5 } },
-          { id: "admin-1", type: "line", source: "mapbox-streets", "source-layer": "admin", filter: ["==", "admin_level", 1], minzoom: 4, paint: { "line-color": "#2A2418", "line-width": 0.4, "line-opacity": 0.3, "line-dasharray": [3, 2] } },
+          { id: "admin-0", type: "line", source: "mapbox-streets", "source-layer": "admin", filter: ["==", "admin_level", 0], paint: { "line-color": "#B8A888", "line-width": 0.8, "line-opacity": 0.4 } },
+          { id: "admin-1", type: "line", source: "mapbox-streets", "source-layer": "admin", filter: ["==", "admin_level", 1], minzoom: 4, paint: { "line-color": "#C8B898", "line-width": 0.4, "line-opacity": 0.3, "line-dasharray": [3, 2] } },
           // Place labels — countries
-          { id: "labels-country", type: "symbol", source: "mapbox-streets", "source-layer": "place_label", filter: ["==", "class", "country"], layout: { "text-field": ["get", "name_en"], "text-size": ["interpolate", ["linear"], ["zoom"], 2, 10, 5, 13], "text-transform": "uppercase", "text-letter-spacing": 0.15, "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"] }, paint: { "text-color": "#5A4E3A", "text-opacity": 0.7 } },
+          { id: "labels-country", type: "symbol", source: "mapbox-streets", "source-layer": "place_label", filter: ["==", "class", "country"], layout: { "text-field": ["get", "name_en"], "text-size": ["interpolate", ["linear"], ["zoom"], 2, 10, 5, 13], "text-transform": "uppercase", "text-letter-spacing": 0.15, "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"] }, paint: { "text-color": "#8C7E6E", "text-opacity": 0.6 } },
           // Place labels — cities
-          { id: "labels-city", type: "symbol", source: "mapbox-streets", "source-layer": "place_label", filter: ["in", "class", "city"], layout: { "text-field": ["get", "name_en"], "text-size": ["interpolate", ["linear"], ["zoom"], 4, 9, 8, 13], "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"] }, paint: { "text-color": "#4A4030", "text-opacity": 0.5, "text-halo-color": "#110E0A", "text-halo-width": 1 } },
-          // Place labels — towns (at higher zoom)
-          { id: "labels-town", type: "symbol", source: "mapbox-streets", "source-layer": "place_label", filter: ["in", "class", "town", "village"], minzoom: 8, layout: { "text-field": ["get", "name_en"], "text-size": 10, "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"] }, paint: { "text-color": "#3A3428", "text-opacity": 0.4, "text-halo-color": "#110E0A", "text-halo-width": 1 } },
+          { id: "labels-city", type: "symbol", source: "mapbox-streets", "source-layer": "place_label", filter: ["in", "class", "city"], layout: { "text-field": ["get", "name_en"], "text-size": ["interpolate", ["linear"], ["zoom"], 4, 9, 8, 13], "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"] }, paint: { "text-color": "#6B5A40", "text-opacity": 0.6, "text-halo-color": "#F0E4CC", "text-halo-width": 1.5 } },
+          // Place labels — towns
+          { id: "labels-town", type: "symbol", source: "mapbox-streets", "source-layer": "place_label", filter: ["in", "class", "town", "village"], minzoom: 8, layout: { "text-field": ["get", "name_en"], "text-size": 10, "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"] }, paint: { "text-color": "#8C7E6E", "text-opacity": 0.5, "text-halo-color": "#F0E4CC", "text-halo-width": 1.5 } },
 
-          // ── POI: Wineries & wine bars (food_and_drink_stores, winery) ──
-          { id: "poi-winery", type: "circle", source: "mapbox-streets", "source-layer": "poi_label",
-            filter: ["any",
-              ["in", "maki", "wine-bar", "bar", "restaurant"],
-              ["in", "type", "Winery", "Wine Bar", "Vineyard"],
-              ["in", "class", "food_and_drink"],
+          // ── POI: Restaurants, bars, cafes (food_and_drink) ──
+          { id: "poi-food", type: "circle", source: "mapbox-streets", "source-layer": "poi_label",
+            filter: ["all",
+              ["==", ["get", "class"], "food_and_drink"],
+              ["<=", ["get", "filterrank"], 3],
             ],
-            minzoom: 9,
+            minzoom: 8,
             paint: {
               "circle-color": "#74070E",
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 2, 12, 4, 14, 6],
-              "circle-opacity": 0.7,
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 1.5, 10, 3, 12, 5, 14, 7],
+              "circle-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.3, 10, 0.6, 12, 0.8],
               "circle-stroke-color": "#F0E8D8",
-              "circle-stroke-width": 0.5,
+              "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 8, 0, 10, 0.5, 12, 1],
               "circle-stroke-opacity": 0.3,
             },
           },
-          // POI labels for wineries
-          { id: "poi-winery-label", type: "symbol", source: "mapbox-streets", "source-layer": "poi_label",
-            filter: ["any",
-              ["in", "maki", "wine-bar", "bar", "restaurant"],
-              ["in", "type", "Winery", "Wine Bar", "Vineyard"],
-              ["in", "class", "food_and_drink"],
+          // Food labels
+          { id: "poi-food-label", type: "symbol", source: "mapbox-streets", "source-layer": "poi_label",
+            filter: ["all",
+              ["==", ["get", "class"], "food_and_drink"],
+              ["<=", ["get", "filterrank"], 2],
             ],
-            minzoom: 12,
+            minzoom: 11,
             layout: {
               "text-field": ["get", "name"],
-              "text-size": 10,
+              "text-size": ["interpolate", ["linear"], ["zoom"], 11, 9, 14, 12],
               "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"],
               "text-offset": [0, 1.2],
               "text-anchor": "top",
@@ -110,24 +108,30 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
 
           // ── POI: Hotels & lodging ──
           { id: "poi-hotel", type: "circle", source: "mapbox-streets", "source-layer": "poi_label",
-            filter: ["in", "class", "lodging"],
-            minzoom: 11,
+            filter: ["all",
+              ["==", ["get", "class"], "lodging"],
+              ["<=", ["get", "filterrank"], 3],
+            ],
+            minzoom: 8,
             paint: {
               "circle-color": "#C8A255",
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 2, 14, 5],
-              "circle-opacity": 0.5,
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 1.5, 10, 3, 12, 5, 14, 7],
+              "circle-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.3, 10, 0.5, 12, 0.7],
               "circle-stroke-color": "#F0E8D8",
-              "circle-stroke-width": 0.5,
+              "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 8, 0, 10, 0.5, 12, 1],
               "circle-stroke-opacity": 0.2,
             },
           },
           // Hotel labels
           { id: "poi-hotel-label", type: "symbol", source: "mapbox-streets", "source-layer": "poi_label",
-            filter: ["in", "class", "lodging"],
-            minzoom: 13,
+            filter: ["all",
+              ["==", ["get", "class"], "lodging"],
+              ["<=", ["get", "filterrank"], 2],
+            ],
+            minzoom: 11,
             layout: {
               "text-field": ["get", "name"],
-              "text-size": 9,
+              "text-size": ["interpolate", ["linear"], ["zoom"], 11, 8, 14, 11],
               "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"],
               "text-offset": [0, 1.2],
               "text-anchor": "top",
@@ -138,6 +142,23 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
               "text-opacity": 0.5,
               "text-halo-color": "#110E0A",
               "text-halo-width": 1,
+            },
+          },
+
+          // ── POI: Food & drink shops (wine shops, etc) ──
+          { id: "poi-shops", type: "circle", source: "mapbox-streets", "source-layer": "poi_label",
+            filter: ["all",
+              ["==", ["get", "class"], "food_and_drink_stores"],
+              ["<=", ["get", "filterrank"], 3],
+            ],
+            minzoom: 9,
+            paint: {
+              "circle-color": "#8B5A4A",
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 1.5, 12, 4, 14, 6],
+              "circle-opacity": ["interpolate", ["linear"], ["zoom"], 9, 0.3, 12, 0.6],
+              "circle-stroke-color": "#F0E8D8",
+              "circle-stroke-width": 0.5,
+              "circle-stroke-opacity": 0.2,
             },
           },
         ],
@@ -207,10 +228,10 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
           "text-allow-overlap": false,
         },
         paint: {
-          "text-color": "#E0D4C0",
+          "text-color": "#74070E",
           "text-opacity": ["interpolate", ["linear"], ["zoom"], 3, 0.5, 5, 0.8],
-          "text-halo-color": "rgba(0,0,0,0.7)",
-          "text-halo-width": 1.2,
+          "text-halo-color": "#F0E4CC",
+          "text-halo-width": 1.5,
         },
       });
 
@@ -235,9 +256,9 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
             .setLngLat(e.lngLat)
             .setHTML(`
               <div style="font-family:system-ui,sans-serif">
-                <p style="font-size:13px;font-weight:700;color:#F0E8D8;margin:0">${props.name}</p>
-                <p style="font-size:10px;color:#8A7E6A;margin:2px 0 0">${props.country} · ${props.grapes}</p>
-                ${count > 0 ? `<p style="font-size:11px;font-weight:600;color:#E8A08A;margin:3px 0 0">${count} wines</p>` : ""}
+                <p style="font-size:13px;font-weight:700;color:#1A1412;margin:0">${props.name}</p>
+                <p style="font-size:10px;color:#8C7E6E;margin:2px 0 0">${props.country} · ${props.grapes}</p>
+                ${count > 0 ? `<p style="font-size:11px;font-weight:600;color:#74070E;margin:3px 0 0">${count} wines</p>` : ""}
               </div>
             `)
             .addTo(map.current);
@@ -285,9 +306,9 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
               <div style="font-family:system-ui,sans-serif">
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
                   <span style="font-size:14px">${isWine ? "🍷" : "🏨"}</span>
-                  <p style="font-size:13px;font-weight:700;color:#F0E8D8;margin:0">${name}</p>
+                  <p style="font-size:13px;font-weight:700;color:#1A1412;margin:0">${name}</p>
                 </div>
-                <p style="font-size:10px;color:#8A7E6A;margin:0">${cat}</p>
+                <p style="font-size:10px;color:#8C7E6E;margin:0">${cat}</p>
               </div>
             `)
             .addTo(map.current!);
@@ -362,15 +383,13 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
     <>
       <style>{`
         .wb-popup .mapboxgl-popup-content {
-          background: rgba(20,18,14,0.92);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-radius: 10px;
-          padding: 8px 12px;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-          border: 1px solid rgba(255,255,255,0.06);
+          background: #FFFFFF;
+          border-radius: 12px;
+          padding: 10px 14px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+          border: 1px solid rgba(0,0,0,0.06);
         }
-        .wb-popup .mapboxgl-popup-tip { border-top-color: rgba(20,18,14,0.92); }
+        .wb-popup .mapboxgl-popup-tip { border-top-color: #FFFFFF; }
         .mapboxgl-ctrl { display: none !important; }
       `}</style>
       <div ref={mapContainer} className={className} style={{ height }} />
