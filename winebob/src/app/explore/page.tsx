@@ -10,6 +10,8 @@ import { MapLayerDrawer } from "@/components/shared/MapLayerDrawer";
 import type { MapLayer } from "@/components/shared/MapLayerDrawer";
 import { VintageWeatherLayer } from "@/components/layers/VintageWeatherLayer";
 import { FlavorGenomeLayer } from "@/components/layers/FlavorGenomeLayer";
+import { LiveHeatmapLayer } from "@/components/layers/LiveHeatmapLayer";
+import { DrawFlightLayer } from "@/components/layers/DrawFlightLayer";
 import { useState, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 
@@ -88,6 +90,18 @@ export default function ExplorePage() {
       {/* Flavor Genome Map layer */}
       <FlavorGenomeLayer
         active={isActive("flavor-genome")}
+        mapRef={mapRef}
+      />
+
+      {/* Live Social Heatmap layer */}
+      <LiveHeatmapLayer
+        active={isActive("live-heatmap")}
+        mapRef={mapRef}
+      />
+
+      {/* Draw Your Flight layer */}
+      <DrawFlightLayer
+        active={isActive("draw-flight")}
         mapRef={mapRef}
       />
 
