@@ -33,6 +33,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       style: {
         version: 8,
         name: "Winebob",
+        glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
         sources: {
           "mapbox-streets": { type: "vector", url: "mapbox://mapbox.mapbox-streets-v8" },
           "mapbox-terrain": { type: "vector", url: "mapbox://mapbox.mapbox-terrain-v2" },
