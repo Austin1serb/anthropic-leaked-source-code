@@ -29,7 +29,7 @@ export function BottomTabBar() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-card-border/30 tab-bar-safe">
       <div className="max-w-2xl mx-auto flex items-center justify-around px-6 pt-2.5 pb-1.5">
         {tabs.map((tab) => {
-          const isActive = pathname === tab.href || (tab.href !== "/" && pathname.startsWith(tab.href));
+          const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
           const Icon = tab.icon;
           return (
             <Link
