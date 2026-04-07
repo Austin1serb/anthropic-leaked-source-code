@@ -1,12 +1,13 @@
 import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 /**
  * Get the current session on the server side.
  * Use this in Server Components and Server Actions.
  */
 export async function auth(): Promise<Session | null> {
-  return getServerSession();
+  return getServerSession(authOptions);
 }
 
 /**
