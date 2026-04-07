@@ -48,9 +48,9 @@ function buildQ(p: Record<string, string | undefined>) {
 }
 
 /* ── Sheet states ── */
-type SheetState = "collapsed" | "half" | "full";
+type SheetState = "peek" | "half" | "full";
 const SHEET_HEIGHTS: Record<SheetState, string> = {
-  collapsed: "140px",
+  peek: "44px",
   half: "50vh",
   full: "88vh",
 };
@@ -66,7 +66,7 @@ export function WinesClient({
   const router = useRouter();
   const [search, setSearch] = useState(activeSearch ?? "");
   const [favSet, setFavSet] = useState<Set<string>>(new Set());
-  const [sheet, setSheet] = useState<SheetState>("collapsed");
+  const [sheet, setSheet] = useState<SheetState>("peek");
   const [exploreRegion, setExploreRegion] = useState<string | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -115,10 +115,10 @@ export function WinesClient({
     if (Math.abs(dy) < 40) return;
     if (dy < 0) {
       // Swipe up
-      setSheet((s) => s === "collapsed" ? "half" : s === "half" ? "full" : s);
+      setSheet((s) => s === "peek" ? "half" : s === "half" ? "full" : s);
     } else {
       // Swipe down
-      setSheet((s) => s === "full" ? "half" : s === "half" ? "collapsed" : s);
+      setSheet((s) => s === "full" ? "half" : s === "half" ? "peek" : s);
     }
   }
 
@@ -324,7 +324,7 @@ export function WinesClient({
             {exploreRegion ? (
               <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
                 <button
-                  onClick={() => { setExploreRegion(null); setSearch(""); setSheet("collapsed"); }}
+                  onClick={() => { setExploreRegion(null); setSearch(""); setSheet("peek"); }}
                   className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
                 >
                   ← {exploreRegion}
@@ -358,29 +358,11 @@ export function WinesClient({
         >
           <div className="h-full flex flex-col bg-background rounded-t-[16px] shadow-[0_-4px_20px_rgba(0,0,0,0.1)] border-t border-card-border/30">
             {/* Drag handle */}
-            <div className="flex items-center justify-center py-2.5 touch-target" onClick={() => setSheet(sheet === "collapsed" ? "half" : sheet === "half" ? "full" : "half")}>
+            <div className="flex items-center justify-center py-2.5 touch-target" onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "half")}>
               <div className="w-9 h-[3px] rounded-full bg-muted/20" />
             </div>
 
-            {sheet === "collapsed" ? (
-              /* ── Collapsed: featured wine preview ── */
-              <div className="px-3 pb-2">
-                {featured ? (
-                  <Link href={`/wines/${featured.id}`} className="flex items-center gap-3 p-2.5 rounded-[12px] bg-card-bg border border-card-border shadow-sm active:scale-[0.99] transition-transform">
-                    <div className="w-[52px] h-[52px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: `${typeColor(featured.type)}15` }}>
-                      <Wine className="h-5 w-5" style={{ color: typeColor(featured.type), opacity: 0.5 }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-foreground truncate">{featured.name}</p>
-                      <p className="text-[10px] text-muted mt-0.5 truncate">{featured.producer} · {featured.region}</p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-cherry">Discover →</span>
-                  </Link>
-                ) : (
-                  <p className="text-[12px] text-muted text-center py-3">Tap a region to explore</p>
-                )}
-              </div>
-            ) : (
+            {sheet !== "peek" && (
               /* ── Half / Full: wine list ── */
               <>
                 <div className="px-4 flex items-center justify-between mb-1">
@@ -399,7 +381,7 @@ export function WinesClient({
                     {hasFilters && !exploreRegion && (
                       <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>
                     )}
-                    <button onClick={() => setSheet("collapsed")}><ChevronDown className="h-4 w-4 text-muted/30" /></button>
+                    <button onClick={() => setSheet("peek")}><ChevronDown className="h-4 w-4 text-muted/30" /></button>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto pb-24">
