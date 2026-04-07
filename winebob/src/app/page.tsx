@@ -126,12 +126,12 @@ export default function HomePage() {
           </p>
 
           <Link
-            href="/login"
+            href="/explore"
             className="inline-flex items-center justify-center gap-2.5 w-full max-w-[280px] py-4 rounded-2xl bg-white font-bold text-[16px] active:scale-[0.98] transition-transform"
             style={{ color: "#74070E", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}
           >
             <Sparkles className="h-5 w-5" />
-            Get Started
+            Explore the Map
           </Link>
           <p className="text-[11px] text-white/35 mt-3">
             Free account — takes 10 seconds

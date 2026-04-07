@@ -422,10 +422,14 @@ export function WineRegionMap({ onRegionClick, onCityClick, regionCounts, height
       try { map.current.setLayoutProperty(id, "visibility", "none"); } catch {}
     }
 
-    // Fly to city center (not polygon center)
-    const city = REGION_CITIES[exploreRegion];
-    if (city) {
-      map.current.flyTo({ center: city, zoom: 12, pitch: 30, duration: 2000, essential: true });
+    // Fly to first sub-city if available, otherwise region city center
+    const subCities = REGION_SUB_CITIES[exploreRegion];
+    const firstCity = subCities?.[0]?.coords;
+    const regionCity = REGION_CITIES[exploreRegion];
+    const target = firstCity ?? regionCity;
+
+    if (target) {
+      map.current.flyTo({ center: target, zoom: 13, pitch: 30, duration: 2000, essential: true });
     } else {
       // Fallback: compute center from polygon
       const feature = wineRegions.features.find((f) => f.properties.name === exploreRegion);
