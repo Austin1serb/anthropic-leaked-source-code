@@ -117,7 +117,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", c
       dragRotate: false,
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+    // Navigation control removed — we add our own floating buttons in the parent
 
     popup.current = new mapboxgl.Popup({
       closeButton: false,
@@ -186,13 +186,13 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", c
           "text-ignore-placement": false,
         },
         paint: {
-          "text-color": "#1A1412",
+          "text-color": "#E0D4C0",
           "text-opacity": [
             "interpolate", ["linear"], ["zoom"],
-            3, 0.5,
-            5, 0.8,
+            3, 0.6,
+            5, 0.85,
           ],
-          "text-halo-color": "#FEF9F0",
+          "text-halo-color": "rgba(20,16,12,0.8)",
           "text-halo-width": 1.5,
         },
       });
@@ -281,17 +281,11 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", c
         .wine-region-popup .mapboxgl-popup-tip {
           border-top-color: rgba(26,20,18,0.92);
         }
-        .mapboxgl-ctrl-group {
-          border-radius: 12px !important;
-          border: 1px solid rgba(0,0,0,0.06) !important;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
-          overflow: hidden;
-        }
-        .mapboxgl-ctrl-group button { width: 36px !important; height: 36px !important; }
+        .mapboxgl-ctrl { display: none !important; }
       `}</style>
       <div
         ref={mapContainer}
-        className={`rounded-[20px] overflow-hidden border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] ${className}`}
+        className={`overflow-hidden ${className}`}
         style={{ height }}
       />
     </>
