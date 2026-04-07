@@ -36,6 +36,23 @@ export type UserDataExport = {
     lng: number;
     createdAt: Date;
   }>;
+  wishlist: Array<{
+    wineId: string;
+    priority: number;
+    createdAt: Date;
+  }>;
+  producerFollows: Array<{
+    producerName: string;
+    region: string | null;
+    country: string | null;
+    createdAt: Date;
+  }>;
+  tastingFlights: Array<{
+    name: string | null;
+    path: unknown;
+    wines: unknown;
+    createdAt: Date;
+  }>;
   exportedAt: Date;
 };
 
@@ -65,11 +82,8 @@ export async function getUserConsent(): Promise<UserConsentData> {
   const session = await requireAuth();
   const userId = session.user.id;
 
-  const consent = await prisma.userConsent.upsert({
-    where: { userId },
-    create: { userId },
-    update: {},
-  });
+  const existing = await prisma.userConsent.findUnique({ where: { userId } });
+  const consent = existing ?? await prisma.userConsent.create({ data: { userId } });
 
   return toConsentData(consent);
 }
@@ -85,28 +99,32 @@ export async function updateConsent(data: {
   const session = await requireAuth();
   const userId = session.user.id;
 
-  const consent = await prisma.userConsent.upsert({
-    where: { userId },
-    create: {
-      userId,
-      analyticsConsent: data.analyticsConsent ?? true,
-      enhancedConsent: data.enhancedConsent ?? false,
-      researchConsent: data.researchConsent ?? false,
-      consentUpdatedAt: new Date(),
-    },
-    update: {
-      ...(data.analyticsConsent !== undefined && {
-        analyticsConsent: data.analyticsConsent,
-      }),
-      ...(data.enhancedConsent !== undefined && {
-        enhancedConsent: data.enhancedConsent,
-      }),
-      ...(data.researchConsent !== undefined && {
-        researchConsent: data.researchConsent,
-      }),
-      consentUpdatedAt: new Date(),
-    },
-  });
+  const existing = await prisma.userConsent.findUnique({ where: { userId } });
+  const consent = existing
+    ? await prisma.userConsent.update({
+        where: { userId },
+        data: {
+          ...(data.analyticsConsent !== undefined && {
+            analyticsConsent: data.analyticsConsent,
+          }),
+          ...(data.enhancedConsent !== undefined && {
+            enhancedConsent: data.enhancedConsent,
+          }),
+          ...(data.researchConsent !== undefined && {
+            researchConsent: data.researchConsent,
+          }),
+          consentUpdatedAt: new Date(),
+        },
+      })
+    : await prisma.userConsent.create({
+        data: {
+          userId,
+          analyticsConsent: data.analyticsConsent ?? true,
+          enhancedConsent: data.enhancedConsent ?? false,
+          researchConsent: data.researchConsent ?? false,
+          consentUpdatedAt: new Date(),
+        },
+      });
 
   return toConsentData(consent);
 }
@@ -145,7 +163,7 @@ export async function exportUserData(): Promise<UserDataExport> {
   const session = await requireAuth();
   const userId = session.user.id;
 
-  const [user, events, favorites, tastings, checkIns] = await Promise.all([
+  const [user, events, favorites, tastings, checkIns, wishlist, producerFollows, tastingFlights] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: { id: true, email: true, createdAt: true },
@@ -175,6 +193,21 @@ export async function exportUserData(): Promise<UserDataExport> {
       select: { wineId: true, lat: true, lng: true, createdAt: true },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.wineWishlist.findMany({
+      where: { userId },
+      select: { wineId: true, priority: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.producerFollow.findMany({
+      where: { userId },
+      select: { producerName: true, region: true, country: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.tastingFlight.findMany({
+      where: { userId },
+      select: { name: true, path: true, wines: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   return {
@@ -196,21 +229,51 @@ export async function exportUserData(): Promise<UserDataExport> {
       tastedAt: t.tastedAt,
     })),
     checkIns,
+    wishlist,
+    producerFollows,
+    tastingFlights,
     exportedAt: new Date(),
   };
 }
 
 /**
- * Delete the current user's analytics data (GDPR right to erasure).
- * Removes all WineEvent records for the user.
+ * Delete ALL of the current user's personal data (GDPR right to erasure).
+ * Removes analytics events, favorites, tastings, wishlist, check-ins,
+ * producer follows, tasting flights, and the consent record itself.
  */
-export async function deleteAnalyticsData(): Promise<{ deletedCount: number }> {
+export async function deleteUserData(): Promise<{
+  events: number;
+  favorites: number;
+  tastings: number;
+  wishlist: number;
+  checkIns: number;
+  producerFollows: number;
+  tastingFlights: number;
+  consent: number;
+}> {
   const session = await requireAuth();
   const userId = session.user.id;
 
-  const result = await prisma.wineEvent.deleteMany({
-    where: { userId },
-  });
+  const [events, favorites, tastings, wishlist, checkIns, producerFollows, tastingFlights, consent] =
+    await Promise.all([
+      prisma.wineEvent.deleteMany({ where: { userId } }),
+      prisma.wineFavorite.deleteMany({ where: { userId } }),
+      prisma.wineTasting.deleteMany({ where: { userId } }),
+      prisma.wineWishlist.deleteMany({ where: { userId } }),
+      prisma.wineCheckIn.deleteMany({ where: { userId } }),
+      prisma.producerFollow.deleteMany({ where: { userId } }),
+      prisma.tastingFlight.deleteMany({ where: { userId } }),
+      prisma.userConsent.deleteMany({ where: { userId } }),
+    ]);
 
-  return { deletedCount: result.count };
+  return {
+    events: events.count,
+    favorites: favorites.count,
+    tastings: tastings.count,
+    wishlist: wishlist.count,
+    checkIns: checkIns.count,
+    producerFollows: producerFollows.count,
+    tastingFlights: tastingFlights.count,
+    consent: consent.count,
+  };
 }

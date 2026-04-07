@@ -126,13 +126,20 @@ function makeId(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30);
 }
 
+/** Convert a JS string array to a PostgreSQL array literal, e.g. {"Cab Sav","Cabernet"} */
+function toPgArray(arr: string[]): string {
+  const escaped = arr.map((s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
+  return `{${escaped.join(",")}}`;
+}
+
 async function main() {
   console.log("Seeding wines...");
   for (const wine of wines) {
     const id = makeId(wine.name);
+    const grapes = toPgArray(wine.grapes);
     await sql`
       INSERT INTO "Wine" (id, name, producer, vintage, grapes, region, country, appellation, type, "createdAt")
-      VALUES (${id}, ${wine.name}, ${wine.producer}, ${wine.vintage}, ${wine.grapes}, ${wine.region}, ${wine.country}, ${wine.appellation}, ${wine.type}, NOW())
+      VALUES (${id}, ${wine.name}, ${wine.producer}, ${wine.vintage}, ${grapes}::text[], ${wine.region}, ${wine.country}, ${wine.appellation}, ${wine.type}, NOW())
       ON CONFLICT (id) DO NOTHING
     `;
   }
@@ -141,9 +148,10 @@ async function main() {
   console.log("Seeding templates...");
   for (const t of templates) {
     const id = makeId(t.name);
+    const guessFields = toPgArray(t.guessFields);
     await sql`
       INSERT INTO "EventTemplate" (id, name, description, theme, difficulty, "wineCount", "guessFields", category, "scoringConfig", "isPublic", featured, "usageCount", "createdAt", "updatedAt")
-      VALUES (${id}, ${t.name}, ${t.description}, ${t.theme}, ${t.difficulty}, ${t.wineCount}, ${t.guessFields}, ${t.category}, ${JSON.stringify(t.scoringConfig)}, true, true, 0, NOW(), NOW())
+      VALUES (${id}, ${t.name}, ${t.description}, ${t.theme}, ${t.difficulty}, ${t.wineCount}, ${guessFields}::text[], ${t.category}, ${JSON.stringify(t.scoringConfig)}, true, true, 0, NOW(), NOW())
       ON CONFLICT (id) DO NOTHING
     `;
   }

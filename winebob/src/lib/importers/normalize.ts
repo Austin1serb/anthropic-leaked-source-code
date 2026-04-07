@@ -2,6 +2,16 @@
  * Shared normalization utilities for wine data imports.
  */
 
+// Common abbreviation expansions for wine names
+const ABBREVIATION_EXPANSIONS: Record<string, string> = {
+  "ch.": "Château",
+  "dom.": "Domaine",
+  "st.": "Saint",
+  "ste.": "Sainte",
+  "mt.": "Mount",
+  "ft.": "Fort",
+};
+
 // Common grape alias mappings (alias -> canonical name)
 const GRAPE_ALIASES: Record<string, string> = {
   "cab sav": "Cabernet Sauvignon",
@@ -59,7 +69,7 @@ const GRAPE_ALIASES: Record<string, string> = {
  */
 function toProperCase(str: string): string {
   // Common lowercase words that should stay lowercase (unless first word)
-  const lowerWords = new Set(["de", "di", "du", "da", "des", "del", "della", "delle", "delle", "von", "van", "le", "la", "les", "et", "y", "e", "do", "dos"]);
+  const lowerWords = new Set(["de", "di", "du", "da", "des", "del", "della", "delle", "von", "van", "le", "la", "les", "et", "y", "e", "do", "dos"]);
 
   return str
     .split(/\s+/)
@@ -79,11 +89,31 @@ function toProperCase(str: string): string {
 /**
  * Normalize Unicode accented characters to their base + combining form,
  * then re-compose. This standardizes different Unicode representations
- * of the same accented character.
+ * of the same accented character. Preserves accents for display.
  */
 function normalizeAccents(str: string): string {
   // NFC normalization: compose characters into canonical form
   return str.normalize("NFC");
+}
+
+/**
+ * Strip accents for comparison/deduplication purposes.
+ * "Château" -> "Chateau", "Côtes" -> "Cotes", etc.
+ * Do NOT use this for display — only for fingerprinting/dedup.
+ */
+function stripAccents(str: string): string {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+/**
+ * Expand common wine abbreviations for display normalization.
+ * "Ch. Margaux" -> "Château Margaux", "Dom. Romanée" -> "Domaine Romanée"
+ */
+function expandAbbreviations(str: string): string {
+  return str.replace(/\b\w+\./g, (match) => {
+    const expansion = ABBREVIATION_EXPANSIONS[match.toLowerCase()];
+    return expansion ?? match;
+  });
 }
 
 /**
@@ -97,7 +127,10 @@ export function normalizeWineName(name: string): string {
   // Remove multiple spaces
   normalized = normalized.replace(/\s+/g, " ");
 
-  // Standardize accents
+  // Expand common abbreviations (Ch. -> Château, Dom. -> Domaine, etc.)
+  normalized = expandAbbreviations(normalized);
+
+  // Standardize accents (preserve for display)
   normalized = normalizeAccents(normalized);
 
   // Proper case

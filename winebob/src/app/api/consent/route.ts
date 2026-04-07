@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { deleteUserData } from "@/lib/consent";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,11 @@ export async function GET() {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const consent = await prisma.userConsent.upsert({
+    const existing = await prisma.userConsent.findUnique({
       where: { userId: session.user.id },
-      create: { userId: session.user.id },
-      update: {},
+    });
+    const consent = existing ?? await prisma.userConsent.create({
+      data: { userId: session.user.id },
     });
 
     return Response.json({
@@ -50,22 +52,28 @@ export async function PUT(request: Request) {
       researchConsent?: boolean;
     };
 
-    const consent = await prisma.userConsent.upsert({
+    const existingConsent = await prisma.userConsent.findUnique({
       where: { userId: session.user.id },
-      create: {
-        userId: session.user.id,
-        analyticsConsent: analyticsConsent ?? true,
-        enhancedConsent: enhancedConsent ?? false,
-        researchConsent: researchConsent ?? false,
-        consentUpdatedAt: new Date(),
-      },
-      update: {
-        ...(analyticsConsent !== undefined && { analyticsConsent }),
-        ...(enhancedConsent !== undefined && { enhancedConsent }),
-        ...(researchConsent !== undefined && { researchConsent }),
-        consentUpdatedAt: new Date(),
-      },
     });
+    const consent = existingConsent
+      ? await prisma.userConsent.update({
+          where: { userId: session.user.id },
+          data: {
+            ...(analyticsConsent !== undefined && { analyticsConsent }),
+            ...(enhancedConsent !== undefined && { enhancedConsent }),
+            ...(researchConsent !== undefined && { researchConsent }),
+            consentUpdatedAt: new Date(),
+          },
+        })
+      : await prisma.userConsent.create({
+          data: {
+            userId: session.user.id,
+            analyticsConsent: analyticsConsent ?? true,
+            enhancedConsent: enhancedConsent ?? false,
+            researchConsent: researchConsent ?? false,
+            consentUpdatedAt: new Date(),
+          },
+        });
 
     return Response.json({
       analyticsConsent: consent.analyticsConsent,
@@ -90,11 +98,9 @@ export async function DELETE() {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const result = await prisma.wineEvent.deleteMany({
-      where: { userId: session.user.id },
-    });
+    const result = await deleteUserData();
 
-    return Response.json({ deletedCount: result.count });
+    return Response.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("Consent DELETE error:", message);

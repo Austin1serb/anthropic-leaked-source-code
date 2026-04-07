@@ -471,7 +471,7 @@ export async function searchWines(query: string) {
 
   // Fire-and-forget: track search after results are ready
   const session = await auth().catch(() => null);
-  trackWineSearch(session?.user?.id ?? null, query, results.length);
+  trackWineSearch(session?.user?.id ?? null, query, results.length).catch(() => {});
 
   return results;
 }
@@ -489,11 +489,17 @@ export async function getWineRegionCounts(): Promise<Record<string, number>> {
 }
 
 export async function getBrowseWines() {
-  return prisma.wine.findMany({
+  const wines = await prisma.wine.findMany({
     where: { isPublic: true },
     take: 30,
     orderBy: { name: "asc" },
   });
+
+  // Fire-and-forget: track browse view
+  const session = await auth().catch(() => null);
+  trackWineView(session?.user?.id ?? null, "", "browse").catch(() => {});
+
+  return wines;
 }
 
 // ============ WINE LIBRARY ============
@@ -530,6 +536,15 @@ export async function getWineLibrary(filters?: {
     prisma.wine.count({ where }),
   ]);
 
+  // Fire-and-forget: track library search with filters
+  const session = await auth().catch(() => null);
+  trackWineSearch(session?.user?.id ?? null, filters?.search ?? "", total, {
+    type: filters?.type,
+    country: filters?.country,
+    priceRange: filters?.priceRange,
+    page,
+  }).catch(() => {});
+
   return { wines, total, pages: Math.ceil(total / PAGE_SIZE), page };
 }
 
@@ -539,7 +554,7 @@ export async function getWineById(id: string) {
   if (wine) {
     // Fire-and-forget: track view after data is fetched
     const session = await auth().catch(() => null);
-    trackWineView(session?.user?.id ?? null, id, "detail");
+    trackWineView(session?.user?.id ?? null, id, "detail").catch(() => {});
   }
 
   return wine;
@@ -588,7 +603,7 @@ export async function addWine(data: {
     userId: session.user.id,
     wineId: wine.id,
     metadata: { producer: data.producer, region: data.region, country: data.country },
-  });
+  }).catch(() => {});
 
   return wine;
 }
@@ -602,6 +617,15 @@ export async function toggleFavorite(wineId: string) {
 
   if (existing) {
     await prisma.wineFavorite.delete({ where: { id: existing.id } });
+
+    // Fire-and-forget: track favorite removal
+    trackEvent({
+      eventType: "wine_unfavorite",
+      userId: session.user.id,
+      wineId,
+      metadata: { action: "remove" },
+    }).catch(() => {});
+
     return { favorited: false };
   }
 
@@ -609,8 +633,8 @@ export async function toggleFavorite(wineId: string) {
     data: { userId: session.user.id, wineId },
   });
 
-  // Fire-and-forget: track favorite after successful toggle
-  trackWineFavorite(session.user.id, wineId);
+  // Fire-and-forget: track favorite addition
+  trackWineFavorite(session.user.id, wineId).catch(() => {});
 
   return { favorited: true };
 }

@@ -161,14 +161,21 @@ function makeId(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").slice(0, 50);
 }
 
+/** Convert a JS string array to a PostgreSQL array literal, e.g. {"Cab Sav","Cabernet"} */
+function toPgArray(arr: string[]): string {
+  const escaped = arr.map((s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
+  return `{${escaped.join(",")}}`;
+}
+
 async function main() {
   console.log(`Seeding ${grapes.length} grape varieties...`);
 
   for (const g of grapes) {
     const id = makeId(g.name);
+    const aliases = toPgArray(g.aliases);
     await sql`
       INSERT INTO "GrapeVariety" (id, name, aliases, color, "originCountry", description, "acreageHa", "createdAt")
-      VALUES (${id}, ${g.name}, ${g.aliases}, ${g.color}, ${g.originCountry}, ${g.description}, ${g.acreageHa}, NOW())
+      VALUES (${id}, ${g.name}, ${aliases}::text[], ${g.color}, ${g.originCountry}, ${g.description}, ${g.acreageHa}, NOW())
       ON CONFLICT (name) DO NOTHING
     `;
   }

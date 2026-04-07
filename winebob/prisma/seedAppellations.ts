@@ -23,6 +23,12 @@ function makeId(name: string, country: string): string {
   return `${name}-${country}`.toLowerCase().replace(/[^a-z0-9]/g, "-");
 }
 
+/** Convert a JS string array to a PostgreSQL array literal, e.g. {"Cab Sav","Cabernet"} */
+function toPgArray(arr: string[]): string {
+  const escaped = arr.map((s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
+  return `{${escaped.join(",")}}`;
+}
+
 const appellations: Appellation[] = [
   // ─── FRANCE (AOC) ───
   { name: "Bordeaux AOC", country: "France", region: "Bordeaux", level: "AOC", grapeVarieties: ["Cabernet Sauvignon", "Merlot", "Cabernet Franc"], established: 1936, description: "Umbrella appellation for the Bordeaux region" },
@@ -160,9 +166,10 @@ async function main() {
 
   for (const a of appellations) {
     const id = makeId(a.name, a.country);
+    const grapeVarieties = toPgArray(a.grapeVarieties);
     await sql`
       INSERT INTO "Appellation" (id, name, country, region, level, "grapeVarieties", established, description, "createdAt")
-      VALUES (${id}, ${a.name}, ${a.country}, ${a.region}, ${a.level}, ${a.grapeVarieties}, ${a.established}, ${a.description}, NOW())
+      VALUES (${id}, ${a.name}, ${a.country}, ${a.region}, ${a.level}, ${grapeVarieties}::text[], ${a.established}, ${a.description}, NOW())
       ON CONFLICT (name, country) DO NOTHING
     `;
   }
