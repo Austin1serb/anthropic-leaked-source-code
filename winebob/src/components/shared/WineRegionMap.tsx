@@ -36,6 +36,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
         sources: {
           "mapbox-streets": { type: "vector", url: "mapbox://mapbox.mapbox-streets-v8" },
+          "mapbox-dem": { type: "raster-dem", url: "mapbox://mapbox.mapbox-terrain-dem-v1", tileSize: 512, maxzoom: 14 },
         },
         layers: [
           // Background
@@ -144,6 +145,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       minZoom: 1.5,
       maxZoom: 14,
       attributionControl: false,
+      pitch: 30,
     });
 
     popup.current = new mapboxgl.Popup({
@@ -151,6 +153,12 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       closeOnClick: false,
       offset: 8,
       className: "wb-popup",
+    });
+
+    // Enable 3D terrain after style loads (avoids createBucket error)
+    map.current.on("style.load", () => {
+      if (!map.current) return;
+      try { map.current.setTerrain({ source: "mapbox-dem", exaggeration: 1.5 }); } catch { /* terrain not supported */ }
     });
 
     map.current.on("load", () => {
