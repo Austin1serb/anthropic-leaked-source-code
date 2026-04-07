@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, Wine, Users, Globe, ArrowRight, Lock } from "lucide-react";
+import { Sparkles, Wine, Users, Globe, ArrowRight, Lock, Play, Square } from "lucide-react";
 import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
 import { useState } from "react";
 
@@ -9,8 +9,10 @@ export default function ExplorePage() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [activeCity, setActiveCity] = useState<string | null>(null);
+  const [tourRegion, setTourRegion] = useState<string | null>(null);
 
   function handleCityClick(city: { name: string; coords: [number, number] }) {
+    setTourRegion(null); // stop any tour
     setFlyToCoords(city.coords);
     setActiveCity(city.name);
   }
@@ -19,12 +21,22 @@ export default function ExplorePage() {
     setSelectedRegion(region);
     setActiveCity(null);
     setFlyToCoords(null);
+    setTourRegion(null);
   }
 
   function handleWorldView() {
     setSelectedRegion(null);
     setActiveCity(null);
     setFlyToCoords(null);
+    setTourRegion(null);
+  }
+
+  function handleTour() {
+    if (tourRegion) {
+      setTourRegion(null); // stop
+    } else if (selectedRegion) {
+      setTourRegion(selectedRegion);
+    }
   }
 
   return (
@@ -35,6 +47,8 @@ export default function ExplorePage() {
           onRegionClick={handleRegionClick}
           exploreRegion={selectedRegion}
           flyToCoords={flyToCoords}
+          tourRegion={tourRegion}
+          onTourEnd={() => setTourRegion(null)}
           height="100%"
         />
       </div>
@@ -83,6 +97,19 @@ export default function ExplorePage() {
                 </button>
               ))}
             </div>
+          )}
+          {getRegionCities(selectedRegion).length > 1 && (
+            <button
+              onClick={handleTour}
+              className={`mt-1.5 w-full flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-[8px] backdrop-blur-xl border text-[11px] font-bold transition-all active:scale-95 ${
+                tourRegion
+                  ? "bg-white border-white/40 text-cherry"
+                  : "bg-cherry/80 border-cherry/40 text-white"
+              }`}
+            >
+              {tourRegion ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+              {tourRegion ? "Stop tour" : "Cinematic tour"}
+            </button>
           )}
           <button
             onClick={handleWorldView}
