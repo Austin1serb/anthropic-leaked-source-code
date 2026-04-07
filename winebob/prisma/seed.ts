@@ -194,8 +194,12 @@ const templates = [
 // ============ RUN SEED ============
 
 import { PrismaClient } from "../src/generated/prisma/client";
+import { Pool } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaNeon(pool);
+const prisma = new PrismaClient({ adapter } as any);
 
 async function main() {
   console.log("Seeding wines...");
