@@ -111,6 +111,92 @@ const wines: W[] = [
 {name:"Rubicon",producer:"Meerlust",vintage:2018,grapes:["Cabernet Sauvignon","Merlot","Cabernet Franc"],region:"Stellenbosch",country:"South Africa",type:"red",description:"Iconic Stellenbosch Bordeaux blend.",priceRange:"premium",isPublic:true},
 {name:"V",producer:"Vergelegen",vintage:2017,grapes:["Cabernet Sauvignon","Merlot"],region:"Stellenbosch",country:"South Africa",type:"red",description:"Flagship red from a historic estate.",priceRange:"premium",isPublic:true},
 {name:"Syrah",producer:"Boekenhoutskloof",vintage:2019,grapes:["Syrah"],region:"Stellenbosch",country:"South Africa",type:"red",description:"Top South African Syrah, Rhône-inspired.",priceRange:"premium",isPublic:true},
+// ═══ BATCH 2: 85 MORE WINES ═══
+// FRANCE - BORDEAUX (more)
+{name:"Château Ausone",producer:"Château Ausone",vintage:2019,grapes:["Merlot","Cabernet Franc"],region:"Bordeaux",country:"France",type:"red",description:"Premier Grand Cru Saint-Émilion, limestone terroir.",priceRange:"luxury",isPublic:true},
+{name:"Château Cos d'Estournel",producer:"Château Cos d'Estournel",vintage:2018,grapes:["Cabernet Sauvignon","Merlot"],region:"Bordeaux",country:"France",type:"red",description:"Super Second from Saint-Estèphe, exotic and rich.",priceRange:"luxury",isPublic:true},
+{name:"Château Léoville-Las Cases",producer:"Château Léoville-Las Cases",vintage:2018,grapes:["Cabernet Sauvignon","Merlot"],region:"Bordeaux",country:"France",type:"red",description:"Super Second rivaling First Growths.",priceRange:"luxury",isPublic:true},
+{name:"Château Palmer",producer:"Château Palmer",vintage:2019,grapes:["Merlot","Cabernet Sauvignon"],region:"Bordeaux",country:"France",type:"red",description:"Margaux's other star, silky and perfumed.",priceRange:"luxury",isPublic:true},
+{name:"Château Ducru-Beaucaillou",producer:"Château Ducru-Beaucaillou",vintage:2018,grapes:["Cabernet Sauvignon","Merlot"],region:"Bordeaux",country:"France",type:"red",description:"Classic Saint-Julien with precision.",priceRange:"premium",isPublic:true},
+{name:"Château Pichon Baron",producer:"Château Pichon Baron",vintage:2019,grapes:["Cabernet Sauvignon","Merlot"],region:"Bordeaux",country:"France",type:"red",description:"Powerful Pauillac Super Second.",priceRange:"premium",isPublic:true},
+{name:"Château Figeac",producer:"Château Figeac",vintage:2020,grapes:["Cabernet Sauvignon","Cabernet Franc","Merlot"],region:"Bordeaux",country:"France",type:"red",description:"Newly elevated Premier Grand Cru.",priceRange:"luxury",isPublic:true},
+// FRANCE - BURGUNDY (more)
+{name:"Chambertin Grand Cru",producer:"Domaine Armand Rousseau",vintage:2019,grapes:["Pinot Noir"],region:"Burgundy",country:"France",type:"red",description:"King of Burgundy Grand Crus.",priceRange:"luxury",isPublic:true},
+{name:"Corton-Charlemagne",producer:"Domaine Bonneau du Martray",vintage:2020,grapes:["Chardonnay"],region:"Burgundy",country:"France",type:"white",description:"Monopole Grand Cru white of great finesse.",priceRange:"luxury",isPublic:true},
+{name:"Vosne-Romanée Les Suchots",producer:"Domaine de l'Arlot",vintage:2019,grapes:["Pinot Noir"],region:"Burgundy",country:"France",type:"red",description:"Premier Cru from a top Vosne estate.",priceRange:"premium",isPublic:true},
+{name:"Beaune Premier Cru Grèves",producer:"Domaine Tollot-Beaut",vintage:2020,grapes:["Pinot Noir"],region:"Burgundy",country:"France",type:"red",description:"Generous, friendly Beaune from family estate.",priceRange:"mid",isPublic:true},
+{name:"Chablis Grand Cru Les Clos",producer:"Domaine William Fèvre",vintage:2020,grapes:["Chardonnay"],region:"Burgundy",country:"France",type:"white",description:"The finest Chablis Grand Cru site.",priceRange:"premium",isPublic:true},
+// FRANCE - RHÔNE (more)
+{name:"Ermitage Le Pavillon",producer:"M. Chapoutier",vintage:2019,grapes:["Syrah"],region:"Rhone Valley",country:"France",type:"red",description:"Biodynamic Hermitage of immense depth.",priceRange:"luxury",isPublic:true},
+{name:"Hermitage",producer:"Jean-Louis Chave",vintage:2018,grapes:["Syrah"],region:"Rhone Valley",country:"France",type:"red",description:"Artisan Hermitage, the benchmark.",priceRange:"luxury",isPublic:true},
+{name:"Côte-Rôtie La Mouline",producer:"E. Guigal",vintage:2018,grapes:["Syrah","Viognier"],region:"Rhone Valley",country:"France",type:"red",description:"One of the legendary La-La's.",priceRange:"luxury",isPublic:true},
+{name:"Gigondas",producer:"Domaine Santa Duc",vintage:2019,grapes:["Grenache","Mourvèdre"],region:"Rhone Valley",country:"France",type:"red",description:"Top Gigondas, Southern Rhône gem.",priceRange:"mid",isPublic:true},
+// FRANCE - ALSACE & PROVENCE
+{name:"Riesling Clos Sainte Hune",producer:"Trimbach",vintage:2017,grapes:["Riesling"],region:"Alsace",country:"France",type:"white",description:"France's greatest dry Riesling.",priceRange:"luxury",isPublic:true},
+{name:"Gewürztraminer Hengst",producer:"Domaine Zind-Humbrecht",vintage:2019,grapes:["Gewürztraminer"],region:"Alsace",country:"France",type:"white",description:"Biodynamic Alsace from a Grand Cru.",priceRange:"premium",isPublic:true},
+{name:"Bandol Rosé",producer:"Domaine Tempier",vintage:2022,grapes:["Mourvèdre","Grenache","Cinsault"],region:"Provence",country:"France",type:"rosé",description:"The benchmark Provence rosé.",priceRange:"mid",isPublic:true},
+{name:"Château Simone Rosé",producer:"Château Simone",vintage:2021,grapes:["Grenache","Mourvèdre"],region:"Provence",country:"France",type:"rosé",description:"Unique Palette appellation rosé.",priceRange:"premium",isPublic:true},
+// ITALY - PIEDMONT (more)
+{name:"Barolo Parussi",producer:"Massolino",vintage:2017,grapes:["Nebbiolo"],region:"Piedmont",country:"Italy",type:"red",description:"Serralunga d'Alba single vineyard Barolo.",priceRange:"premium",isPublic:true},
+{name:"Barolo Gran Bussia",producer:"Aldo Conterno",vintage:2016,grapes:["Nebbiolo"],region:"Piedmont",country:"Italy",type:"red",description:"Three-vineyard blend, traditional style.",priceRange:"luxury",isPublic:true},
+{name:"Barbaresco Rabajà",producer:"Bruno Giacosa",vintage:2018,grapes:["Nebbiolo"],region:"Piedmont",country:"Italy",type:"red",description:"Exceptional single-vineyard Barbaresco.",priceRange:"luxury",isPublic:true},
+{name:"Barolo Cannubi",producer:"Marchesi di Barolo",vintage:2018,grapes:["Nebbiolo"],region:"Piedmont",country:"Italy",type:"red",description:"Historic cru in the heart of Barolo.",priceRange:"premium",isPublic:true},
+{name:"Gavi di Gavi",producer:"La Scolca",vintage:2021,grapes:["Cortese"],region:"Piedmont",country:"Italy",type:"white",description:"Italy's finest Cortese, crisp and mineral.",priceRange:"mid",isPublic:true},
+// ITALY - TUSCANY (more)
+{name:"Flaccianello della Pieve",producer:"Fontodi",vintage:2018,grapes:["Sangiovese"],region:"Tuscany",country:"Italy",type:"red",description:"100% Sangiovese IGT of great intensity.",priceRange:"premium",isPublic:true},
+{name:"Solaia",producer:"Antinori",vintage:2019,grapes:["Cabernet Sauvignon","Sangiovese"],region:"Tuscany",country:"Italy",type:"red",description:"Super Tuscan sibling of Tignanello.",priceRange:"luxury",isPublic:true},
+{name:"Masseto",producer:"Tenuta dell'Ornellaia",vintage:2019,grapes:["Merlot"],region:"Tuscany",country:"Italy",type:"red",description:"Italy's answer to Pétrus, pure Merlot.",priceRange:"luxury",isPublic:true},
+{name:"Vernaccia di San Gimignano",producer:"Teruzzi & Puthod",vintage:2021,grapes:["Vernaccia"],region:"Tuscany",country:"Italy",type:"white",description:"Crisp Tuscan white from medieval towers.",priceRange:"budget",isPublic:true},
+// SPAIN (more)
+{name:"Castillo Ygay Gran Reserva",producer:"Marqués de Murrieta",vintage:2012,grapes:["Tempranillo","Mazuelo"],region:"Rioja",country:"Spain",type:"red",description:"Decades of aging, legendary Rioja.",priceRange:"luxury",isPublic:true},
+{name:"Pesquera Reserva",producer:"Alejandro Fernández",vintage:2018,grapes:["Tempranillo"],region:"Ribera del Duero",country:"Spain",type:"red",description:"The man who put Ribera on the map.",priceRange:"premium",isPublic:true},
+{name:"Alión",producer:"Vega Sicilia",vintage:2019,grapes:["Tempranillo"],region:"Ribera del Duero",country:"Spain",type:"red",description:"Vega Sicilia's modern, earlier-drinking wine.",priceRange:"premium",isPublic:true},
+{name:"Clos Mogador",producer:"René Barbier",vintage:2018,grapes:["Garnacha","Cariñena","Syrah"],region:"Priorat",country:"Spain",type:"red",description:"Pioneer of the Priorat renaissance.",priceRange:"premium",isPublic:true},
+{name:"Clos Erasmus",producer:"Daphne Glorian",vintage:2019,grapes:["Garnacha","Syrah"],region:"Priorat",country:"Spain",type:"red",description:"Tiny production, immense Priorat.",priceRange:"luxury",isPublic:true},
+{name:"Albariño",producer:"Pazo de Señorans",vintage:2022,grapes:["Albariño"],region:"Rías Baixas",country:"Spain",type:"white",description:"Benchmark Albariño from Galicia.",priceRange:"mid",isPublic:true},
+// PORTUGAL (more)
+{name:"Quinta do Crasto Reserva",producer:"Quinta do Crasto",vintage:2019,grapes:["Touriga Nacional","Tinta Roriz"],region:"Douro Valley",country:"Portugal",type:"red",description:"Structured Douro red, great value.",priceRange:"mid",isPublic:true},
+{name:"Quinta do Vale Meão",producer:"Quinta do Vale Meão",vintage:2018,grapes:["Touriga Nacional","Touriga Franca"],region:"Douro Valley",country:"Portugal",type:"red",description:"Original Barca Velha estate.",priceRange:"premium",isPublic:true},
+{name:"Mouchão Tonel 3-4",producer:"Herdade do Mouchão",vintage:2016,grapes:["Alicante Bouschet"],region:"Alentejo",country:"Portugal",type:"red",description:"Cult Alentejo from ancient vines.",priceRange:"premium",isPublic:true},
+// GERMANY (more)
+{name:"Bernkasteler Doctor Riesling",producer:"Markus Molitor",vintage:2019,grapes:["Riesling"],region:"Mosel",country:"Germany",type:"white",description:"From the most famous Mosel vineyard.",priceRange:"premium",isPublic:true},
+{name:"Riesling Spätlese",producer:"Schloss Johannisberg",vintage:2019,grapes:["Riesling"],region:"Rheingau",country:"Germany",type:"white",description:"The birthplace of Riesling.",priceRange:"mid",isPublic:true},
+{name:"Riesling GG Kirchenstück",producer:"Reichsrat von Buhl",vintage:2020,grapes:["Riesling"],region:"Rheingau",country:"Germany",type:"white",description:"Grand Cru Pfalz Riesling.",priceRange:"premium",isPublic:true},
+// USA (more)
+{name:"Silver Oak Cabernet",producer:"Silver Oak",vintage:2018,grapes:["Cabernet Sauvignon"],region:"Napa Valley",country:"United States",type:"red",description:"America's favorite Cabernet.",priceRange:"premium",isPublic:true},
+{name:"Harlan Estate",producer:"Harlan Estate",vintage:2018,grapes:["Cabernet Sauvignon","Merlot"],region:"Napa Valley",country:"United States",type:"red",description:"Napa's cult Bordeaux blend.",priceRange:"luxury",isPublic:true},
+{name:"Scarecrow Cabernet",producer:"Scarecrow",vintage:2019,grapes:["Cabernet Sauvignon"],region:"Napa Valley",country:"United States",type:"red",description:"Rutherford cult wine, tiny production.",priceRange:"luxury",isPublic:true},
+{name:"Flowers Pinot Noir",producer:"Flowers",vintage:2020,grapes:["Pinot Noir"],region:"Sonoma",country:"United States",type:"red",description:"Extreme Sonoma Coast Pinot.",priceRange:"premium",isPublic:true},
+{name:"Beaux Frères Pinot Noir",producer:"Beaux Frères",vintage:2020,grapes:["Pinot Noir"],region:"Willamette Valley",country:"United States",type:"red",description:"Robert Parker's Oregon estate.",priceRange:"premium",isPublic:true},
+{name:"Ridge Monte Bello",producer:"Ridge Vineyards",vintage:2019,grapes:["Cabernet Sauvignon","Merlot"],region:"Santa Cruz Mountains",country:"United States",type:"red",description:"California's longest-running icon.",priceRange:"luxury",isPublic:true},
+// ARGENTINA (more)
+{name:"Nicolás Catena Zapata",producer:"Catena Zapata",vintage:2018,grapes:["Cabernet Sauvignon","Malbec"],region:"Mendoza",country:"Argentina",type:"red",description:"Flagship Bordeaux-style blend.",priceRange:"luxury",isPublic:true},
+{name:"Cheval des Andes",producer:"Cheval des Andes",vintage:2019,grapes:["Malbec","Cabernet Sauvignon"],region:"Mendoza",country:"Argentina",type:"red",description:"Cheval Blanc's Argentine venture.",priceRange:"premium",isPublic:true},
+{name:"Malbec Reserva",producer:"Bodega Colomé",vintage:2019,grapes:["Malbec"],region:"Mendoza",country:"Argentina",type:"red",description:"High-altitude Salta Malbec.",priceRange:"mid",isPublic:true},
+// CHILE (more)
+{name:"Don Maximiano",producer:"Errazuriz",vintage:2019,grapes:["Cabernet Sauvignon"],region:"Maipo Valley",country:"Chile",type:"red",description:"Chile's first premium wine.",priceRange:"premium",isPublic:true},
+{name:"Clos Apalta",producer:"Casa Lapostolle",vintage:2018,grapes:["Carmenère","Merlot","Cabernet Sauvignon"],region:"Colchagua Valley",country:"Chile",type:"red",description:"Biodynamic star of Colchagua.",priceRange:"premium",isPublic:true},
+{name:"Carmenère Reserva",producer:"Concha y Toro",vintage:2021,grapes:["Carmenère"],region:"Colchagua Valley",country:"Chile",type:"red",description:"Chile's signature grape, great value.",priceRange:"budget",isPublic:true},
+// AUSTRALIA (more)
+{name:"Ares Shiraz",producer:"Two Hands",vintage:2019,grapes:["Shiraz"],region:"Barossa Valley",country:"Australia",type:"red",description:"Rich Barossa Shiraz from top sites.",priceRange:"premium",isPublic:true},
+{name:"Heytesbury",producer:"Vasse Felix",vintage:2019,grapes:["Cabernet Sauvignon"],region:"Margaret River",country:"Australia",type:"red",description:"Margaret River's founding estate flagship.",priceRange:"premium",isPublic:true},
+{name:"Riesling Watervale",producer:"Jim Barry",vintage:2022,grapes:["Riesling"],region:"Clare Valley",country:"Australia",type:"white",description:"Classic Clare Valley dry Riesling.",priceRange:"mid",isPublic:true},
+{name:"Semillon",producer:"Tyrrell's Vat 1",vintage:2017,grapes:["Semillon"],region:"Hunter Valley",country:"Australia",type:"white",description:"Australia's most awarded white wine.",priceRange:"premium",isPublic:true},
+// NEW ZEALAND (more)
+{name:"Greywacke Sauvignon Blanc",producer:"Greywacke",vintage:2022,grapes:["Sauvignon Blanc"],region:"Marlborough",country:"New Zealand",type:"white",description:"From Cloudy Bay's original winemaker.",priceRange:"mid",isPublic:true},
+{name:"Felton Road Pinot Noir",producer:"Felton Road",vintage:2020,grapes:["Pinot Noir"],region:"Central Otago",country:"New Zealand",type:"red",description:"New Zealand's finest Pinot Noir.",priceRange:"premium",isPublic:true},
+{name:"Kumeu River Chardonnay",producer:"Kumeu River",vintage:2020,grapes:["Chardonnay"],region:"Auckland",country:"New Zealand",type:"white",description:"Burgundian Chardonnay from Auckland.",priceRange:"premium",isPublic:true},
+// SOUTH AFRICA (more)
+{name:"FMC Chenin Blanc",producer:"Ken Forrester",vintage:2020,grapes:["Chenin Blanc"],region:"Stellenbosch",country:"South Africa",type:"white",description:"South Africa's greatest Chenin Blanc.",priceRange:"premium",isPublic:true},
+{name:"Columella",producer:"Sadie Family",vintage:2019,grapes:["Syrah","Mourvèdre"],region:"Swartland",country:"South Africa",type:"red",description:"South Africa's most acclaimed red blend.",priceRange:"premium",isPublic:true},
+{name:"Palladius",producer:"Sadie Family",vintage:2020,grapes:["Chenin Blanc","Viognier"],region:"Swartland",country:"South Africa",type:"white",description:"Groundbreaking Swartland white blend.",priceRange:"premium",isPublic:true},
+// REST OF WORLD
+{name:"Grüner Veltliner Smaragd",producer:"Domäne Wachau",vintage:2021,grapes:["Grüner Veltliner"],region:"Wachau",country:"Austria",type:"white",description:"Top-tier Austrian Grüner Veltliner.",priceRange:"premium",isPublic:true},
+{name:"Blaufränkisch",producer:"Moric",vintage:2019,grapes:["Blaufränkisch"],region:"Burgenland",country:"Austria",type:"red",description:"Austria's answer to great Pinot Noir.",priceRange:"premium",isPublic:true},
+{name:"Assyrtiko",producer:"Domaine Sigalas",vintage:2021,grapes:["Assyrtiko"],region:"Santorini",country:"Greece",type:"white",description:"Volcanic Santorini white of great minerality.",priceRange:"mid",isPublic:true},
+{name:"Château Musar",producer:"Château Musar",vintage:2017,grapes:["Cabernet Sauvignon","Cinsault","Carignan"],region:"Bekaa Valley",country:"Lebanon",type:"red",description:"Lebanon's legendary wine, made through conflict.",priceRange:"premium",isPublic:true},
+{name:"Tokaji Aszú 5 Puttonyos",producer:"Royal Tokaji",vintage:2017,grapes:["Furmint","Hárslevelű"],region:"Tokaj",country:"Hungary",type:"dessert",description:"Hungary's historic sweet wine.",priceRange:"premium",isPublic:true},
+{name:"Saperavi",producer:"Pheasant's Tears",vintage:2020,grapes:["Saperavi"],region:"Kakheti",country:"Georgia",type:"red",description:"Natural Georgian wine from qvevri.",priceRange:"mid",isPublic:true},
 ];
 
 async function main() {
