@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Search, Plus, Wine, Heart, ChevronLeft, ChevronRight,
-  ChevronDown, Bookmark, Grape, Layers,
+  ChevronDown, Bookmark, Grape, Layers, Play, Square, Satellite, Map,
 } from "lucide-react";
 import { useState, useTransition, useRef, useCallback } from "react";
 import { toggleFavorite } from "@/lib/actions";
@@ -70,6 +70,8 @@ export function WinesClient({
   const [sheet, setSheet] = useState<SheetState>("peek");
   const [exploreRegion, setExploreRegion] = useState<string | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
+  const [tourRegion, setTourRegion] = useState<string | null>(null);
+  const [satellite, setSatellite] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -232,13 +234,20 @@ export function WinesClient({
     <div className="fixed inset-0">
       {/* ═══ SINGLE MAP — shared between desktop & mobile ═══ */}
       <div className="absolute inset-0">
-        <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} height="100%" />
+        <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} tourRegion={tourRegion} onTourEnd={() => setTourRegion(null)} satellite={satellite} height="100%" />
       </div>
 
       {/* ═══ DESKTOP (lg+) overlays ═══ */}
       {/* Search overlay */}
-      <div className="hidden lg:block absolute top-4 left-4 z-20 w-full max-w-sm">
-        <SearchBar />
+      <div className="hidden lg:flex absolute top-4 left-4 z-20 gap-2 items-start" style={{ maxWidth: "420px" }}>
+        <SearchBar className="flex-1" />
+        <button
+          onClick={() => setSatellite((s) => !s)}
+          className="h-11 w-11 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center justify-center active:scale-90 transition-transform flex-shrink-0"
+          title={satellite ? "Map view" : "Satellite view"}
+        >
+          {satellite ? <Map className="h-4 w-4 text-white/70" /> : <Satellite className="h-4 w-4 text-white/70" />}
+        </button>
       </div>
 
       {/* Bottom bar: filter pills OR city hopping pills */}
@@ -246,15 +255,28 @@ export function WinesClient({
         {exploreRegion ? (
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
             <button
-              onClick={() => { setExploreRegion(null); setSearch(""); }}
+              onClick={() => { setExploreRegion(null); setSearch(""); setTourRegion(null); }}
               className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
             >
               ← {exploreRegion}
             </button>
+            {getRegionCities(exploreRegion).length > 1 && (
+              <button
+                onClick={() => setTourRegion(tourRegion ? null : exploreRegion)}
+                className={`flex-shrink-0 h-[30px] px-3 rounded-[8px] text-[11px] font-bold flex items-center gap-1 transition-all ${
+                  tourRegion
+                    ? "bg-white text-cherry border border-white/40"
+                    : "bg-cherry/80 text-white border border-cherry/40"
+                }`}
+              >
+                {tourRegion ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                {tourRegion ? "Stop tour" : "Cinematic tour"}
+              </button>
+            )}
             {getRegionCities(exploreRegion).map((city) => (
               <button
                 key={city.name}
-                onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
+                onClick={(e) => { e.stopPropagation(); setTourRegion(null); setFlyToCoords([...city.coords]); }}
                 className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-[#1A1412]/60 backdrop-blur-xl text-white/70 border border-white/[0.06] text-[11px] font-semibold active:bg-cherry active:text-white transition-colors"
               >
                 {city.name}
@@ -307,6 +329,13 @@ export function WinesClient({
       <div className="lg:hidden absolute top-0 left-0 right-0 z-20 safe-top px-3 pt-3">
         <div className="flex gap-2">
           <SearchBar className="flex-1" />
+          <button
+            onClick={() => setSatellite((s) => !s)}
+            className="h-11 w-11 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center justify-center active:scale-90 transition-transform flex-shrink-0"
+            title={satellite ? "Map view" : "Satellite view"}
+          >
+            {satellite ? <Map className="h-4.5 w-4.5 text-white/70" /> : <Satellite className="h-4.5 w-4.5 text-white/70" />}
+          </button>
           <Link href="/wines/add" className="h-11 w-11 rounded-[12px] bg-cherry flex items-center justify-center shadow-[0_2px_10px_rgba(116,7,14,0.3)] active:scale-90 transition-transform flex-shrink-0">
             <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
           </Link>
@@ -316,15 +345,28 @@ export function WinesClient({
           {exploreRegion ? (
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
               <button
-                onClick={() => { setExploreRegion(null); setSearch(""); setSheet("peek"); }}
+                onClick={() => { setExploreRegion(null); setSearch(""); setSheet("peek"); setTourRegion(null); }}
                 className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
               >
                 ← {exploreRegion}
               </button>
+              {getRegionCities(exploreRegion).length > 1 && (
+                <button
+                  onClick={() => setTourRegion(tourRegion ? null : exploreRegion)}
+                  className={`flex-shrink-0 h-[30px] px-3 rounded-[8px] text-[11px] font-bold flex items-center gap-1 transition-all ${
+                    tourRegion
+                      ? "bg-white text-cherry border border-white/40"
+                      : "bg-cherry/80 text-white border border-cherry/40"
+                  }`}
+                >
+                  {tourRegion ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                  {tourRegion ? "Stop" : "Tour"}
+                </button>
+              )}
               {getRegionCities(exploreRegion).map((city) => (
                 <button
                   key={city.name}
-                  onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
+                  onClick={(e) => { e.stopPropagation(); setTourRegion(null); setFlyToCoords([...city.coords]); }}
                   className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-[#1A1412]/60 backdrop-blur-xl text-white/70 border border-white/[0.06] text-[11px] font-semibold active:bg-cherry active:text-white transition-colors"
                 >
                   {city.name}
