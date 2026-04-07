@@ -193,6 +193,7 @@ const templates = [
 
 // ============ RUN SEED ============
 
+import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { Pool } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
