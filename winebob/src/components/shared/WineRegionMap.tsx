@@ -7,10 +7,10 @@ import { wineRegions } from "@/data/wineRegions";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
-/* Winebob map style — butter/cream world */
+/* Dark wine map style — like Strava's dark map */
 const MAP_STYLE: mapboxgl.StyleSpecification = {
   version: 8,
-  name: "Winebob",
+  name: "Winebob Dark",
   sources: {
     "mapbox-streets": {
       type: "vector",
@@ -21,21 +21,29 @@ const MAP_STYLE: mapboxgl.StyleSpecification = {
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#F0E4CC" },
+      paint: { "background-color": "#14100C" },
     },
     {
       id: "water",
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "water",
-      paint: { "fill-color": "#C8D8E4" },
+      paint: { "fill-color": "#1A2030" },
     },
     {
       id: "land",
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "landuse",
-      paint: { "fill-color": "#E8DCC8", "fill-opacity": 0.4 },
+      paint: { "fill-color": "#1C1810", "fill-opacity": 0.6 },
+    },
+    {
+      id: "roads",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["in", "class", "motorway", "trunk", "primary"],
+      paint: { "line-color": "#2A2420", "line-width": 0.5, "line-opacity": 0.4 },
     },
     {
       id: "country-boundaries",
@@ -43,7 +51,7 @@ const MAP_STYLE: mapboxgl.StyleSpecification = {
       source: "mapbox-streets",
       "source-layer": "admin",
       filter: ["==", "admin_level", 0],
-      paint: { "line-color": "#C0B090", "line-width": 0.6, "line-opacity": 0.4 },
+      paint: { "line-color": "#3A3020", "line-width": 0.8, "line-opacity": 0.5 },
     },
     {
       id: "country-labels",
@@ -58,7 +66,20 @@ const MAP_STYLE: mapboxgl.StyleSpecification = {
         "text-letter-spacing": 0.12,
         "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
       },
-      paint: { "text-color": "#8C7E6E", "text-opacity": 0.5 },
+      paint: { "text-color": "#6A5A4A", "text-opacity": 0.6 },
+    },
+    {
+      id: "city-labels",
+      type: "symbol",
+      source: "mapbox-streets",
+      "source-layer": "place_label",
+      filter: ["in", "class", "city", "town"],
+      layout: {
+        "text-field": ["get", "name_en"],
+        "text-size": 9,
+        "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"],
+      },
+      paint: { "text-color": "#4A4030", "text-opacity": 0.4 },
     },
   ],
 };
@@ -114,7 +135,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", c
         data: wineRegions as GeoJSON.FeatureCollection,
       });
 
-      // Fill layer — colored region areas
+      // Fill layer — colored region areas (brighter on dark bg)
       map.current.addLayer({
         id: "wine-regions-fill",
         type: "fill",
@@ -124,13 +145,13 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", c
           "fill-opacity": [
             "case",
             ["boolean", ["feature-state", "hover"], false],
-            0.35,
-            0.18,
+            0.5,
+            0.25,
           ],
         },
       });
 
-      // Border layer — region outlines
+      // Border layer — region outlines (glowing on dark)
       map.current.addLayer({
         id: "wine-regions-border",
         type: "line",
@@ -140,10 +161,10 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", c
           "line-width": [
             "case",
             ["boolean", ["feature-state", "hover"], false],
-            2,
-            1,
+            2.5,
+            1.2,
           ],
-          "line-opacity": 0.5,
+          "line-opacity": 0.7,
         },
       });
 
@@ -199,9 +220,9 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", c
             .setLngLat(e.lngLat)
             .setHTML(`
               <div style="font-family: system-ui, sans-serif; padding: 2px 0;">
-                <p style="font-size: 14px; font-weight: 700; color: #1A1412; margin: 0;">${props.name}</p>
-                <p style="font-size: 11px; color: #8C7E6E; margin: 2px 0 0;">${props.country} · ${props.grapes}</p>
-                <p style="font-size: 12px; font-weight: 600; color: #74070E; margin: 4px 0 0;">${count} wines</p>
+                <p style="font-size: 14px; font-weight: 700; color: #F0E8D8; margin: 0;">${props.name}</p>
+                <p style="font-size: 11px; color: #8A7E6A; margin: 2px 0 0;">${props.country} · ${props.grapes}</p>
+                <p style="font-size: 12px; font-weight: 600; color: #E8A08A; margin: 4px 0 0;">${count} wines</p>
               </div>
             `)
             .addTo(map.current);
@@ -249,14 +270,16 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", c
     <>
       <style>{`
         .wine-region-popup .mapboxgl-popup-content {
-          background: #FFFFFF;
+          background: rgba(26,20,18,0.92);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
           border-radius: 12px;
           padding: 10px 14px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-          border: 1px solid rgba(0,0,0,0.06);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.08);
         }
         .wine-region-popup .mapboxgl-popup-tip {
-          border-top-color: #FFFFFF;
+          border-top-color: rgba(26,20,18,0.92);
         }
         .mapboxgl-ctrl-group {
           border-radius: 12px !important;
