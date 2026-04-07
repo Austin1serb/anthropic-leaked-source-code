@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { wineRegions } from "@/data/wineRegions";
@@ -85,15 +85,17 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
   const mapLoaded = useRef(false);
   const exploreRegionRef = useRef(exploreRegion);
 
+  // Refs for values used inside map event closures — avoids re-init on prop change
+  const onRegionClickRef = useRef(onRegionClick);
+  onRegionClickRef.current = onRegionClick;
+  const regionCountsRef = useRef(regionCounts);
+  regionCountsRef.current = regionCounts;
+
   // City hopping — only flyTo, don't touch region visibility
   useEffect(() => {
     if (!flyToCoords || !map.current || !mapLoaded.current) return;
     map.current.flyTo({ center: flyToCoords, zoom: 13, pitch: 30, duration: 1200 });
   }, [flyToCoords]);
-
-  const handleRegionClick = useCallback((region: string, country: string) => {
-    onRegionClick?.(region, country);
-  }, [onRegionClick]);
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_TOKEN) return;
@@ -248,9 +250,10 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       className: "wb-popup",
     });
 
-    // Enable 3D terrain after style loads (avoids createBucket error)
+    // Enable 3D terrain on desktop only — expensive on mobile GPUs (DEM tiles + draping passes)
+    const isMobile = window.matchMedia("(max-width: 1024px)").matches || navigator.maxTouchPoints > 0;
     map.current.on("style.load", () => {
-      if (!map.current) return;
+      if (!map.current || isMobile) return;
       try { map.current.setTerrain({ source: "mapbox-dem", exaggeration: 1.5 }); } catch { /* terrain not supported */ }
     });
 
@@ -317,28 +320,35 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         if (!map.current || !e.features?.length) return;
         map.current.getCanvas().style.cursor = "pointer";
 
-        if (hoveredId !== null) {
-          map.current.setFeatureState({ source: "wine-regions", id: hoveredId }, { hover: false });
-        }
-        hoveredId = e.features[0].id ?? null;
-        if (hoveredId !== null) {
-          map.current.setFeatureState({ source: "wine-regions", id: hoveredId }, { hover: true });
+        const newId = e.features[0].id ?? null;
+
+        // Only update feature state + popup HTML when hovered feature changes
+        if (newId !== hoveredId) {
+          if (hoveredId !== null) {
+            map.current.setFeatureState({ source: "wine-regions", id: hoveredId }, { hover: false });
+          }
+          hoveredId = newId;
+          if (hoveredId !== null) {
+            map.current.setFeatureState({ source: "wine-regions", id: hoveredId }, { hover: true });
+          }
+
+          const props = e.features[0].properties;
+          if (props && popup.current && map.current) {
+            const count = regionCountsRef.current?.[props.name] ?? 0;
+            popup.current
+              .setHTML(`
+                <div style="font-family:system-ui,sans-serif">
+                  <p style="font-size:13px;font-weight:700;color:#1A1412;margin:0">${props.name}</p>
+                  <p style="font-size:10px;color:#8C7E6E;margin:2px 0 0">${props.country} · ${props.grapes}</p>
+                  ${count > 0 ? `<p style="font-size:11px;font-weight:600;color:#74070E;margin:3px 0 0">${count} wines</p>` : ""}
+                </div>
+              `)
+              .addTo(map.current);
+          }
         }
 
-        const props = e.features[0].properties;
-        if (props && popup.current && map.current) {
-          const count = regionCounts?.[props.name] ?? 0;
-          popup.current
-            .setLngLat(e.lngLat)
-            .setHTML(`
-              <div style="font-family:system-ui,sans-serif">
-                <p style="font-size:13px;font-weight:700;color:#1A1412;margin:0">${props.name}</p>
-                <p style="font-size:10px;color:#8C7E6E;margin:2px 0 0">${props.country} · ${props.grapes}</p>
-                ${count > 0 ? `<p style="font-size:11px;font-weight:600;color:#74070E;margin:3px 0 0">${count} wines</p>` : ""}
-              </div>
-            `)
-            .addTo(map.current);
-        }
+        // Always update position (cheap — just a CSS transform)
+        popup.current?.setLngLat(e.lngLat);
       });
 
       map.current.on("mouseleave", "wine-regions-fill", () => {
@@ -354,7 +364,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       map.current.on("click", "wine-regions-fill", (e) => {
         if (!e.features?.length) return;
         const props = e.features[0].properties;
-        if (props) handleRegionClick(props.name, props.country);
+        if (props) onRegionClickRef.current?.(props.name, props.country);
       });
 
       // ── POI interactions ──
@@ -402,8 +412,9 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       }
     });
 
-    return () => { popup.current?.remove(); map.current?.remove(); };
-  }, [handleRegionClick, regionCounts]);
+    return () => { popup.current?.remove(); map.current?.remove(); map.current = null; mapLoaded.current = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* City centers for each region — zooms to the main wine town, not the polygon center */
   const REGION_CITIES: Record<string, [number, number]> = {
@@ -479,7 +490,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
           {regions.map((r) => (
             <button
               key={r.name}
-              onClick={() => handleRegionClick(r.name, r.country)}
+              onClick={() => onRegionClick?.(r.name, r.country)}
               className="px-3 py-1.5 rounded-[8px] text-[11px] font-semibold active:scale-95 transition-transform"
               style={{ background: `${r.color}30`, color: `${r.color}`, border: `1px solid ${r.color}40` }}
             >
