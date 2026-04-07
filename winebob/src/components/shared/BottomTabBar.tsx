@@ -10,7 +10,7 @@ const tabs = [
 ] as const;
 
 /** Routes where the tab bar should be hidden (focused flows) */
-const HIDDEN_ROUTES = ["/arena/create", "/arena/event/"];
+const HIDDEN_ROUTES = ["/arena/create", "/arena/event/", "/play/", "/join/"];
 
 export function BottomTabBar() {
   const pathname = usePathname();

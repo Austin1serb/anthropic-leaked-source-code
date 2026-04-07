@@ -137,25 +137,40 @@ export default function PlayPage({
     (w) => w.position === event.currentWine
   );
 
+  // Wine is locked once revealed — no more edits allowed
+  const isWineLocked = currentBlindWine?.revealed ?? false;
+
+  // Track which wine the form is currently for (prevents clearing on poll updates)
+  const formWineRef = useRef<number>(0);
+
   // Pre-fill form when wine changes or existing guess is found
   useEffect(() => {
-    if (currentGuess && !editing) {
-      setForm({
-        grape: currentGuess.guessedGrape ?? "",
-        region: currentGuess.guessedRegion ?? "",
-        country: currentGuess.guessedCountry ?? "",
-        vintage: currentGuess.guessedVintage?.toString() ?? "",
-        producer: currentGuess.guessedProducer ?? "",
-        type: currentGuess.guessedType ?? "",
-        price: currentGuess.guessedPrice?.toString() ?? "",
-        notes: currentGuess.notes ?? "",
-      });
-      setSubmitted(true);
-    } else if (!currentGuess) {
-      setForm(emptyForm);
-      setSubmitted(false);
+    const winePos = event?.currentWine ?? 0;
+
+    // Only reset form when the wine position actually changes
+    if (winePos !== formWineRef.current) {
+      formWineRef.current = winePos;
+      if (currentGuess) {
+        setForm({
+          grape: currentGuess.guessedGrape ?? "",
+          region: currentGuess.guessedRegion ?? "",
+          country: currentGuess.guessedCountry ?? "",
+          vintage: currentGuess.guessedVintage?.toString() ?? "",
+          producer: currentGuess.guessedProducer ?? "",
+          type: currentGuess.guessedType ?? "",
+          price: currentGuess.guessedPrice?.toString() ?? "",
+          notes: currentGuess.notes ?? "",
+        });
+        setSubmitted(true);
+      } else {
+        setForm(emptyForm);
+        setSubmitted(false);
+        startTimeRef.current = Date.now();
+      }
       setEditing(false);
-      startTimeRef.current = Date.now();
+    } else if (currentGuess && !editing && !submitted) {
+      // Existing guess found on same wine (e.g., after submit + poll)
+      setSubmitted(true);
     }
   }, [event?.currentWine, currentGuess?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -222,9 +237,10 @@ export default function PlayPage({
           <X className="h-8 w-8 text-red-500" />
         </div>
         <p className="text-xl font-bold">Event not found</p>
-        <p className="mt-2 text-muted text-center text-[15px]">
+        <p className="mt-2 text-muted text-center text-[15px] mb-6">
           This tasting may have been deleted or the link is incorrect.
         </p>
+        <a href="/" className="btn-primary px-8 touch-target">Back to Home</a>
       </div>
     );
   }
@@ -233,6 +249,17 @@ export default function PlayPage({
   if (event.status === "draft" || event.status === "lobby") {
     return (
       <div className="fixed inset-0 flex flex-col bg-hero-gradient safe-top safe-bottom">
+        {/* Top bar with leave option */}
+        <div className="px-5 pt-5">
+          <a
+            href="/"
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted active:text-foreground transition-colors touch-target"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+            Leave
+          </a>
+        </div>
+
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="animate-fade-in-up text-center">
             <div className="h-20 w-20 rounded-3xl widget-wine flex items-center justify-center mx-auto mb-6">
@@ -340,10 +367,20 @@ export default function PlayPage({
             </div>
           )}
 
-          <p className="text-center text-muted mt-8 flex items-center justify-center gap-2 text-[14px]">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Waiting for next wine...
-          </p>
+          {/* Progress indicator */}
+          <div className="wine-card p-4 mt-6 flex items-center gap-3">
+            <Loader2 className="h-4 w-4 animate-spin text-cherry flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-[14px] font-medium text-foreground">
+                {event.currentWine < event.wines.length
+                  ? "Waiting for next wine..."
+                  : "Last wine — waiting for results..."}
+              </p>
+              <p className="text-[12px] text-muted mt-0.5">
+                Wine {event.currentWine} of {event.wines.length}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -396,13 +433,21 @@ export default function PlayPage({
                 {form.notes && <SummaryPill label="Notes" value={form.notes} />}
               </div>
 
-              <button
-                onClick={() => setEditing(true)}
-                className="mt-5 flex items-center gap-2 text-cherry font-semibold text-[14px] touch-target"
-              >
-                <Pencil className="h-4 w-4" />
-                Edit guess
-              </button>
+              {!isWineLocked && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="mt-5 flex items-center gap-2 text-cherry font-semibold text-[14px] touch-target"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit guess
+                </button>
+              )}
+              {isWineLocked && (
+                <p className="mt-4 text-[12px] text-muted flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  Guesses locked — wine has been revealed
+                </p>
+              )}
             </div>
           ) : (
             /* ---- Guess form ---- */
@@ -581,8 +626,8 @@ export default function PlayPage({
         </div>
       </div>
 
-      {/* Sticky submit button */}
-      {(!submitted || editing) && (
+      {/* Sticky submit button — hidden when wine is locked (revealed) */}
+      {(!submitted || editing) && !isWineLocked && (
         <div className="fixed bottom-0 left-0 right-0 safe-bottom z-50">
           <div className="max-w-lg mx-auto px-5 pb-5 pt-3 bg-gradient-to-t from-background via-background to-transparent">
             <button

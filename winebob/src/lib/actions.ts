@@ -42,6 +42,19 @@ export async function createEvent(data: {
   const session = await requireAuth();
   const joinCode = await uniqueJoinCode();
 
+  // Validate that all wine IDs actually exist before creating the event
+  if (data.wineIds.length > 0) {
+    const existingWines = await prisma.wine.findMany({
+      where: { id: { in: data.wineIds } },
+      select: { id: true },
+    });
+    const existingIds = new Set(existingWines.map((w) => w.id));
+    const invalid = data.wineIds.filter((id) => !existingIds.has(id));
+    if (invalid.length > 0) {
+      throw new Error(`Invalid wine IDs: ${invalid.join(", ")}`);
+    }
+  }
+
   const event = await prisma.blindTastingEvent.create({
     data: {
       hostId: session.user.id,
@@ -213,6 +226,33 @@ export async function submitGuess(data: {
   notes?: string;
   timeElapsed?: number;
 }) {
+  // 1. Verify the guest actually belongs to this event
+  const guest = await prisma.guestParticipant.findFirst({
+    where: { id: data.guestId, eventId: data.eventId },
+  });
+  if (!guest) {
+    throw new Error("Guest not found in this event");
+  }
+
+  // 2. Verify the event is live and the wine is not already revealed (submission lock)
+  const event = await prisma.blindTastingEvent.findUnique({
+    where: { id: data.eventId },
+  });
+  if (!event || event.status !== "live") {
+    throw new Error("Event is not accepting guesses");
+  }
+
+  const blindWine = await prisma.blindWine.findFirst({
+    where: { eventId: data.eventId, position: data.winePosition },
+  });
+  if (!blindWine) {
+    throw new Error("Wine position does not exist");
+  }
+  if (blindWine.revealed) {
+    throw new Error("This wine has already been revealed — guesses are locked");
+  }
+
+  // 3. Submit/update the guess
   const guess = await prisma.blindGuess.upsert({
     where: {
       eventId_guestId_winePosition: {
@@ -299,34 +339,50 @@ export async function scoreEvent(eventId: string) {
 
       let score = 0;
 
+      // Helper: normalize strings for comparison (trim, lowercase)
+      const norm = (s: string) => s.trim().toLowerCase();
+
+      // Grape: match if guessed grape is one of the actual grapes (exact match per grape)
       if (weights.grape && guess.guessedGrape) {
-        const guessLower = guess.guessedGrape.toLowerCase();
-        if (actual.grapes.some((g: string) => g.toLowerCase().includes(guessLower))) {
+        const guessNorm = norm(guess.guessedGrape);
+        if (actual.grapes.some((g: string) => norm(g) === guessNorm)) {
           score += weights.grape;
         }
       }
+
+      // Region: exact match (normalized)
       if (weights.region && guess.guessedRegion) {
-        if (actual.region.toLowerCase().includes(guess.guessedRegion.toLowerCase())) {
+        if (norm(actual.region) === norm(guess.guessedRegion)) {
           score += weights.region;
         }
       }
+
+      // Country: exact match (normalized)
       if (weights.country && guess.guessedCountry) {
-        if (actual.country.toLowerCase() === guess.guessedCountry.toLowerCase()) {
+        if (norm(actual.country) === norm(guess.guessedCountry)) {
           score += weights.country;
         }
       }
-      if (weights.vintage && guess.guessedVintage) {
+
+      // Vintage: exact year match, or half points for ±1 year
+      if (weights.vintage && guess.guessedVintage && actual.vintage) {
         if (actual.vintage === guess.guessedVintage) {
           score += weights.vintage;
+        } else if (Math.abs(actual.vintage - guess.guessedVintage) === 1) {
+          score += Math.round(weights.vintage / 2);
         }
       }
+
+      // Producer: exact match (normalized)
       if (weights.producer && guess.guessedProducer) {
-        if (actual.producer.toLowerCase().includes(guess.guessedProducer.toLowerCase())) {
+        if (norm(actual.producer) === norm(guess.guessedProducer)) {
           score += weights.producer;
         }
       }
+
+      // Type: exact match (normalized) — red, white, rosé etc.
       if (weights.type && guess.guessedType) {
-        if (actual.type.toLowerCase() === guess.guessedType.toLowerCase()) {
+        if (norm(actual.type) === norm(guess.guessedType)) {
           score += weights.type;
         }
       }

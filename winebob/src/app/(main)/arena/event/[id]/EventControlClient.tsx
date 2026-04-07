@@ -2,12 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import {
   Copy,
   QrCode,
   Play,
   Eye,
   ChevronRight,
+  ChevronLeft,
   Trophy,
   Users,
   Wine,
@@ -15,6 +17,7 @@ import {
   DoorOpen,
   Flag,
   Crown,
+  Plus,
 } from "lucide-react";
 import {
   updateEventStatus,
@@ -143,13 +146,23 @@ export function EventControlClient({ event }: EventControlClientProps) {
     startTransition(async () => { await updateEventStatus(event.id, "live"); await advanceWine(event.id); refreshAfterAction(); });
   }
   function handleRevealWine() {
-    startTransition(async () => { await revealWine(event.id, event.currentWine); await scoreEvent(event.id); refreshAfterAction(); });
+    startTransition(async () => {
+      await revealWine(event.id, event.currentWine);
+      // Score all guesses (may already be scored, but re-scoring is safe)
+      try { await scoreEvent(event.id); } catch { /* scoring error — will retry on finish */ }
+      refreshAfterAction();
+    });
   }
   function handleNextWine() {
     startTransition(async () => { await advanceWine(event.id); refreshAfterAction(); });
   }
   function handleFinishTasting() {
-    startTransition(async () => { await updateEventStatus(event.id, "completed"); refreshAfterAction(); });
+    startTransition(async () => {
+      // Final scoring pass before completing — catches any missed guesses
+      try { await scoreEvent(event.id); } catch { /* best effort */ }
+      await updateEventStatus(event.id, "completed");
+      refreshAfterAction();
+    });
   }
 
   function handleCopyCode() {
@@ -180,6 +193,13 @@ export function EventControlClient({ event }: EventControlClientProps) {
       <div className="max-w-lg mx-auto px-5">
         {/* ========== HEADER ========== */}
         <header className="mb-6">
+          <Link
+            href="/arena"
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted mb-3 active:text-foreground transition-colors touch-target"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Tastings
+          </Link>
           <div className="flex items-start justify-between gap-3 mb-5">
             <h1 className="text-2xl font-bold text-foreground tracking-tight leading-tight flex-1">
               {event.title}
@@ -390,7 +410,16 @@ export function EventControlClient({ event }: EventControlClientProps) {
           )}
 
           {event.status === "completed" && (
-            <p className="text-center text-[13px] text-muted py-1">This tasting has ended.</p>
+            <div className="flex gap-3">
+              <Link href="/arena" className="btn-secondary flex-1 touch-target">
+                <ChevronLeft className="h-4 w-4" />
+                Dashboard
+              </Link>
+              <Link href="/arena/create" className="btn-primary flex-1 touch-target">
+                <Plus className="h-4 w-4" />
+                New Tasting
+              </Link>
+            </div>
           )}
         </div>
       </div>

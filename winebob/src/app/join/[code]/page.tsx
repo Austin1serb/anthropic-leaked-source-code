@@ -192,6 +192,14 @@ export default function JoinPage({
       )}
 
       <div className="max-w-md mx-auto px-5 py-8">
+        {/* Back link */}
+        <a
+          href="/"
+          className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted mb-6 active:text-foreground transition-colors touch-target"
+        >
+          ← Back to Home
+        </a>
+
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
           <div className="text-4xl mb-3">🍷</div>
@@ -226,7 +234,7 @@ export default function JoinPage({
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="How you'll appear on the scoreboard"
               autoComplete="given-name"
-              className="w-full px-4 py-3 rounded-xl border border-card-border bg-card-bg text-foreground text-base touch-target focus:outline-none focus:ring-2 focus:ring-wine-burgundy/40 focus:border-wine-burgundy transition-colors"
+              className="input-field w-full touch-target"
             />
             {errors.displayName && (
               <p className="text-red-500 text-sm mt-1">{errors.displayName}</p>
@@ -245,7 +253,7 @@ export default function JoinPage({
               id="birthYear"
               value={birthYear}
               onChange={(e) => setBirthYear(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-card-border bg-card-bg text-foreground text-lg touch-target focus:outline-none focus:ring-2 focus:ring-wine-burgundy/40 focus:border-wine-burgundy transition-colors appearance-none"
+              className="input-field w-full touch-target text-lg appearance-none"
               style={{
                 backgroundImage:
                   'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' fill=\'%23888\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M8 11L3 6h10z\'/%3E%3C/svg%3E")',
@@ -296,12 +304,12 @@ export default function JoinPage({
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="City"
-                  className="flex-1 px-4 py-3 rounded-xl border border-card-border bg-card-bg text-foreground text-base touch-target focus:outline-none focus:ring-2 focus:ring-wine-burgundy/40 focus:border-wine-burgundy transition-colors"
+                  className="input-field flex-1 touch-target"
                 />
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="flex-1 px-3 py-3 rounded-xl border border-card-border bg-card-bg text-foreground text-base touch-target focus:outline-none focus:ring-2 focus:ring-wine-burgundy/40 focus:border-wine-burgundy transition-colors"
+                  className="input-field flex-1 touch-target"
                 >
                   <option value="">Country</option>
                   {COUNTRIES.map((c) => (
@@ -343,7 +351,7 @@ export default function JoinPage({
           <button
             type="submit"
             disabled={isPending}
-            className="w-full py-4 rounded-xl bg-wine-burgundy text-white text-lg font-bold touch-target hover:bg-wine-burgundy-light active:bg-wine-burgundy-dark transition-colors disabled:opacity-60"
+            className="btn-primary w-full touch-target text-lg"
           >
             {isPending ? "Joining..." : "Join Tasting 🍷"}
           </button>
