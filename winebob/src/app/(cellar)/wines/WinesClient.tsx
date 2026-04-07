@@ -274,7 +274,7 @@ export function WinesClient({
                   {getRegionCities(exploreRegion).map((city) => (
                     <button
                       key={city.name}
-                      onClick={() => setFlyToCoords(city.coords)}
+                      onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
                       className="px-2.5 py-1 rounded-[8px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] text-[11px] font-semibold text-white/70 active:scale-95 transition-transform active:bg-cherry active:text-white"
                     >
                       {city.name}
@@ -364,7 +364,7 @@ export function WinesClient({
                 {getRegionCities(exploreRegion).map((city) => (
                   <button
                     key={city.name}
-                    onClick={() => setFlyToCoords(city.coords)}
+                    onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
                     className="px-2.5 py-1.5 rounded-[8px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] text-[11px] font-semibold text-white/70 text-left active:bg-cherry active:text-white transition-colors"
                   >
                     {city.name} →
