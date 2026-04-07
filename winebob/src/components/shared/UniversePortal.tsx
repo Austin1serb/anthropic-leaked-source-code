@@ -17,8 +17,8 @@ const UNIVERSES = [
   },
   {
     id: "cellar",
-    label: "Wine Library",
-    description: "Browse, discover & collect",
+    label: "Explore",
+    description: "Browse wines & regions",
     href: "/wines",
     icon: Library,
     gradient: "from-[#2A2420] to-[#0C0A08]",
