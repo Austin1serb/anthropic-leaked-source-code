@@ -8,7 +8,10 @@ import { TourInfoCard } from "@/components/shared/TourInfoCard";
 import { useMapLayers } from "@/hooks/useMapLayers";
 import { MapLayerDrawer } from "@/components/shared/MapLayerDrawer";
 import type { MapLayer } from "@/components/shared/MapLayerDrawer";
-import { useState } from "react";
+import { VintageWeatherLayer } from "@/components/layers/VintageWeatherLayer";
+import { FlavorGenomeLayer } from "@/components/layers/FlavorGenomeLayer";
+import { useState, useRef } from "react";
+import mapboxgl from "mapbox-gl";
 
 const LAYER_ICONS: Record<string, React.ReactNode> = {
   "vintage-weather": <CloudRain size={18} />,
@@ -18,8 +21,9 @@ const LAYER_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function ExplorePage() {
-  const { layers, toggle } = useMapLayers();
+  const { layers, toggle, isActive } = useMapLayers();
   const fullLayers: MapLayer[] = layers.map((l) => ({ ...l, icon: LAYER_ICONS[l.id] ?? null }));
+  const mapRef = useRef<mapboxgl.Map | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [activeCity, setActiveCity] = useState<string | null>(null);
@@ -68,10 +72,24 @@ export default function ExplorePage() {
           satellite={satellite}
           onTourStop={setActiveTourStop}
           height="100%"
+          mapRef={mapRef}
         />
       </div>
 
       <MapLayerDrawer layers={fullLayers} onToggle={toggle} />
+
+      {/* Vintage Weather Replay layer */}
+      <VintageWeatherLayer
+        active={isActive("vintage-weather")}
+        mapRef={mapRef}
+        region={selectedRegion}
+      />
+
+      {/* Flavor Genome Map layer */}
+      <FlavorGenomeLayer
+        active={isActive("flavor-genome")}
+        mapRef={mapRef}
+      />
 
       {/* Top — branding + back */}
       <div className="absolute top-0 left-0 right-0 z-20 safe-top">
