@@ -1,8 +1,5 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { runWikidataImport } from "@/lib/importers/wikidata";
-import { runOpenFoodFactsImport } from "@/lib/importers/openfoodfacts";
-import { runTtbImport } from "@/lib/importers/ttb";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +9,22 @@ type ImportSource = (typeof VALID_SOURCES)[number];
 /**
  * POST /api/import
  *
- * Trigger a data import from one of the supported sources.
+ * Queue a data import from one of the supported sources.
  * Requires authentication + IMPORT_SECRET env variable.
  *
  * Body: { source: "wikidata" | "openfoodfacts" | "ttb", options?: { csvPath?: string } }
- * Returns: { importBatchId: string }
+ * Returns: { importBatchId: string, status: "queued" }
+ *
+ * IMPORTANT: This endpoint does NOT run the import inline. In serverless
+ * environments (Vercel, AWS Lambda, etc.), fire-and-forget background work
+ * is unreliable — the runtime may freeze or terminate the function as soon
+ * as the HTTP response is sent, killing any in-flight promises.
+ *
+ * Instead, this endpoint creates an ImportBatch record with status "queued"
+ * and returns immediately. The actual import should be triggered via:
+ *   - CLI: `npx tsx src/lib/importers/wikidata.ts`
+ *   - A separate long-running worker process
+ *   - A cron job or task queue (e.g., Inngest, QStash, BullMQ)
  */
 export async function POST(request: Request) {
   try {
@@ -55,57 +63,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create a placeholder batch immediately so we can return the ID
+    // Create a queued batch record. A worker or CLI command will pick it up.
+    // Fire-and-forget does NOT work in serverless — the runtime will kill the
+    // background promise as soon as the response is sent.
     const batch = await prisma.importBatch.create({
       data: {
         source,
-        status: "running",
+        status: "queued",
         createdBy: session.user.id,
         metadata: { triggeredVia: "api", options: options ?? null },
       },
     });
 
-    // Fire off the import in the background (don't await)
-    const importPromise = (async () => {
-      try {
-        switch (source as ImportSource) {
-          case "wikidata":
-            await runWikidataImport();
-            break;
-          case "openfoodfacts":
-            await runOpenFoodFactsImport();
-            break;
-          case "ttb":
-            await runTtbImport(options);
-            break;
-        }
-
-        // Mark the trigger batch as completed (the actual import creates
-        // its own batch internally, but we update this trigger record too)
-        await prisma.importBatch.update({
-          where: { id: batch.id },
-          data: {
-            status: "completed",
-            completedAt: new Date(),
-          },
-        });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        await prisma.importBatch.update({
-          where: { id: batch.id },
-          data: {
-            status: "failed",
-            completedAt: new Date(),
-            errorLog: message,
-          },
-        });
-      }
-    })();
-
-    // Prevent unhandled promise rejection warnings
-    importPromise.catch(() => {});
-
-    return Response.json({ importBatchId: batch.id }, { status: 202 });
+    return Response.json(
+      {
+        importBatchId: batch.id,
+        status: "queued",
+        message:
+          "Import has been queued. Run the import via CLI " +
+          `(\`npx tsx src/lib/importers/${source}.ts\`) or a background worker.`,
+      },
+      { status: 202 }
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return Response.json({ error: message }, { status: 500 });

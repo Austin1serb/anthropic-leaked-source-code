@@ -88,7 +88,9 @@ const grapes: Grape[] = [
   { name: "Molinara", aliases: [], color: "red", originCountry: "Italy", description: "Light Valpolicella blending grape", acreageHa: 1000 },
   { name: "Cesanese", aliases: [], color: "red", originCountry: "Italy", description: "Lazio's native red grape", acreageHa: 500 },
   { name: "Schiava", aliases: ["Vernatsch", "Trollinger"], color: "red", originCountry: "Italy", description: "Light, almondy Alto Adige red", acreageHa: 2000 },
+  { name: "Babić", aliases: [], color: "red", originCountry: "Croatia", description: "Croatian coastal red, herbal", acreageHa: 300 },
   { name: "Raboso", aliases: [], color: "red", originCountry: "Italy", description: "Fiercely tannic Veneto red", acreageHa: 1000 },
+  { name: "Tinta Roriz", aliases: ["Tempranillo", "Aragonez"], color: "red", originCountry: "Spain", description: "Portuguese name for Tempranillo", acreageHa: null },
 
   // ── WHITE GRAPES ──
   { name: "Chardonnay", aliases: ["Morillon"], color: "white", originCountry: "France", description: "Versatile, from crisp to buttery", acreageHa: 210000 },
@@ -155,6 +157,18 @@ const grapes: Grape[] = [
   { name: "Kisi", aliases: [], color: "white", originCountry: "Georgia", description: "Tropical, Georgian white often in qvevri", acreageHa: 500 },
   { name: "Vidal Blanc", aliases: [], color: "white", originCountry: "France", description: "Hybrid, key Canadian ice wine grape", acreageHa: 1000 },
   { name: "Seyval Blanc", aliases: [], color: "white", originCountry: "France", description: "Hardy hybrid, English wine staple", acreageHa: 500 },
+  { name: "Txakoli", aliases: ["Hondarrabi Zuri"], color: "white", originCountry: "Spain", description: "Spritz, tart Basque white", acreageHa: 500 },
+  { name: "Ugni Blanc", aliases: ["Trebbiano"], color: "white", originCountry: "Italy", description: "High-acid, mainly for Cognac distillation", acreageHa: 110000 },
+  { name: "Muscat Blanc à Petits Grains", aliases: ["Muscat de Frontignan"], color: "white", originCountry: "Greece", description: "Finest Muscat, intensely perfumed", acreageHa: 5000 },
+  { name: "Muscat of Alexandria", aliases: ["Zibibbo", "Moscatel de Alejandría"], color: "white", originCountry: "Egypt", description: "Floral, often for sweet wine", acreageHa: 20000 },
+  { name: "Irsai Olivér", aliases: [], color: "white", originCountry: "Hungary", description: "Muscat-like Hungarian aromatic", acreageHa: 1000 },
+  { name: "Cserszegi Fűszeres", aliases: [], color: "white", originCountry: "Hungary", description: "Spicy Hungarian aromatic white", acreageHa: 1000 },
+  { name: "Zierfandler", aliases: [], color: "white", originCountry: "Austria", description: "Rich, honeyed Austrian rarity", acreageHa: 100 },
+  { name: "Rotgipfler", aliases: [], color: "white", originCountry: "Austria", description: "Full, spicy Thermenregion white", acreageHa: 100 },
+  { name: "Gutedel", aliases: ["Chasselas", "Fendant"], color: "white", originCountry: "Switzerland", description: "Delicate neutral Swiss/German white", acreageHa: 6000 },
+  { name: "Blanc du Bois", aliases: [], color: "white", originCountry: "USA", description: "Hybrid, tropical Gulf Coast white", acreageHa: 200 },
+  { name: "Traminette", aliases: [], color: "white", originCountry: "USA", description: "American Gewürz-like hybrid", acreageHa: 300 },
+  { name: "Catawba", aliases: [], color: "white", originCountry: "USA", description: "American native, floral", acreageHa: 500 },
 ];
 
 function makeId(name: string): string {
