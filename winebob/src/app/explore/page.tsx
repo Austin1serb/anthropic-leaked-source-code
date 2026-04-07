@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, Wine, Users, Globe, ArrowRight, Lock, Play, Square } from "lucide-react";
+import { Sparkles, Wine, Users, Globe, ArrowRight, Lock, Play, Square, Satellite, Map } from "lucide-react";
 import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
 import { useState } from "react";
 
@@ -10,6 +10,7 @@ export default function ExplorePage() {
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [activeCity, setActiveCity] = useState<string | null>(null);
   const [tourRegion, setTourRegion] = useState<string | null>(null);
+  const [satellite, setSatellite] = useState(false);
 
   function handleCityClick(city: { name: string; coords: [number, number] }) {
     setTourRegion(null); // stop any tour
@@ -49,6 +50,7 @@ export default function ExplorePage() {
           flyToCoords={flyToCoords}
           tourRegion={tourRegion}
           onTourEnd={() => setTourRegion(null)}
+          satellite={satellite}
           height="100%"
         />
       </div>
@@ -70,7 +72,13 @@ export default function ExplorePage() {
               Winebob
             </span>
           </div>
-          <div className="w-[70px]" /> {/* spacer */}
+          <button
+            onClick={() => setSatellite((s) => !s)}
+            className="h-10 px-3 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 text-[12px] font-semibold active:scale-95 transition-transform"
+          >
+            {satellite ? <Map className="h-4 w-4" /> : <Satellite className="h-4 w-4" />}
+            {satellite ? "Map" : "Satellite"}
+          </button>
         </div>
       </div>
 
