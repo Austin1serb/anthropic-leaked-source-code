@@ -1,4 +1,4 @@
-import { getWineLibrary, getWineCountries } from "@/lib/actions";
+import { getWineLibrary, getWineCountries, getWineRegionCounts } from "@/lib/actions";
 import { WinesClient } from "./WinesClient";
 
 export const dynamic = "force-dynamic";
@@ -15,9 +15,10 @@ export default async function WinesPage({
   const search = typeof params.search === "string" ? params.search : undefined;
   const page = typeof params.page === "string" ? parseInt(params.page, 10) : 1;
 
-  const [data, countries] = await Promise.all([
+  const [data, countries, regionCounts] = await Promise.all([
     getWineLibrary({ type, country, priceRange, search, page }),
     getWineCountries(),
+    getWineRegionCounts(),
   ]);
 
   return (
@@ -27,6 +28,7 @@ export default async function WinesPage({
       pages={data.pages}
       currentPage={data.page}
       countries={countries}
+      regionCounts={regionCounts}
       activeType={type}
       activeCountry={country}
       activePriceRange={priceRange}

@@ -1,33 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { wineRegions } from "@/data/wineRegions";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
-/* Major wine regions with coordinates */
-const WINE_REGIONS = [
-  { name: "Bordeaux", country: "France", lat: 44.84, lng: -0.58, wines: "Cabernet, Merlot" },
-  { name: "Burgundy", country: "France", lat: 47.05, lng: 4.39, wines: "Pinot Noir, Chardonnay" },
-  { name: "Champagne", country: "France", lat: 49.25, lng: 3.96, wines: "Sparkling" },
-  { name: "Rhône", country: "France", lat: 44.06, lng: 4.81, wines: "Syrah, Grenache" },
-  { name: "Loire", country: "France", lat: 47.38, lng: 0.69, wines: "Sauvignon Blanc, Chenin" },
-  { name: "Piedmont", country: "Italy", lat: 44.69, lng: 8.03, wines: "Nebbiolo, Barbera" },
-  { name: "Tuscany", country: "Italy", lat: 43.35, lng: 11.35, wines: "Sangiovese" },
-  { name: "Veneto", country: "Italy", lat: 45.44, lng: 12.32, wines: "Corvina, Glera" },
-  { name: "Rioja", country: "Spain", lat: 42.47, lng: -2.45, wines: "Tempranillo" },
-  { name: "Ribera del Duero", country: "Spain", lat: 41.63, lng: -3.71, wines: "Tempranillo" },
-  { name: "Douro", country: "Portugal", lat: 41.16, lng: -7.79, wines: "Touriga Nacional" },
-  { name: "Mosel", country: "Germany", lat: 49.96, lng: 6.89, wines: "Riesling" },
-  { name: "Napa Valley", country: "USA", lat: 38.50, lng: -122.27, wines: "Cabernet Sauvignon" },
-  { name: "Barossa Valley", country: "Australia", lat: -34.56, lng: 138.95, wines: "Shiraz" },
-  { name: "Mendoza", country: "Argentina", lat: -32.89, lng: -68.83, wines: "Malbec" },
-  { name: "Marlborough", country: "New Zealand", lat: -41.51, lng: 173.95, wines: "Sauvignon Blanc" },
-  { name: "Stellenbosch", country: "South Africa", lat: -33.93, lng: 18.86, wines: "Pinotage, Chenin" },
-];
-
-/* Winebob-themed Mapbox style — warm, muted, butter tones */
+/* Winebob map style — butter/cream world */
 const MAP_STYLE: mapboxgl.StyleSpecification = {
   version: 8,
   name: "Winebob",
@@ -41,21 +21,21 @@ const MAP_STYLE: mapboxgl.StyleSpecification = {
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#F5E6C8" },
+      paint: { "background-color": "#F0E4CC" },
     },
     {
       id: "water",
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "water",
-      paint: { "fill-color": "#D6E2E8" },
+      paint: { "fill-color": "#C8D8E4" },
     },
     {
       id: "land",
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "landuse",
-      paint: { "fill-color": "#EDE4D4", "fill-opacity": 0.5 },
+      paint: { "fill-color": "#E8DCC8", "fill-opacity": 0.4 },
     },
     {
       id: "country-boundaries",
@@ -63,11 +43,7 @@ const MAP_STYLE: mapboxgl.StyleSpecification = {
       source: "mapbox-streets",
       "source-layer": "admin",
       filter: ["==", "admin_level", 0],
-      paint: {
-        "line-color": "#C8B898",
-        "line-width": 0.8,
-        "line-opacity": 0.5,
-      },
+      paint: { "line-color": "#C0B090", "line-width": 0.6, "line-opacity": 0.4 },
     },
     {
       id: "country-labels",
@@ -77,28 +53,31 @@ const MAP_STYLE: mapboxgl.StyleSpecification = {
       filter: ["==", "class", "country"],
       layout: {
         "text-field": ["get", "name_en"],
-        "text-size": 11,
+        "text-size": 10,
         "text-transform": "uppercase",
-        "text-letter-spacing": 0.15,
+        "text-letter-spacing": 0.12,
         "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
       },
-      paint: {
-        "text-color": "#8C7E6E",
-        "text-opacity": 0.6,
-      },
+      paint: { "text-color": "#8C7E6E", "text-opacity": 0.5 },
     },
   ],
 };
 
 type WineRegionMapProps = {
   onRegionClick?: (region: string, country: string) => void;
+  regionCounts?: Record<string, number>; // region name → wine count from DB
   height?: string;
   className?: string;
 };
 
-export function WineRegionMap({ onRegionClick, height = "300px", className = "" }: WineRegionMapProps) {
+export function WineRegionMap({ onRegionClick, regionCounts, height = "300px", className = "" }: WineRegionMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const popup = useRef<mapboxgl.Popup | null>(null);
+
+  const handleRegionClick = useCallback((region: string, country: string) => {
+    onRegionClick?.(region, country);
+  }, [onRegionClick]);
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_TOKEN) return;
@@ -108,10 +87,10 @@ export function WineRegionMap({ onRegionClick, height = "300px", className = "" 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: MAP_STYLE,
-      center: [10, 46], // Europe center
-      zoom: 3.5,
-      minZoom: 2,
-      maxZoom: 8,
+      center: [12, 42],
+      zoom: 3.2,
+      minZoom: 1.5,
+      maxZoom: 10,
       attributionControl: false,
       pitchWithRotate: false,
       dragRotate: false,
@@ -119,57 +98,149 @@ export function WineRegionMap({ onRegionClick, height = "300px", className = "" 
 
     map.current.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
+    popup.current = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      offset: 8,
+      className: "wine-region-popup",
+    });
+
     map.current.on("load", () => {
       if (!map.current) return;
 
-      // Add region markers
-      for (const region of WINE_REGIONS) {
-        // Create marker element
-        const el = document.createElement("button");
-        el.className = "wine-region-marker";
-        el.style.cssText = `
-          width: 12px; height: 12px; border-radius: 6px;
-          background: #74070E; border: 2px solid #FEF9F0;
-          box-shadow: 0 2px 8px rgba(116, 7, 14, 0.3);
-          cursor: pointer; transition: transform 0.15s;
-          padding: 0; outline: none;
-        `;
-        el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.5)"; });
-        el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
-        el.addEventListener("click", (e) => {
-          e.stopPropagation();
-          onRegionClick?.(region.name, region.country);
-        });
+      // Add region polygons as a source
+      map.current.addSource("wine-regions", {
+        type: "geojson",
+        data: wineRegions as GeoJSON.FeatureCollection,
+      });
 
-        // Create popup
-        const popup = new mapboxgl.Popup({
-          offset: 12,
-          closeButton: false,
-          className: "wine-popup",
-        }).setHTML(`
-          <div style="font-family: system-ui, sans-serif; padding: 4px 0;">
-            <p style="font-size: 13px; font-weight: 700; color: #1A1412; margin: 0;">${region.name}</p>
-            <p style="font-size: 11px; color: #8C7E6E; margin: 2px 0 0;">${region.country} · ${region.wines}</p>
-          </div>
-        `);
+      // Fill layer — colored region areas
+      map.current.addLayer({
+        id: "wine-regions-fill",
+        type: "fill",
+        source: "wine-regions",
+        paint: {
+          "fill-color": ["get", "color"],
+          "fill-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            0.35,
+            0.18,
+          ],
+        },
+      });
 
-        new mapboxgl.Marker({ element: el })
-          .setLngLat([region.lng, region.lat])
-          .setPopup(popup)
-          .addTo(map.current!);
-      }
+      // Border layer — region outlines
+      map.current.addLayer({
+        id: "wine-regions-border",
+        type: "line",
+        source: "wine-regions",
+        paint: {
+          "line-color": ["get", "color"],
+          "line-width": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            2,
+            1,
+          ],
+          "line-opacity": 0.5,
+        },
+      });
+
+      // Label layer — region names
+      map.current.addLayer({
+        id: "wine-regions-label",
+        type: "symbol",
+        source: "wine-regions",
+        layout: {
+          "text-field": ["get", "name"],
+          "text-size": [
+            "interpolate", ["linear"], ["zoom"],
+            3, 9,
+            6, 12,
+            8, 14,
+          ],
+          "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+          "text-allow-overlap": false,
+          "text-ignore-placement": false,
+        },
+        paint: {
+          "text-color": "#1A1412",
+          "text-opacity": [
+            "interpolate", ["linear"], ["zoom"],
+            3, 0.5,
+            5, 0.8,
+          ],
+          "text-halo-color": "#FEF9F0",
+          "text-halo-width": 1.5,
+        },
+      });
+
+      let hoveredId: string | number | null = null;
+
+      // Hover effect
+      map.current.on("mousemove", "wine-regions-fill", (e) => {
+        if (!map.current || !e.features?.length) return;
+        map.current.getCanvas().style.cursor = "pointer";
+
+        if (hoveredId !== null) {
+          map.current.setFeatureState({ source: "wine-regions", id: hoveredId }, { hover: false });
+        }
+        hoveredId = e.features[0].id ?? null;
+        if (hoveredId !== null) {
+          map.current.setFeatureState({ source: "wine-regions", id: hoveredId }, { hover: true });
+        }
+
+        // Show popup
+        const props = e.features[0].properties;
+        if (props && popup.current && map.current) {
+          const count = regionCounts?.[props.name] ?? props.wineCount ?? 0;
+          popup.current
+            .setLngLat(e.lngLat)
+            .setHTML(`
+              <div style="font-family: system-ui, sans-serif; padding: 2px 0;">
+                <p style="font-size: 14px; font-weight: 700; color: #1A1412; margin: 0;">${props.name}</p>
+                <p style="font-size: 11px; color: #8C7E6E; margin: 2px 0 0;">${props.country} · ${props.grapes}</p>
+                <p style="font-size: 12px; font-weight: 600; color: #74070E; margin: 4px 0 0;">${count} wines</p>
+              </div>
+            `)
+            .addTo(map.current);
+        }
+      });
+
+      map.current.on("mouseleave", "wine-regions-fill", () => {
+        if (!map.current) return;
+        map.current.getCanvas().style.cursor = "";
+        if (hoveredId !== null) {
+          map.current.setFeatureState({ source: "wine-regions", id: hoveredId }, { hover: false });
+        }
+        hoveredId = null;
+        popup.current?.remove();
+      });
+
+      // Click — filter wines
+      map.current.on("click", "wine-regions-fill", (e) => {
+        if (!e.features?.length) return;
+        const props = e.features[0].properties;
+        if (props) {
+          handleRegionClick(props.name, props.country);
+        }
+      });
     });
 
-    return () => { map.current?.remove(); };
-  }, [onRegionClick]);
+    return () => {
+      popup.current?.remove();
+      map.current?.remove();
+    };
+  }, [handleRegionClick, regionCounts]);
 
   if (!MAPBOX_TOKEN) {
     return (
       <div
-        className={`rounded-[16px] bg-card-bg border border-card-border flex items-center justify-center ${className}`}
+        className={`rounded-[20px] bg-card-bg border border-card-border flex items-center justify-center ${className}`}
         style={{ height }}
       >
-        <p className="text-muted text-[13px]">Map requires NEXT_PUBLIC_MAPBOX_TOKEN</p>
+        <p className="text-muted text-[13px]">Add NEXT_PUBLIC_MAPBOX_TOKEN to enable the wine region map</p>
       </div>
     );
   }
@@ -177,28 +248,27 @@ export function WineRegionMap({ onRegionClick, height = "300px", className = "" 
   return (
     <>
       <style>{`
-        .mapboxgl-popup-content {
+        .wine-region-popup .mapboxgl-popup-content {
           background: #FFFFFF;
           border-radius: 12px;
           padding: 10px 14px;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.12);
           border: 1px solid rgba(0,0,0,0.06);
         }
-        .mapboxgl-popup-tip { border-top-color: #FFFFFF; }
+        .wine-region-popup .mapboxgl-popup-tip {
+          border-top-color: #FFFFFF;
+        }
         .mapboxgl-ctrl-group {
           border-radius: 12px !important;
           border: 1px solid rgba(0,0,0,0.06) !important;
           box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
           overflow: hidden;
         }
-        .mapboxgl-ctrl-group button {
-          width: 36px !important;
-          height: 36px !important;
-        }
+        .mapboxgl-ctrl-group button { width: 36px !important; height: 36px !important; }
       `}</style>
       <div
         ref={mapContainer}
-        className={`rounded-[20px] overflow-hidden ${className}`}
+        className={`rounded-[20px] overflow-hidden border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] ${className}`}
         style={{ height }}
       />
     </>

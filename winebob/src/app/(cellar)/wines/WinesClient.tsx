@@ -27,6 +27,7 @@ type WinesClientProps = {
   pages: number;
   currentPage: number;
   countries: string[];
+  regionCounts?: Record<string, number>;
   activeType?: string;
   activeCountry?: string;
   activePriceRange?: string;
@@ -74,7 +75,7 @@ function buildQuery(params: Record<string, string | undefined>) {
 const card = "rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)]";
 
 export function WinesClient({
-  wines, total, pages, currentPage, countries,
+  wines, total, pages, currentPage, countries, regionCounts,
   activeType, activeCountry, activePriceRange, activeSearch,
 }: WinesClientProps) {
   const router = useRouter();
@@ -130,6 +131,7 @@ export function WinesClient({
         <div className="mb-5">
           <WineRegionMap
             onRegionClick={handleRegionClick}
+            regionCounts={regionCounts}
             height="280px"
             className="md:h-[360px]"
           />

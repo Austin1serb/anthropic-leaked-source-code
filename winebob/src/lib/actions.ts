@@ -464,6 +464,18 @@ export async function searchWines(query: string) {
   });
 }
 
+export async function getWineRegionCounts(): Promise<Record<string, number>> {
+  const wines = await prisma.wine.findMany({
+    where: { isPublic: true },
+    select: { region: true },
+  });
+  const counts: Record<string, number> = {};
+  for (const w of wines) {
+    counts[w.region] = (counts[w.region] ?? 0) + 1;
+  }
+  return counts;
+}
+
 export async function getBrowseWines() {
   return prisma.wine.findMany({
     where: { isPublic: true },
