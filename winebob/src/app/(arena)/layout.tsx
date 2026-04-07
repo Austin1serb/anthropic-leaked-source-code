@@ -2,16 +2,11 @@
 
 import { Swords } from "lucide-react";
 
-export default function ArenaLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ArenaLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-background">
-      {/* Header */}
       <header className="safe-top">
-        <div className="container-app flex items-center justify-between" style={{ height: 56 }}>
+        <div className="px-4 md:px-8 lg:px-12 flex items-center justify-between" style={{ height: 56 }}>
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-xl bg-cherry flex items-center justify-center float-action">
               <Swords size={18} color="white" />
@@ -21,9 +16,7 @@ export default function ArenaLayout({
             </h1>
           </div>
         </div>
-        <div className="container-app"><div className="h-px bg-card-border" /></div>
       </header>
-
       <main className="pb-24">{children}</main>
     </div>
   );
