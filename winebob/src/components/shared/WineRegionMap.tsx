@@ -191,6 +191,8 @@ type WineRegionMapProps = {
   satellite?: boolean;
   /** Called with current tour stop info (null = in-flight between stops) */
   onTourStop?: (stop: TourStop | null) => void;
+  /** Expose the internal Mapbox map instance to parent */
+  mapRef?: React.RefObject<mapboxgl.Map | null>;
 };
 
 const STYLE_STANDARD = "mapbox://styles/mapbox/standard";
@@ -202,7 +204,7 @@ export function getRegionCities(region: string) {
 }
 
 /* City centers for each region */
-const REGION_CITIES: Record<string, [number, number]> = {
+export const REGION_CITIES: Record<string, [number, number]> = {
   "Bordeaux": [-0.58, 44.84], "Burgundy": [4.84, 47.02], "Champagne": [3.96, 49.25],
   "Rhone Valley": [4.83, 44.93], "Loire Valley": [0.69, 47.38], "Alsace": [7.35, 48.08],
   "Provence": [5.93, 43.53], "Piedmont": [7.68, 44.69], "Tuscany": [11.25, 43.77],
@@ -215,7 +217,7 @@ const REGION_CITIES: Record<string, [number, number]> = {
   "Marlborough": [173.95, -41.51], "Stellenbosch": [18.86, -33.93],
 };
 
-export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", className = "", exploreRegion, flyToCoords, tourRegion, onTourEnd, satellite = false, onTourStop }: WineRegionMapProps) {
+export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", className = "", exploreRegion, flyToCoords, tourRegion, onTourEnd, satellite = false, onTourStop, mapRef }: WineRegionMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -470,6 +472,11 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       if (!map.current) return;
       mapLoaded.current = true;
 
+      // Expose map instance to parent via mapRef
+      if (mapRef) {
+        (mapRef as React.MutableRefObject<mapboxgl.Map | null>).current = map.current;
+      }
+
       let hoveredId: string | number | null = null;
 
       map.current.on("mousemove", "wine-regions-fill", (e) => {
@@ -566,7 +573,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       }
     });
 
-    return () => { popup.current?.remove(); tourAbort.current?.abort(); map.current?.remove(); map.current = null; mapLoaded.current = false; };
+    return () => { popup.current?.remove(); tourAbort.current?.abort(); map.current?.remove(); map.current = null; mapLoaded.current = false; if (mapRef) { (mapRef as React.MutableRefObject<mapboxgl.Map | null>).current = null; } };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
