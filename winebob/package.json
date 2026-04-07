@@ -26,7 +26,8 @@
     "react-dom": "19.2.4",
     "recharts": "^3.8.1",
     "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "ws": "^8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -37,7 +38,6 @@
     "eslint-config-next": "16.2.2",
     "tailwindcss": "^4",
     "tsx": "^4",
-    "typescript": "^5",
-    "ws": "^8"
+    "typescript": "^5"
   }
 }

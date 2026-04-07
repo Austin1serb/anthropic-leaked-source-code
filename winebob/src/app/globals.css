@@ -1,57 +1,71 @@
 @import "tailwindcss";
 
 :root {
-  /* Winebob Wine Palette */
-  --wine-burgundy: #722F37;
-  --wine-burgundy-light: #8B3A44;
-  --wine-burgundy-dark: #5A252C;
-  --wine-gold: #C9A96E;
-  --wine-gold-light: #D4BA88;
-  --wine-cream: #FDF6EC;
-  --wine-cream-dark: #F5EAD6;
-  --wine-charcoal: #2D2D2D;
-  --wine-rosé: #E8A0BF;
-  --wine-sage: #8B9E82;
+  /* Winebob Palette — Pinterest 2025 */
+  --butter: #FFEEBC;
+  --butter-dark: #F5E0A0;
+  --butter-light: #FFF5D6;
+  --cherry: #74070E;
+  --cherry-light: #8B1A22;
+  --cherry-dark: #5A0509;
+  --sky: #C0D8F0;
+  --sky-light: #D6E6F5;
+  --sky-dark: #A3C2E0;
+  --leather: #6B3A2A;
+  --leather-light: #8B5A4A;
+  --leather-dark: #4A2518;
 
-  --background: var(--wine-cream);
-  --foreground: var(--wine-charcoal);
-  --card-bg: #ffffff;
-  --card-border: #F0E6D6;
-  --muted: #A89F91;
-  --tab-inactive: #A89F91;
-  --tab-active: var(--wine-burgundy);
+  --background: var(--butter);
+  --foreground: #2D2019;
+  --card-bg: #FFFDF7;
+  --card-border: #F0E4CC;
+  --muted: #9E8E76;
+  --tab-inactive: #9E8E76;
+  --tab-active: var(--cherry);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-wine-burgundy: var(--wine-burgundy);
-  --color-wine-burgundy-light: var(--wine-burgundy-light);
-  --color-wine-burgundy-dark: var(--wine-burgundy-dark);
-  --color-wine-gold: var(--wine-gold);
-  --color-wine-gold-light: var(--wine-gold-light);
-  --color-wine-cream: var(--wine-cream);
-  --color-wine-cream-dark: var(--wine-cream-dark);
-  --color-wine-charcoal: var(--wine-charcoal);
-  --color-wine-rosé: var(--wine-rosé);
-  --color-wine-sage: var(--wine-sage);
+  --color-butter: var(--butter);
+  --color-butter-dark: var(--butter-dark);
+  --color-butter-light: var(--butter-light);
+  --color-cherry: var(--cherry);
+  --color-cherry-light: var(--cherry-light);
+  --color-cherry-dark: var(--cherry-dark);
+  --color-sky: var(--sky);
+  --color-sky-light: var(--sky-light);
+  --color-sky-dark: var(--sky-dark);
+  --color-leather: var(--leather);
+  --color-leather-light: var(--leather-light);
+  --color-leather-dark: var(--leather-dark);
   --color-card-bg: var(--card-bg);
   --color-card-border: var(--card-border);
   --color-muted: var(--muted);
   --color-tab-inactive: var(--tab-inactive);
   --color-tab-active: var(--tab-active);
+  /* Keep old names as aliases for components not yet updated */
+  --color-wine-burgundy: var(--cherry);
+  --color-wine-burgundy-light: var(--cherry-light);
+  --color-wine-burgundy-dark: var(--cherry-dark);
+  --color-wine-gold: #C9A96E;
+  --color-wine-gold-light: #D4BA88;
+  --color-wine-cream: var(--butter);
+  --color-wine-cream-dark: var(--butter-dark);
+  --color-wine-charcoal: #2D2019;
+  --color-wine-sage: #8B9E82;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1A1214;
+    --background: #1A1510;
     --foreground: #F5EAD6;
-    --card-bg: #2A1E22;
-    --card-border: #3D2E33;
-    --muted: #8A7E76;
-    --tab-inactive: #8A7E76;
+    --card-bg: #2A2218;
+    --card-border: #3D3228;
+    --muted: #8A7E6A;
+    --tab-inactive: #8A7E6A;
   }
 }
 
@@ -72,32 +86,14 @@ body {
 }
 
 /* Safe area insets for iPhone notch/Dynamic Island */
-.safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-.safe-left {
-  padding-left: env(safe-area-inset-left, 0px);
-}
-
-.safe-right {
-  padding-right: env(safe-area-inset-right, 0px);
-}
-
-/* Bottom tab bar safe area */
-.tab-bar-safe {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
-}
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-left { padding-left: env(safe-area-inset-left, 0px); }
+.safe-right { padding-right: env(safe-area-inset-right, 0px); }
+.tab-bar-safe { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem); }
 
 /* Touch-friendly minimum target sizes (44x44pt Apple HIG) */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
-}
+.touch-target { min-height: 44px; min-width: 44px; }
 
 /* Smooth scrolling for iOS */
 .scroll-smooth {
@@ -105,18 +101,21 @@ body {
   scroll-behavior: smooth;
 }
 
-/* Pull to refresh indicator area */
-.pull-refresh-area {
-  overscroll-behavior-y: contain;
+/* Wine-themed gradient backgrounds */
+.bg-cherry-gradient {
+  background: linear-gradient(135deg, var(--cherry) 0%, var(--cherry-dark) 100%);
 }
 
-/* Wine-themed gradient backgrounds */
 .bg-wine-gradient {
-  background: linear-gradient(135deg, var(--wine-burgundy) 0%, var(--wine-burgundy-dark) 100%);
+  background: linear-gradient(135deg, var(--cherry) 0%, var(--cherry-dark) 100%);
 }
 
 .bg-warm-gradient {
-  background: linear-gradient(180deg, var(--wine-cream) 0%, var(--wine-cream-dark) 100%);
+  background: linear-gradient(180deg, var(--butter-light) 0%, var(--butter) 100%);
+}
+
+.bg-sky-gradient {
+  background: linear-gradient(180deg, var(--sky-light) 0%, var(--sky) 60%, var(--butter) 100%);
 }
 
 /* Card styling */
@@ -127,7 +126,210 @@ body {
   overflow: hidden;
 }
 
-/* Toast/cheers animation */
+/* ============ LANDING ANIMATION ============ */
+
+/* Sky background */
+.sky-scene {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #D6E6F5 0%,
+    #C0D8F0 30%,
+    #A3C2E0 60%,
+    #FFEEBC 90%,
+    #F5E0A0 100%
+  );
+  overflow: hidden;
+  z-index: 50;
+}
+
+/* Clouds */
+.cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  filter: blur(1px);
+}
+
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  background: inherit;
+  border-radius: 999px;
+}
+
+.cloud-1 {
+  width: 120px; height: 40px;
+  top: 8%; left: -20%;
+  animation: cloudDrift 18s linear infinite;
+}
+.cloud-1::before { width: 60px; height: 50px; top: -20px; left: 20px; }
+.cloud-1::after { width: 80px; height: 45px; top: -15px; left: 50px; }
+
+.cloud-2 {
+  width: 160px; height: 50px;
+  top: 15%; left: -30%;
+  animation: cloudDrift 25s linear infinite 5s;
+}
+.cloud-2::before { width: 70px; height: 55px; top: -25px; left: 30px; }
+.cloud-2::after { width: 90px; height: 50px; top: -20px; left: 70px; }
+
+.cloud-3 {
+  width: 100px; height: 35px;
+  top: 22%; left: -15%;
+  animation: cloudDrift 22s linear infinite 10s;
+}
+.cloud-3::before { width: 50px; height: 40px; top: -18px; left: 15px; }
+.cloud-3::after { width: 65px; height: 38px; top: -12px; left: 40px; }
+
+@keyframes cloudDrift {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(100vw + 200px)); }
+}
+
+/* Antique table at bottom */
+.antique-table {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28%;
+  background: linear-gradient(
+    180deg,
+    var(--leather) 0%,
+    var(--leather-dark) 4%,
+    var(--leather-light) 5%,
+    #7B4A3A 40%,
+    #5A3020 100%
+  );
+  border-top: 4px solid var(--leather-dark);
+  box-shadow: 0 -8px 30px rgba(74, 37, 24, 0.3);
+}
+
+/* Wood grain texture */
+.antique-table::before {
+  content: "";
+  position: absolute;
+  inset: 5% 0 0 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 40px,
+    rgba(0,0,0,0.03) 40px,
+    rgba(0,0,0,0.03) 41px
+  );
+}
+
+/* Table cloth / runner */
+.table-runner {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(180deg, var(--butter-dark) 0%, var(--butter) 20%, transparent 100%);
+  opacity: 0.3;
+  border-radius: 0 0 20px 20px;
+}
+
+/* Wine bottles falling */
+.bottle {
+  position: absolute;
+  font-size: 48px;
+  z-index: 2;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+.bottle-1 {
+  left: 20%;
+  animation: bottleFall1 2.2s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.bottle-2 {
+  left: 42%;
+  animation: bottleFall2 2.5s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s forwards;
+  opacity: 0;
+}
+
+.bottle-3 {
+  left: 65%;
+  animation: bottleFall3 2.8s cubic-bezier(0.22, 0.61, 0.36, 1) 0.6s forwards;
+  opacity: 0;
+}
+
+@keyframes bottleFall1 {
+  0% { top: -80px; transform: rotate(-15deg); opacity: 1; }
+  60% { transform: rotate(5deg); }
+  80% { top: calc(72% - 48px); transform: rotate(-2deg); }
+  90% { top: calc(72% - 56px); transform: rotate(1deg); }
+  100% { top: calc(72% - 50px); transform: rotate(0deg); opacity: 1; }
+}
+
+@keyframes bottleFall2 {
+  0% { top: -80px; transform: rotate(10deg); opacity: 1; }
+  60% { transform: rotate(-8deg); }
+  80% { top: calc(72% - 48px); transform: rotate(3deg); }
+  90% { top: calc(72% - 56px); transform: rotate(-1deg); }
+  100% { top: calc(72% - 50px); transform: rotate(0deg); opacity: 1; }
+}
+
+@keyframes bottleFall3 {
+  0% { top: -80px; transform: rotate(-20deg); opacity: 1; }
+  60% { transform: rotate(10deg); }
+  80% { top: calc(72% - 48px); transform: rotate(-3deg); }
+  90% { top: calc(72% - 56px); transform: rotate(2deg); }
+  100% { top: calc(72% - 50px); transform: rotate(0deg); opacity: 1; }
+}
+
+/* Bottle landing bounce */
+@keyframes bottleLand {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05, 0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Scene fade out after animation */
+.sky-scene-exit {
+  animation: sceneFadeOut 0.8s ease-in forwards 4s;
+}
+
+@keyframes sceneFadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+/* Logo reveal after bottles land */
+@keyframes logoReveal {
+  0% { opacity: 0; transform: translateY(20px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-logo-reveal {
+  animation: logoReveal 0.6s ease-out forwards 3s;
+  opacity: 0;
+}
+
+/* Sparkle on bottle landing */
+@keyframes sparkle {
+  0% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+.sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--butter);
+  border-radius: 50%;
+  animation: sparkle 0.5s ease-out forwards;
+}
+
+/* ============ STANDARD ANIMATIONS ============ */
+
 @keyframes cheers {
   0% { transform: scale(1) rotate(0deg); }
   25% { transform: scale(1.2) rotate(-10deg); }
@@ -140,18 +342,15 @@ body {
   animation: cheers 0.6s ease-in-out;
 }
 
-/* Fade in animation */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in-up {
   animation: fadeInUp 0.4s ease-out;
 }
+
+/* Scrollbar hide utility */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
