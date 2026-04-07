@@ -21,6 +21,8 @@ import {
   Plus,
   X,
   Download,
+  Share2,
+  Link as LinkIcon,
 } from "lucide-react";
 import {
   updateEventStatus,
@@ -512,11 +514,43 @@ export function EventControlClient({ event }: EventControlClientProps) {
             </p>
             <p className="caption mb-5">{event.title}</p>
 
-            {/* Download */}
-            <button onClick={handleDownloadQR} className="btn-secondary w-full touch-target">
-              <Download className="h-4 w-4" />
-              Download Image
-            </button>
+            {/* Actions */}
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/join/${event.joinCode}`;
+                  navigator.clipboard.writeText(url);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="btn-primary w-full touch-target"
+              >
+                <LinkIcon className="h-4 w-4" />
+                {copied ? "Link Copied!" : "Copy Join Link"}
+              </button>
+              <div className="flex gap-2">
+                <button onClick={handleDownloadQR} className="btn-secondary flex-1 touch-target">
+                  <Download className="h-4 w-4" />
+                  Save Image
+                </button>
+                <button
+                  onClick={async () => {
+                    const url = `${window.location.origin}/join/${event.joinCode}`;
+                    if (navigator.share) {
+                      try { await navigator.share({ title: `Join "${event.title}" on Winebob`, text: `Join code: ${event.joinCode}`, url }); } catch {}
+                    } else {
+                      navigator.clipboard.writeText(url);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }
+                  }}
+                  className="btn-secondary flex-1 touch-target"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
