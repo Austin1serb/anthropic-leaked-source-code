@@ -13,7 +13,7 @@ export default async function ArenaPage() {
       orderBy: { createdAt: "desc" },
       include: {
         wines: true,
-        guests: { select: { id: true } },
+        guests: { select: { id: true, displayName: true } },
       },
     }),
     prisma.eventTemplate.findMany({

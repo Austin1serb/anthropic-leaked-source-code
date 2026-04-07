@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Users, Wine, Copy, ChevronRight, Sparkles, Trophy, Calendar } from "lucide-react";
+import { Plus, Wine, Copy, ChevronRight, Sparkles, Trophy, Calendar } from "lucide-react";
 import { useState } from "react";
+import { Avatar, AvatarStack, avatarIdFromString } from "@/components/shared/Avatar";
 
 type Event = {
   id: string;
@@ -12,7 +13,7 @@ type Event = {
   difficulty: string;
   createdAt: Date;
   wines: { id: string }[];
-  guests: { id: string }[];
+  guests: { id: string; displayName: string }[];
 };
 
 type Template = {
@@ -106,11 +107,14 @@ export function ArenaClient({ events, templates, userName }: ArenaClientProps) {
       {/* ── Header ── */}
       <div className="px-5 pt-8 pb-5">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-serif text-[26px] font-bold text-foreground leading-tight">
-              {firstName}
-            </h1>
-            <p className="text-sm text-muted mt-0.5">Host Dashboard</p>
+          <div className="flex items-center gap-3">
+            <Avatar avatarId={avatarIdFromString(userName)} size={48} />
+            <div>
+              <h1 className="font-serif text-xl font-bold text-foreground leading-tight">
+                {firstName}
+              </h1>
+              <p className="text-xs text-muted mt-0.5">Host Dashboard</p>
+            </div>
           </div>
           <Link
             href="/arena/create"
@@ -155,7 +159,17 @@ export function ArenaClient({ events, templates, userName }: ArenaClientProps) {
               <h3 className="font-serif font-bold text-xl leading-tight">
                 {event.title}
               </h3>
-              <div className="mt-4 flex items-center gap-5">
+              {/* Guest avatars */}
+              {event.guests.length > 0 && (
+                <div className="mt-3">
+                  <AvatarStack
+                    ids={event.guests.map((g) => avatarIdFromString(g.id))}
+                    size={28}
+                    max={6}
+                  />
+                </div>
+              )}
+              <div className="mt-3 flex items-center gap-5">
                 <div>
                   <p className="text-2xl font-bold">{event.wines.length}</p>
                   <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">Wines</p>
@@ -255,21 +269,36 @@ export function ArenaClient({ events, templates, userName }: ArenaClientProps) {
                   <ChevronRight className="h-4 w-4 text-muted/40 flex-shrink-0" />
                 </div>
 
-                {/* Activity stats bar (Strava-style) */}
-                <div className="px-4 py-3 bg-butter-dark/15 border-t border-card-border/40 flex items-center">
-                  <div className="flex-1 text-center">
-                    <p className="text-lg font-bold text-foreground font-serif">{event.wines.length}</p>
-                    <p className="text-[9px] font-semibold text-muted uppercase tracking-wider">Wines</p>
-                  </div>
-                  <div className="w-px h-8 bg-card-border/60" />
-                  <div className="flex-1 text-center">
-                    <p className="text-lg font-bold text-foreground font-serif">{event.guests.length}</p>
-                    <p className="text-[9px] font-semibold text-muted uppercase tracking-wider">Guests</p>
-                  </div>
-                  <div className="w-px h-8 bg-card-border/60" />
-                  <div className="flex-1 text-center">
-                    <JoinCodeDisplay code={event.joinCode} />
-                    <p className="text-[9px] font-semibold text-muted uppercase tracking-wider mt-0.5">Code</p>
+                {/* Guest avatars + stats bar */}
+                <div className="px-4 py-3 bg-butter-dark/15 border-t border-card-border/40">
+                  {event.guests.length > 0 && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <AvatarStack
+                        ids={event.guests.map((g) => avatarIdFromString(g.id))}
+                        size={26}
+                        max={5}
+                      />
+                      <span className="text-[11px] text-muted">
+                        {event.guests.map((g) => g.displayName.split(" ")[0]).slice(0, 3).join(", ")}
+                        {event.guests.length > 3 && ` +${event.guests.length - 3}`}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center">
+                    <div className="flex-1 text-center">
+                      <p className="text-lg font-bold text-foreground font-serif">{event.wines.length}</p>
+                      <p className="text-[9px] font-semibold text-muted uppercase tracking-wider">Wines</p>
+                    </div>
+                    <div className="w-px h-8 bg-card-border/60" />
+                    <div className="flex-1 text-center">
+                      <p className="text-lg font-bold text-foreground font-serif">{event.guests.length}</p>
+                      <p className="text-[9px] font-semibold text-muted uppercase tracking-wider">Guests</p>
+                    </div>
+                    <div className="w-px h-8 bg-card-border/60" />
+                    <div className="flex-1 text-center">
+                      <JoinCodeDisplay code={event.joinCode} />
+                      <p className="text-[9px] font-semibold text-muted uppercase tracking-wider mt-0.5">Code</p>
+                    </div>
                   </div>
                 </div>
               </Link>
