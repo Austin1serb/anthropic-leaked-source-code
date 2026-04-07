@@ -1,0 +1,121 @@
+"use client";
+
+import Link from "next/link";
+import { Sparkles, Wine, Users, Globe, ArrowRight, Lock } from "lucide-react";
+import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
+import { useState } from "react";
+
+export default function ExplorePage() {
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+
+  return (
+    <div className="fixed inset-0">
+      {/* Map — fullscreen preview */}
+      <div className="absolute inset-0">
+        <WineRegionMap
+          onRegionClick={(region) => setSelectedRegion(region)}
+          exploreRegion={selectedRegion}
+          height="100%"
+        />
+      </div>
+
+      {/* Top — branding + back */}
+      <div className="absolute top-0 left-0 right-0 z-20 safe-top">
+        <div className="px-4 pt-3 flex items-center justify-between">
+          <Link
+            href="/"
+            className="h-10 px-3 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 text-[12px] font-semibold active:scale-95 transition-transform"
+          >
+            ← Back
+          </Link>
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-[10px] bg-cherry flex items-center justify-center">
+              <Wine className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-[15px] font-bold text-[#1A1412]" style={{ fontFamily: "var(--font-serif, Georgia, serif)" }}>
+              Winebob
+            </span>
+          </div>
+          <div className="w-[70px]" /> {/* spacer */}
+        </div>
+      </div>
+
+      {/* City pills when exploring */}
+      {selectedRegion && (
+        <div className="absolute left-3 z-20" style={{ top: "30%" }}>
+          <div className="px-3 py-2 rounded-[12px] bg-cherry/90 backdrop-blur-xl shadow-[0_2px_12px_rgba(116,7,14,0.3)] mb-2">
+            <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Exploring</p>
+            <p className="text-[14px] font-bold text-white">{selectedRegion}</p>
+          </div>
+          {getRegionCities(selectedRegion).length > 0 && (
+            <div className="flex flex-col gap-1 max-w-[140px]">
+              {getRegionCities(selectedRegion).map((city) => (
+                <button
+                  key={city.name}
+                  className="px-2.5 py-1.5 rounded-[8px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] text-[11px] font-semibold text-white/70 text-left active:bg-cherry active:text-white transition-colors"
+                >
+                  {city.name} →
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => setSelectedRegion(null)}
+            className="mt-2 px-2.5 py-1.5 rounded-[8px] bg-[#1A1412]/60 backdrop-blur-xl border border-white/[0.06] text-[11px] font-semibold text-white/50 active:scale-95 transition-transform"
+          >
+            ← World view
+          </button>
+        </div>
+      )}
+
+      {/* Bottom — signup CTA overlay */}
+      <div className="absolute bottom-0 left-0 right-0 z-30">
+        <div className="bg-gradient-to-t from-[#1A1412] via-[#1A1412]/95 to-transparent pt-20 pb-8 px-4">
+          <div className="max-w-md mx-auto text-center">
+            {/* Feature pills */}
+            <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-white/10 text-white/70 text-[10px] font-semibold">
+                <Wine className="h-3 w-3" /> Browse wines
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-white/10 text-white/70 text-[10px] font-semibold">
+                <Globe className="h-3 w-3" /> Explore regions
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-white/10 text-white/70 text-[10px] font-semibold">
+                <Users className="h-3 w-3" /> Join live events
+              </span>
+            </div>
+
+            <h2 className="text-[22px] font-bold text-white tracking-tight mb-2" style={{ fontFamily: "var(--font-serif, Georgia, serif)" }}>
+              Discover the world of wine
+            </h2>
+            <p className="text-[13px] text-white/50 mb-5 max-w-[280px] mx-auto leading-relaxed">
+              Create a free account to save favorites, join tastings, and build your cellar.
+            </p>
+
+            <div className="flex flex-col gap-2.5 max-w-[300px] mx-auto">
+              <Link
+                href="/login"
+                className="flex items-center justify-center gap-2 h-12 rounded-[12px] bg-white text-cherry font-bold text-[15px] active:scale-[0.98] transition-transform"
+                style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}
+              >
+                <Sparkles className="h-4 w-4" />
+                Sign up free
+              </Link>
+              <Link
+                href="/login"
+                className="flex items-center justify-center gap-2 h-11 rounded-[12px] bg-white/10 border border-white/10 text-white/70 font-semibold text-[13px] active:scale-[0.98] transition-transform"
+              >
+                Already have an account? Log in
+              </Link>
+            </div>
+
+            <div className="flex items-center justify-center gap-1.5 mt-4 text-white/25 text-[11px]">
+              <Lock className="h-3 w-3" />
+              <span>Full access requires a free account</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,118 @@
+{
+  "common": {
+    "appName": "Winebob",
+    "loading": "Indlæser...",
+    "save": "Gem",
+    "cancel": "Annuller",
+    "next": "Næste",
+    "back": "Tilbage",
+    "search": "Søg",
+    "seeAll": "Se alle",
+    "cheers": "Skål! 🥂"
+  },
+  "tabs": {
+    "arena": "Arena",
+    "futures": "Futures",
+    "cellar": "Kælder",
+    "trail": "Spor",
+    "profile": "Profil"
+  },
+  "onboarding": {
+    "welcome": "Velkommen til Winebob",
+    "welcomeSubtitle": "Lad os finde din vinpersonlighed",
+    "bodyQuestion": "Hvordan kan du lide din vin?",
+    "bodySubtitle": "Let og delikat, eller rig og fyldig?",
+    "bodyLight": "Let & Frisk",
+    "bodyFull": "Rig & Kraftig",
+    "sweetnessQuestion": "Sød eller tør?",
+    "sweetnessSubtitle": "Hvor ligger du på sødmeskalaen?",
+    "sweetnessDry": "Knastør",
+    "sweetnessSweet": "Sød & Fyldig",
+    "grapeQuestion": "Vælg dine favoritter",
+    "grapeSubtitle": "Vælg de druer der taler til dig",
+    "regionQuestion": "Foretrukne vinregioner?",
+    "regionSubtitle": "Hvor i verden rejser dine smagsløg hen?",
+    "adventureQuestion": "Hvor eventyrlysten er du?",
+    "adventureSubtitle": "Holder du dig til favoritter eller udforsker du altid?",
+    "adventureComfort": "Komfortzone",
+    "adventureExplorer": "Vild Udforsker",
+    "seeProfile": "Se Min Smagsprofil"
+  },
+  "cellar": {
+    "title": "Kælder",
+    "searchPlaceholder": "Søg vine, producenter, regioner...",
+    "recommended": "Anbefalet til Dig",
+    "friendsCheckins": "Venners Check-ins",
+    "filters": {
+      "all": "Alle",
+      "red": "Rød",
+      "white": "Hvid",
+      "rosé": "Rosé",
+      "sparkling": "Mousserende",
+      "orange": "Orange",
+      "natural": "Naturvin"
+    },
+    "checkin": "Check In",
+    "rate": "Bedøm",
+    "addReview": "Tilføj Anmeldelse"
+  },
+  "arena": {
+    "title": "Blindsmagning",
+    "subtitle": "Test din gane, udfordr venner",
+    "dailyChallenge": "Dagens Udfordring",
+    "hostTasting": "Vært for Smagning",
+    "soloPractice": "Solo Øvelse",
+    "upcoming": "Kommende Begivenheder",
+    "leaderboard": "Rangliste",
+    "startChallenge": "Start Udfordring",
+    "difficulty": {
+      "beginner": "Begynder",
+      "intermediate": "Øvet",
+      "advanced": "Avanceret",
+      "master": "Mester"
+    }
+  },
+  "futures": {
+    "title": "Vin Futures",
+    "subtitle": "Forudsig vinverdenens udfald, optjen omdømme",
+    "reputation": "Dit Omdømme",
+    "accuracy": "Forudsigelsesnøjagtighed",
+    "stake": "Sats",
+    "categories": {
+      "trending": "Trending",
+      "vintage": "Årgang",
+      "auctions": "Auktioner",
+      "critics": "Kritikere",
+      "trends": "Tendenser"
+    }
+  },
+  "trail": {
+    "title": "Vinspor",
+    "subtitle": "Din vinrejse, dokumenteret",
+    "recentActivity": "Seneste Aktivitet",
+    "streak": "Dags Streak",
+    "winesRated": "Vine Bedømt",
+    "regions": "Regioner",
+    "events": "Begivenheder"
+  },
+  "profile": {
+    "title": "Profil",
+    "tasteProfile": "Din Smagsprofil",
+    "badges": "Badges",
+    "collections": "Mine Samlinger",
+    "cellarInventory": "Kælderopgørelse",
+    "predictionHistory": "Forudsigelseshistorik",
+    "arenaStats": "Arena Statistik",
+    "settings": "Indstillinger",
+    "following": "Følger",
+    "followers": "Følgere",
+    "reputation": "Omdømme"
+  },
+  "scoring": {
+    "incredible": "Utroligt! Du har en ekstraordinær gane! 🏆",
+    "impressive": "Imponerende! Din næse ved, hvad den laver! 🎯",
+    "great": "Godt gået! Du udvikler et ægte talent! 👏",
+    "nice": "Flot indsats! Hver smagning gør dig bedre! 🌱",
+    "keep": "Bliv ved med at udforske! Rejsen er det bedste! 🍷"
+  }
+}
