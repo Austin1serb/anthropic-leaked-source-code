@@ -1,70 +1,44 @@
-/**
- * Winebob MVP Seed
- *
- * Seeds the database with:
- * 1. A curated wine database for hosts to pick from
- * 2. Starter event templates for quick event creation
- */
+import "dotenv/config";
+import { neon } from "@neondatabase/serverless";
+
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  console.error("DATABASE_URL is not set");
+  process.exit(1);
+}
+
+const sql = neon(dbUrl);
 
 const wines = [
-  // Bordeaux, France
   { name: "Château Margaux", producer: "Château Margaux", vintage: 2019, grapes: ["Cabernet Sauvignon", "Merlot", "Petit Verdot"], region: "Margaux", country: "France", appellation: "Margaux AOC", type: "red" },
   { name: "Château Lafite Rothschild", producer: "Domaines Barons de Rothschild", vintage: 2018, grapes: ["Cabernet Sauvignon", "Merlot"], region: "Pauillac", country: "France", appellation: "Pauillac AOC", type: "red" },
   { name: "Petrus", producer: "Petrus", vintage: 2020, grapes: ["Merlot"], region: "Pomerol", country: "France", appellation: "Pomerol AOC", type: "red" },
   { name: "Château Haut-Brion", producer: "Domaine Clarence Dillon", vintage: 2019, grapes: ["Cabernet Sauvignon", "Merlot", "Cabernet Franc"], region: "Pessac-Léognan", country: "France", appellation: "Pessac-Léognan AOC", type: "red" },
-
-  // Burgundy, France
   { name: "Romanée-Conti", producer: "Domaine de la Romanée-Conti", vintage: 2019, grapes: ["Pinot Noir"], region: "Vosne-Romanée", country: "France", appellation: "Romanée-Conti Grand Cru", type: "red" },
   { name: "Chambertin", producer: "Domaine Armand Rousseau", vintage: 2020, grapes: ["Pinot Noir"], region: "Gevrey-Chambertin", country: "France", appellation: "Chambertin Grand Cru", type: "red" },
   { name: "Meursault Les Perrières", producer: "Domaine Coche-Dury", vintage: 2020, grapes: ["Chardonnay"], region: "Meursault", country: "France", appellation: "Meursault 1er Cru", type: "white" },
   { name: "Chablis Grand Cru Les Clos", producer: "Domaine Raveneau", vintage: 2021, grapes: ["Chardonnay"], region: "Chablis", country: "France", appellation: "Chablis Grand Cru", type: "white" },
-
-  // Rhône, France
   { name: "Hermitage La Chapelle", producer: "Paul Jaboulet Aîné", vintage: 2019, grapes: ["Syrah"], region: "Hermitage", country: "France", appellation: "Hermitage AOC", type: "red" },
   { name: "Châteauneuf-du-Pape", producer: "Château Rayas", vintage: 2019, grapes: ["Grenache"], region: "Châteauneuf-du-Pape", country: "France", appellation: "Châteauneuf-du-Pape AOC", type: "red" },
-
-  // Champagne
   { name: "Dom Pérignon", producer: "Moët & Chandon", vintage: 2013, grapes: ["Chardonnay", "Pinot Noir"], region: "Champagne", country: "France", appellation: "Champagne AOC", type: "sparkling" },
   { name: "Krug Grande Cuvée", producer: "Krug", vintage: null, grapes: ["Chardonnay", "Pinot Noir", "Pinot Meunier"], region: "Champagne", country: "France", appellation: "Champagne AOC", type: "sparkling" },
-
-  // Italy
   { name: "Barolo Monfortino", producer: "Giacomo Conterno", vintage: 2015, grapes: ["Nebbiolo"], region: "Barolo", country: "Italy", appellation: "Barolo DOCG", type: "red" },
   { name: "Brunello di Montalcino", producer: "Biondi-Santi", vintage: 2017, grapes: ["Sangiovese"], region: "Montalcino", country: "Italy", appellation: "Brunello di Montalcino DOCG", type: "red" },
   { name: "Sassicaia", producer: "Tenuta San Guido", vintage: 2020, grapes: ["Cabernet Sauvignon", "Cabernet Franc"], region: "Bolgheri", country: "Italy", appellation: "Bolgheri DOC", type: "red" },
   { name: "Tignanello", producer: "Marchesi Antinori", vintage: 2020, grapes: ["Sangiovese", "Cabernet Sauvignon", "Cabernet Franc"], region: "Tuscany", country: "Italy", appellation: "Toscana IGT", type: "red" },
   { name: "Amarone della Valpolicella", producer: "Giuseppe Quintarelli", vintage: 2015, grapes: ["Corvina", "Rondinella", "Molinara"], region: "Valpolicella", country: "Italy", appellation: "Amarone della Valpolicella DOCG", type: "red" },
-
-  // Spain
   { name: "Vega Sicilia Único", producer: "Vega Sicilia", vintage: 2012, grapes: ["Tempranillo", "Cabernet Sauvignon"], region: "Ribera del Duero", country: "Spain", appellation: "Ribera del Duero DO", type: "red" },
   { name: "La Rioja Alta Gran Reserva 904", producer: "La Rioja Alta", vintage: 2015, grapes: ["Tempranillo", "Graciano"], region: "Rioja", country: "Spain", appellation: "Rioja DOCa", type: "red" },
-
-  // USA
   { name: "Opus One", producer: "Opus One", vintage: 2019, grapes: ["Cabernet Sauvignon", "Merlot", "Cabernet Franc"], region: "Napa Valley", country: "USA", appellation: "Oakville AVA", type: "red" },
   { name: "Ridge Monte Bello", producer: "Ridge Vineyards", vintage: 2019, grapes: ["Cabernet Sauvignon", "Merlot", "Petit Verdot"], region: "Santa Cruz Mountains", country: "USA", appellation: "Santa Cruz Mountains AVA", type: "red" },
-
-  // Australia
   { name: "Penfolds Grange", producer: "Penfolds", vintage: 2018, grapes: ["Syrah/Shiraz"], region: "South Australia", country: "Australia", appellation: null, type: "red" },
-
-  // Germany
   { name: "Scharzhofberger Riesling Auslese", producer: "Egon Müller", vintage: 2021, grapes: ["Riesling"], region: "Mosel", country: "Germany", appellation: "Wiltinger Scharzhofberger", type: "white" },
-
-  // New Zealand
   { name: "Cloudy Bay Sauvignon Blanc", producer: "Cloudy Bay", vintage: 2023, grapes: ["Sauvignon Blanc"], region: "Marlborough", country: "New Zealand", appellation: null, type: "white" },
   { name: "Felton Road Block 5 Pinot Noir", producer: "Felton Road", vintage: 2021, grapes: ["Pinot Noir"], region: "Central Otago", country: "New Zealand", appellation: null, type: "red" },
-
-  // Portugal
   { name: "Barca Velha", producer: "Casa Ferreirinha", vintage: 2015, grapes: ["Touriga Nacional", "Touriga Franca", "Tinta Roriz"], region: "Douro", country: "Portugal", appellation: "Douro DOC", type: "red" },
-
-  // Rosé
   { name: "Whispering Angel", producer: "Caves d'Esclans", vintage: 2023, grapes: ["Grenache", "Cinsault", "Rolle"], region: "Provence", country: "France", appellation: "Côtes de Provence AOC", type: "rosé" },
-
-  // Dessert
   { name: "Château d'Yquem", producer: "Château d'Yquem", vintage: 2019, grapes: ["Sémillon", "Sauvignon Blanc"], region: "Sauternes", country: "France", appellation: "Sauternes AOC", type: "dessert" },
-
-  // Orange
   { name: "Radikon Ribolla Gialla", producer: "Radikon", vintage: 2018, grapes: ["Ribolla Gialla"], region: "Friuli", country: "Italy", appellation: "Venezia Giulia IGT", type: "orange" },
-
-  // Accessible / everyday wines
   { name: "Chablis", producer: "Louis Jadot", vintage: 2022, grapes: ["Chardonnay"], region: "Chablis", country: "France", appellation: "Chablis AOC", type: "white" },
   { name: "Sancerre", producer: "Domaine Vacheron", vintage: 2022, grapes: ["Sauvignon Blanc"], region: "Loire", country: "France", appellation: "Sancerre AOC", type: "white" },
   { name: "Barolo", producer: "Prunotto", vintage: 2019, grapes: ["Nebbiolo"], region: "Barolo", country: "Italy", appellation: "Barolo DOCG", type: "red" },
@@ -75,7 +49,6 @@ const wines = [
   { name: "Albariño", producer: "Pazo de Señorans", vintage: 2022, grapes: ["Albariño"], region: "Rías Baixas", country: "Spain", appellation: "Rías Baixas DO", type: "white" },
 ];
 
-// Starter event templates
 const templates = [
   {
     name: "Bordeaux vs Burgundy",
@@ -86,14 +59,6 @@ const templates = [
     guessFields: ["grape", "region", "vintage"],
     category: "region_vs_region",
     scoringConfig: { grape: 30, region: 35, vintage: 20, country: 15 },
-    suggestedWines: [
-      { name: "Château Margaux", region: "Margaux", country: "France", type: "red" },
-      { name: "Château Haut-Brion", region: "Pessac-Léognan", country: "France", type: "red" },
-      { name: "Petrus", region: "Pomerol", country: "France", type: "red" },
-      { name: "Romanée-Conti", region: "Vosne-Romanée", country: "France", type: "red" },
-      { name: "Chambertin", region: "Gevrey-Chambertin", country: "France", type: "red" },
-      { name: "Meursault Les Perrières", region: "Meursault", country: "France", type: "white" },
-    ],
   },
   {
     name: "Italian Reds Deep Dive",
@@ -104,13 +69,6 @@ const templates = [
     guessFields: ["grape", "region", "vintage", "producer"],
     category: "grape_deep_dive",
     scoringConfig: { grape: 30, region: 25, vintage: 15, producer: 15, country: 15 },
-    suggestedWines: [
-      { name: "Barolo Monfortino", region: "Barolo", country: "Italy", type: "red" },
-      { name: "Brunello di Montalcino", region: "Montalcino", country: "Italy", type: "red" },
-      { name: "Sassicaia", region: "Bolgheri", country: "Italy", type: "red" },
-      { name: "Tignanello", region: "Tuscany", country: "Italy", type: "red" },
-      { name: "Amarone della Valpolicella", region: "Valpolicella", country: "Italy", type: "red" },
-    ],
   },
   {
     name: "New World vs Old World",
@@ -121,14 +79,6 @@ const templates = [
     guessFields: ["country", "grape", "region"],
     category: "region_vs_region",
     scoringConfig: { country: 30, grape: 30, region: 25, vintage: 15 },
-    suggestedWines: [
-      { name: "Opus One", region: "Napa Valley", country: "USA", type: "red" },
-      { name: "Penfolds Grange", region: "South Australia", country: "Australia", type: "red" },
-      { name: "Cloudy Bay Sauvignon Blanc", region: "Marlborough", country: "New Zealand", type: "white" },
-      { name: "Château Margaux", region: "Margaux", country: "France", type: "red" },
-      { name: "Hermitage La Chapelle", region: "Hermitage", country: "France", type: "red" },
-      { name: "Sancerre", region: "Loire", country: "France", type: "white" },
-    ],
   },
   {
     name: "Beginner Friendly: Red or White?",
@@ -139,12 +89,6 @@ const templates = [
     guessFields: ["type", "country"],
     category: "beginner",
     scoringConfig: { type: 50, country: 50 },
-    suggestedWines: [
-      { name: "Côtes du Rhône", region: "Rhône", country: "France", type: "red" },
-      { name: "Chablis", region: "Chablis", country: "France", type: "white" },
-      { name: "Rioja Reserva", region: "Rioja", country: "Spain", type: "red" },
-      { name: "Albariño", region: "Rías Baixas", country: "Spain", type: "white" },
-    ],
   },
   {
     name: "Grape Roulette",
@@ -155,14 +99,6 @@ const templates = [
     guessFields: ["grape", "country"],
     category: "grape_deep_dive",
     scoringConfig: { grape: 50, country: 30, region: 20 },
-    suggestedWines: [
-      { name: "Barolo", region: "Barolo", country: "Italy", type: "red" },
-      { name: "Hermitage La Chapelle", region: "Hermitage", country: "France", type: "red" },
-      { name: "Vega Sicilia Único", region: "Ribera del Duero", country: "Spain", type: "red" },
-      { name: "Grüner Veltliner", region: "Kamptal", country: "Austria", type: "white" },
-      { name: "Scharzhofberger Riesling Auslese", region: "Mosel", country: "Germany", type: "white" },
-      { name: "Whispering Angel", region: "Provence", country: "France", type: "rosé" },
-    ],
   },
   {
     name: "Sparkling Showdown",
@@ -173,10 +109,6 @@ const templates = [
     guessFields: ["region", "country", "grape"],
     category: "category_focus",
     scoringConfig: { region: 35, country: 30, grape: 35 },
-    suggestedWines: [
-      { name: "Dom Pérignon", region: "Champagne", country: "France", type: "sparkling" },
-      { name: "Krug Grande Cuvée", region: "Champagne", country: "France", type: "sparkling" },
-    ],
   },
   {
     name: "Freestyle — Build Your Own",
@@ -187,81 +119,40 @@ const templates = [
     guessFields: ["grape", "region", "country", "vintage", "producer", "type"],
     category: "freestyle",
     scoringConfig: { grape: 25, region: 20, country: 15, vintage: 15, producer: 15, type: 10 },
-    suggestedWines: null,
   },
 ];
 
-// ============ RUN SEED ============
-
-import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma/client";
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { PrismaNeon } from "@prisma/adapter-neon";
-import ws from "ws";
-
-// Required for Node.js — Neon serverless driver needs WebSocket
-neonConfig.webSocketConstructor = ws;
-
-const dbUrl = process.env.DATABASE_URL;
-console.log("DATABASE_URL set:", !!dbUrl);
-
-const pool = new Pool({ connectionString: dbUrl });
-const adapter = new PrismaNeon(pool);
-const prisma = new PrismaClient({ adapter } as any);
+function makeId(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30);
+}
 
 async function main() {
   console.log("Seeding wines...");
   for (const wine of wines) {
-    await prisma.wine.upsert({
-      where: {
-        id: wine.name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30),
-      },
-      update: {},
-      create: {
-        id: wine.name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30),
-        name: wine.name,
-        producer: wine.producer,
-        vintage: wine.vintage,
-        grapes: wine.grapes,
-        region: wine.region,
-        country: wine.country,
-        appellation: wine.appellation ?? undefined,
-        type: wine.type,
-      },
-    });
+    const id = makeId(wine.name);
+    await sql`
+      INSERT INTO "Wine" (id, name, producer, vintage, grapes, region, country, appellation, type, "createdAt")
+      VALUES (${id}, ${wine.name}, ${wine.producer}, ${wine.vintage}, ${wine.grapes}, ${wine.region}, ${wine.country}, ${wine.appellation}, ${wine.type}, NOW())
+      ON CONFLICT (id) DO NOTHING
+    `;
   }
   console.log(`Seeded ${wines.length} wines.`);
 
   console.log("Seeding templates...");
   for (const t of templates) {
-    await prisma.eventTemplate.upsert({
-      where: {
-        id: t.name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30),
-      },
-      update: {},
-      create: {
-        id: t.name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30),
-        name: t.name,
-        description: t.description,
-        theme: t.theme,
-        difficulty: t.difficulty,
-        wineCount: t.wineCount,
-        guessFields: t.guessFields,
-        category: t.category,
-        scoringConfig: t.scoringConfig,
-        suggestedWines: t.suggestedWines,
-        isPublic: true,
-        featured: true,
-      },
-    });
+    const id = makeId(t.name);
+    await sql`
+      INSERT INTO "EventTemplate" (id, name, description, theme, difficulty, "wineCount", "guessFields", category, "scoringConfig", "isPublic", featured, "usageCount", "createdAt", "updatedAt")
+      VALUES (${id}, ${t.name}, ${t.description}, ${t.theme}, ${t.difficulty}, ${t.wineCount}, ${t.guessFields}, ${t.category}, ${JSON.stringify(t.scoringConfig)}, true, true, 0, NOW(), NOW())
+      ON CONFLICT (id) DO NOTHING
+    `;
   }
   console.log(`Seeded ${templates.length} templates.`);
+
+  console.log("Done!");
 }
 
-main()
-  .then(() => prisma.$disconnect())
-  .catch((e) => {
-    console.error(e);
-    prisma.$disconnect();
-    process.exit(1);
-  });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
