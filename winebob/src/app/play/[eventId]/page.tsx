@@ -222,9 +222,10 @@ export default function PlayPage({
           <X className="h-8 w-8 text-red-500" />
         </div>
         <p className="text-xl font-bold">Event not found</p>
-        <p className="mt-2 text-muted text-center text-[15px]">
+        <p className="mt-2 text-muted text-center text-[15px] mb-6">
           This tasting may have been deleted or the link is incorrect.
         </p>
+        <a href="/" className="btn-primary px-8 touch-target">Back to Home</a>
       </div>
     );
   }
@@ -233,6 +234,17 @@ export default function PlayPage({
   if (event.status === "draft" || event.status === "lobby") {
     return (
       <div className="fixed inset-0 flex flex-col bg-hero-gradient safe-top safe-bottom">
+        {/* Top bar with leave option */}
+        <div className="px-5 pt-5">
+          <a
+            href="/"
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted active:text-foreground transition-colors touch-target"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+            Leave
+          </a>
+        </div>
+
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="animate-fade-in-up text-center">
             <div className="h-20 w-20 rounded-3xl widget-wine flex items-center justify-center mx-auto mb-6">
@@ -340,10 +352,20 @@ export default function PlayPage({
             </div>
           )}
 
-          <p className="text-center text-muted mt-8 flex items-center justify-center gap-2 text-[14px]">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Waiting for next wine...
-          </p>
+          {/* Progress indicator */}
+          <div className="wine-card p-4 mt-6 flex items-center gap-3">
+            <Loader2 className="h-4 w-4 animate-spin text-cherry flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-[14px] font-medium text-foreground">
+                {event.currentWine < event.wines.length
+                  ? "Waiting for next wine..."
+                  : "Last wine — waiting for results..."}
+              </p>
+              <p className="text-[12px] text-muted mt-0.5">
+                Wine {event.currentWine} of {event.wines.length}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   Search,
   Plus,
@@ -862,6 +863,20 @@ function CreateEventInner() {
       onTouchEnd={handleTouchEnd}
     >
       <div className="max-w-lg mx-auto px-5">
+        {/* Close / Cancel */}
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            href="/arena"
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted active:text-foreground transition-colors touch-target"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Cancel
+          </Link>
+          <span className="text-[12px] font-semibold text-muted">
+            Step {step} of 4
+          </span>
+        </div>
+
         {renderProgress()}
 
         {step === 1 && renderStep1()}
