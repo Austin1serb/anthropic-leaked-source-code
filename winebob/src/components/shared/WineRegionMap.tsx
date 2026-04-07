@@ -36,15 +36,10 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
         sources: {
           "mapbox-streets": { type: "vector", url: "mapbox://mapbox.mapbox-streets-v8" },
-          "mapbox-terrain": { type: "vector", url: "mapbox://mapbox.mapbox-terrain-v2" },
-          "mapbox-dem": { type: "raster-dem", url: "mapbox://mapbox.mapbox-terrain-dem-v1", tileSize: 512, maxzoom: 14 },
         },
-        terrain: { source: "mapbox-dem", exaggeration: 1.3 },
         layers: [
           // Background
           { id: "bg", type: "background", paint: { "background-color": "#110E0A" } },
-          // Hillshade for 3D terrain feel
-          { id: "hillshade", type: "hillshade", source: "mapbox-terrain", "source-layer": "hillshade", paint: { "hillshade-shadow-color": "#0A0806", "hillshade-highlight-color": "#2A2418", "hillshade-accent-color": "#1A1610", "hillshade-exaggeration": 0.3 } },
           // Water
           { id: "water", type: "fill", source: "mapbox-streets", "source-layer": "water", paint: { "fill-color": "#141C28" } },
           // Land use (parks, forests etc)
@@ -149,8 +144,6 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       minZoom: 1.5,
       maxZoom: 14,
       attributionControl: false,
-      pitch: 20,
-      bearing: 0,
     });
 
     popup.current = new mapboxgl.Popup({
