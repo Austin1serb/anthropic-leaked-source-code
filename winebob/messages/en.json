@@ -1,0 +1,118 @@
+{
+  "common": {
+    "appName": "Winebob",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "next": "Next",
+    "back": "Back",
+    "search": "Search",
+    "seeAll": "See all",
+    "cheers": "Cheers! 🥂"
+  },
+  "tabs": {
+    "arena": "Arena",
+    "futures": "Futures",
+    "cellar": "Cellar",
+    "trail": "Trail",
+    "profile": "Profile"
+  },
+  "onboarding": {
+    "welcome": "Welcome to Winebob",
+    "welcomeSubtitle": "Let's discover your wine personality",
+    "bodyQuestion": "How do you like your wine?",
+    "bodySubtitle": "Light and delicate, or rich and full?",
+    "bodyLight": "Light & Crisp",
+    "bodyFull": "Rich & Bold",
+    "sweetnessQuestion": "Sweet or dry?",
+    "sweetnessSubtitle": "Where do you fall on the sweetness scale?",
+    "sweetnessDry": "Bone Dry",
+    "sweetnessSweet": "Sweet & Luscious",
+    "grapeQuestion": "Pick your favorites",
+    "grapeSubtitle": "Select the grapes that speak to you",
+    "regionQuestion": "Favorite wine regions?",
+    "regionSubtitle": "Where in the world do your taste buds travel?",
+    "adventureQuestion": "How adventurous are you?",
+    "adventureSubtitle": "Stick to favorites or always exploring?",
+    "adventureComfort": "Comfort Zone",
+    "adventureExplorer": "Wild Explorer",
+    "seeProfile": "See My Taste Profile"
+  },
+  "cellar": {
+    "title": "Cellar",
+    "searchPlaceholder": "Search wines, producers, regions...",
+    "recommended": "Recommended for You",
+    "friendsCheckins": "Friends' Check-ins",
+    "filters": {
+      "all": "All",
+      "red": "Red",
+      "white": "White",
+      "rosé": "Rosé",
+      "sparkling": "Sparkling",
+      "orange": "Orange",
+      "natural": "Natural"
+    },
+    "checkin": "Check In",
+    "rate": "Rate",
+    "addReview": "Add Review"
+  },
+  "arena": {
+    "title": "Blind Arena",
+    "subtitle": "Test your palate, challenge friends",
+    "dailyChallenge": "Daily Challenge",
+    "hostTasting": "Host Tasting",
+    "soloPractice": "Solo Practice",
+    "upcoming": "Upcoming Events",
+    "leaderboard": "Leaderboard",
+    "startChallenge": "Start Challenge",
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "master": "Master"
+    }
+  },
+  "futures": {
+    "title": "Vine Futures",
+    "subtitle": "Predict wine world outcomes, earn reputation",
+    "reputation": "Your Reputation",
+    "accuracy": "Prediction Accuracy",
+    "stake": "Stake",
+    "categories": {
+      "trending": "Trending",
+      "vintage": "Vintage",
+      "auctions": "Auctions",
+      "critics": "Critics",
+      "trends": "Trends"
+    }
+  },
+  "trail": {
+    "title": "Wine Trail",
+    "subtitle": "Your wine journey, tracked",
+    "recentActivity": "Recent Activity",
+    "streak": "Day Streak",
+    "winesRated": "Wines Rated",
+    "regions": "Regions",
+    "events": "Events"
+  },
+  "profile": {
+    "title": "Profile",
+    "tasteProfile": "Your Taste Profile",
+    "badges": "Badges",
+    "collections": "My Collections",
+    "cellarInventory": "Cellar Inventory",
+    "predictionHistory": "Prediction History",
+    "arenaStats": "Arena Stats",
+    "settings": "Settings",
+    "following": "Following",
+    "followers": "Followers",
+    "reputation": "Rep"
+  },
+  "scoring": {
+    "incredible": "Incredible! You have an extraordinary palate! 🏆",
+    "impressive": "Impressive! Your nose knows its stuff! 🎯",
+    "great": "Great job! You're developing a real talent! 👏",
+    "nice": "Nice effort! Every tasting makes you better! 🌱",
+    "keep": "Keep exploring! The journey is the best part! 🍷"
+  }
+}
