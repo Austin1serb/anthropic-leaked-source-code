@@ -406,21 +406,23 @@ export function WineRegionMap({ onRegionClick, onCityClick, regionCounts, height
   useEffect(() => {
     if (!map.current) return;
 
-    const regionLayers = ["wine-regions-fill", "wine-regions-border", "wine-regions-label"];
-
     if (!exploreRegion) {
       // Show regions, fly back to world
-      for (const id of regionLayers) {
-        try { map.current.setLayoutProperty(id, "visibility", "visible"); } catch {}
-      }
+      try {
+        map.current.setPaintProperty("wine-regions-fill", "fill-opacity", ["case", ["boolean", ["feature-state", "hover"], false], 0.45, 0.2]);
+        map.current.setPaintProperty("wine-regions-border", "line-opacity", 0.6);
+        map.current.setLayoutProperty("wine-regions-label", "visibility", "visible");
+      } catch {}
       map.current.flyTo({ center: [12, 44], zoom: 3.5, pitch: 0, duration: 1200 });
       return;
     }
 
-    // Hide region overlays when zoomed in
-    for (const id of regionLayers) {
-      try { map.current.setLayoutProperty(id, "visibility", "none"); } catch {}
-    }
+    // Hide region overlays when zoomed in — set opacity to 0
+    try {
+      map.current.setPaintProperty("wine-regions-fill", "fill-opacity", 0);
+      map.current.setPaintProperty("wine-regions-border", "line-opacity", 0);
+      map.current.setLayoutProperty("wine-regions-label", "visibility", "none");
+    } catch {}
 
     // Fly to first sub-city if available, otherwise region city center
     const subCities = REGION_SUB_CITIES[exploreRegion];
