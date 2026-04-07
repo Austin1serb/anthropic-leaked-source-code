@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition, useCallback, Suspense } from "react";
+import { useState, useEffect, useTransition, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Search,
@@ -205,6 +205,38 @@ function CreateEventInner() {
     if (step === 2) return title.trim().length > 0 && guessFields.length > 0;
     if (step === 3) return selectedWines.length > 0;
     return true;
+  }
+
+  function goNext() {
+    if (step < 4 && canGoNext()) setStep((s) => s + 1);
+  }
+
+  function goBack() {
+    if (step > 1) setStep((s) => s - 1);
+  }
+
+  // ============ SWIPE GESTURE ============
+
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    touchStartX.current = null;
+    touchStartY.current = null;
+
+    // Only count horizontal swipes (not vertical scrolling)
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
+
+    if (dx < 0) goNext();   // swipe left → next
+    if (dx > 0) goBack();   // swipe right → back
   }
 
   // ============ RENDER: PROGRESS BAR ============
@@ -754,34 +786,42 @@ function CreateEventInner() {
   // ============ MAIN RENDER ============
 
   return (
-    <div className="min-h-screen px-5 pb-32 pt-6 safe-top bg-background">
-      {renderProgress()}
+    <div
+      className="min-h-screen pb-28 pt-6 safe-top bg-background"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="max-w-lg mx-auto px-5">
+        {renderProgress()}
 
-      {step === 1 && renderStep1()}
-      {step === 2 && renderStep2()}
-      {step === 3 && renderStep3()}
-      {step === 4 && renderStep4()}
+        {step === 1 && renderStep1()}
+        {step === 2 && renderStep2()}
+        {step === 3 && renderStep3()}
+        {step === 4 && renderStep4()}
+      </div>
 
       {/* Back / Next sticky footer */}
       {step > 1 && (
-        <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-card-border/30 px-5 py-3 safe-bottom flex gap-3 z-40">
-          <button
-            onClick={() => setStep((s) => s - 1)}
-            className="btn-secondary flex-1 touch-target"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back
-          </button>
-          {step < 4 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-card-border/30 safe-bottom">
+          <div className="max-w-lg mx-auto px-5 py-3 flex gap-3">
             <button
-              onClick={() => setStep((s) => s + 1)}
-              disabled={!canGoNext()}
-              className="btn-primary flex-1 touch-target"
+              onClick={goBack}
+              className="btn-secondary flex-1 touch-target"
             >
-              Next
-              <ChevronRight className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" />
+              Back
             </button>
-          )}
+            {step < 4 && (
+              <button
+                onClick={goNext}
+                disabled={!canGoNext()}
+                className="btn-primary flex-1 touch-target"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
