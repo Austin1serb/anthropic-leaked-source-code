@@ -148,7 +148,7 @@ const grapes: Grape[] = [
   { name: "Clairette", aliases: [], color: "white", originCountry: "France", description: "Soft, low-acid southern French", acreageHa: 3000 },
   { name: "Picpoul", aliases: ["Piquepoul"], color: "white", originCountry: "France", description: "Briny, citrus Mediterranean white", acreageHa: 1500 },
   { name: "Melon de Bourgogne", aliases: ["Muscadet"], color: "white", originCountry: "France", description: "Mineral, lees-aged Loire white", acreageHa: 10000 },
-  { name: "Savagnin", aliases: [], color: "white", originCountry: "France", description: "Nutty, oxidative Jura white", acreageHa: 500 },
+  { name: "Savagnin", aliases: ["Traminer"], color: "white", originCountry: "France", description: "Nutty, oxidative Jura white", acreageHa: 500 },
   { name: "Aligoté", aliases: [], color: "white", originCountry: "France", description: "Crisp, tart Burgundy white", acreageHa: 5000 },
   { name: "Colombard", aliases: [], color: "white", originCountry: "France", description: "Fruity, also for Armagnac", acreageHa: 25000 },
   { name: "Pinot Blanc", aliases: ["Weissburgunder", "Pinot Bianco"], color: "white", originCountry: "France", description: "Gentle, apple-scented white", acreageHa: 8000 },
