@@ -241,49 +241,37 @@ export function WinesClient({
             <SearchBar />
           </div>
 
-          {/* Filter pills overlay */}
-          <div className="absolute bottom-4 left-4 z-20">
-            <FilterPills />
+          {/* Bottom bar: filter pills OR city hopping pills */}
+          <div className="absolute bottom-4 left-4 right-4 z-20">
+            {exploreRegion ? (
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                <button
+                  onClick={() => { setExploreRegion(null); setSearch(""); }}
+                  className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
+                >
+                  ← {exploreRegion}
+                </button>
+                {getRegionCities(exploreRegion).map((city) => (
+                  <button
+                    key={city.name}
+                    onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
+                    className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-[#1A1412]/60 backdrop-blur-xl text-white/70 border border-white/[0.06] text-[11px] font-semibold active:bg-cherry active:text-white transition-colors"
+                  >
+                    {city.name}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <FilterPills />
+            )}
           </div>
 
           {/* Floating buttons */}
           <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
-            {exploreRegion && (
-              <button
-                onClick={() => { setExploreRegion(null); setSearch(""); }}
-                className="h-10 px-3 rounded-[12px] bg-[#1A1412]/80 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 shadow-[0_2px_12px_rgba(0,0,0,0.2)] active:scale-90 transition-transform"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                <span className="text-[11px] font-semibold">World</span>
-              </button>
-            )}
             <Link href="/wines/add" className="h-10 w-10 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center text-white/50 shadow-[0_2px_12px_rgba(0,0,0,0.15)] active:scale-90 transition-transform" title="Add wine">
               <Plus className="h-4 w-4" />
             </Link>
           </div>
-
-          {/* Explore: region badge + city hopping pills */}
-          {exploreRegion && (
-            <div className="absolute left-4 bottom-16 z-20 flex flex-col gap-2">
-              <div className="px-4 py-2.5 rounded-[12px] bg-cherry/90 backdrop-blur-xl shadow-[0_2px_12px_rgba(116,7,14,0.3)]">
-                <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Exploring</p>
-                <p className="text-[16px] font-bold text-white">{exploreRegion}</p>
-              </div>
-              {getRegionCities(exploreRegion).length > 0 && (
-                <div className="flex gap-1.5 flex-wrap max-w-[300px]">
-                  {getRegionCities(exploreRegion).map((city) => (
-                    <button
-                      key={city.name}
-                      onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
-                      className="px-2.5 py-1 rounded-[8px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] text-[11px] font-semibold text-white/70 active:scale-95 transition-transform active:bg-cherry active:text-white"
-                    >
-                      {city.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Sidebar */}
@@ -323,7 +311,7 @@ export function WinesClient({
           <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} height="100%" />
         </div>
 
-        {/* Top overlays */}
+        {/* Top: search + add */}
         <div className="absolute top-0 left-0 right-0 z-20 safe-top px-3 pt-3">
           <div className="flex gap-2">
             <SearchBar className="flex-1" />
@@ -331,49 +319,31 @@ export function WinesClient({
               <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
             </Link>
           </div>
+          {/* Filter pills OR city pills — same position, swap based on state */}
           <div className="mt-2">
-            <FilterPills />
-          </div>
-        </div>
-
-        {/* Right floating */}
-        <div className="absolute right-3 z-20 flex flex-col gap-2" style={{ top: "35%" }}>
-          {exploreRegion && (
-            <button
-              onClick={() => { setExploreRegion(null); setSearch(""); setSheet("collapsed"); }}
-              className="h-10 px-3 rounded-[12px] bg-[#1A1412]/80 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 shadow-[0_2px_12px_rgba(0,0,0,0.2)] active:scale-90 transition-transform"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span className="text-[11px] font-semibold">World</span>
-            </button>
-          )}
-          <button className="h-10 w-10 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center text-white/40 shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
-            <Layers className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Explore: region badge + city pills */}
-        {exploreRegion && (
-          <div className="absolute left-3 z-20 flex flex-col gap-2" style={{ top: "30%" }}>
-            <div className="px-3 py-2 rounded-[12px] bg-cherry/90 backdrop-blur-xl shadow-[0_2px_12px_rgba(116,7,14,0.3)]">
-              <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Exploring</p>
-              <p className="text-[14px] font-bold text-white">{exploreRegion}</p>
-            </div>
-            {getRegionCities(exploreRegion).length > 0 && (
-              <div className="flex flex-col gap-1 max-w-[140px]">
+            {exploreRegion ? (
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                <button
+                  onClick={() => { setExploreRegion(null); setSearch(""); setSheet("collapsed"); }}
+                  className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
+                >
+                  ← {exploreRegion}
+                </button>
                 {getRegionCities(exploreRegion).map((city) => (
                   <button
                     key={city.name}
                     onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
-                    className="px-2.5 py-1.5 rounded-[8px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] text-[11px] font-semibold text-white/70 text-left active:bg-cherry active:text-white transition-colors"
+                    className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-[#1A1412]/60 backdrop-blur-xl text-white/70 border border-white/[0.06] text-[11px] font-semibold active:bg-cherry active:text-white transition-colors"
                   >
-                    {city.name} →
+                    {city.name}
                   </button>
                 ))}
               </div>
+            ) : (
+              <FilterPills />
             )}
           </div>
-        )}
+        </div>
 
         {/* Bottom sheet */}
         <div
