@@ -5,12 +5,16 @@ import Link from "next/link";
 import {
   Search, Plus, Wine, Heart, ChevronLeft, ChevronRight,
   ChevronDown, Bookmark, Grape, Layers, Play, Square, Satellite, Map,
+  CloudRain, Target, Radio, PenTool,
 } from "lucide-react";
 import { useState, useTransition, useRef, useCallback } from "react";
 import { toggleFavorite } from "@/lib/actions";
 import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
 import type { TourStop } from "@/components/shared/WineRegionMap";
 import { TourInfoCard } from "@/components/shared/TourInfoCard";
+import { useMapLayers } from "@/hooks/useMapLayers";
+import { MapLayerDrawer } from "@/components/shared/MapLayerDrawer";
+import type { MapLayer } from "@/components/shared/MapLayerDrawer";
 
 /* ── Types ── */
 
@@ -58,6 +62,13 @@ const SHEET_TRANSLATE: Record<SheetState, string> = {
   full: "0",
 };
 
+const LAYER_ICONS: Record<string, React.ReactNode> = {
+  "vintage-weather": <CloudRain size={18} />,
+  "flavor-genome": <Target size={18} />,
+  "live-heatmap": <Radio size={18} />,
+  "draw-flight": <PenTool size={18} />,
+};
+
 /* ══════════════════════════════════════════
    COMPONENT
    ══════════════════════════════════════════ */
@@ -67,6 +78,8 @@ export function WinesClient({
   activeType, activeCountry, activePriceRange, activeSearch,
 }: Props) {
   const router = useRouter();
+  const { layers, toggle } = useMapLayers();
+  const fullLayers: MapLayer[] = layers.map((l) => ({ ...l, icon: LAYER_ICONS[l.id] ?? null }));
   const [search, setSearch] = useState(activeSearch ?? "");
   const [favSet, setFavSet] = useState<Set<string>>(new Set());
   const [sheet, setSheet] = useState<SheetState>("peek");
@@ -242,6 +255,8 @@ export function WinesClient({
       <div className="absolute inset-0">
         <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} tourRegion={tourRegion} onTourEnd={() => { setTourRegion(null); setActiveTourStop(null); }} satellite={satellite} onTourStop={setActiveTourStop} height="100%" />
       </div>
+
+      <MapLayerDrawer layers={fullLayers} onToggle={toggle} />
 
       {/* Tour info card — floating overlay */}
       {activeTourStop && tourRegion && (

@@ -1,13 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, Wine, Users, Globe, ArrowRight, Lock, Play, Square, Satellite, Map } from "lucide-react";
+import { Sparkles, Wine, Users, Globe, ArrowRight, Lock, Play, Square, Satellite, Map, CloudRain, Target, Radio, PenTool } from "lucide-react";
 import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
 import type { TourStop } from "@/components/shared/WineRegionMap";
 import { TourInfoCard } from "@/components/shared/TourInfoCard";
+import { useMapLayers } from "@/hooks/useMapLayers";
+import { MapLayerDrawer } from "@/components/shared/MapLayerDrawer";
+import type { MapLayer } from "@/components/shared/MapLayerDrawer";
 import { useState } from "react";
 
+const LAYER_ICONS: Record<string, React.ReactNode> = {
+  "vintage-weather": <CloudRain size={18} />,
+  "flavor-genome": <Target size={18} />,
+  "live-heatmap": <Radio size={18} />,
+  "draw-flight": <PenTool size={18} />,
+};
+
 export default function ExplorePage() {
+  const { layers, toggle } = useMapLayers();
+  const fullLayers: MapLayer[] = layers.map((l) => ({ ...l, icon: LAYER_ICONS[l.id] ?? null }));
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [activeCity, setActiveCity] = useState<string | null>(null);
@@ -58,6 +70,8 @@ export default function ExplorePage() {
           height="100%"
         />
       </div>
+
+      <MapLayerDrawer layers={fullLayers} onToggle={toggle} />
 
       {/* Top — branding + back */}
       <div className="absolute top-0 left-0 right-0 z-20 safe-top">
