@@ -321,10 +321,17 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       if (lat > maxLat) maxLat = lat;
     }
 
-    map.current.fitBounds(
-      [[minLng - 0.3, minLat - 0.2], [maxLng + 0.3, maxLat + 0.2]],
-      { duration: 1500, pitch: 35, padding: { top: 80, bottom: 200, left: 40, right: 40 } }
-    );
+    // Calculate center and fly to zoom 10 minimum (enough to see POIs)
+    const centerLng = (minLng + maxLng) / 2;
+    const centerLat = (minLat + maxLat) / 2;
+
+    map.current.flyTo({
+      center: [centerLng, centerLat],
+      zoom: 10,
+      pitch: 35,
+      duration: 2000,
+      essential: true,
+    });
   }, [exploreRegion]);
 
   // ── Fallback without token ──
