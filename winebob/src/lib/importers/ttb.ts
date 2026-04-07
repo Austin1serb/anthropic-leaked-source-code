@@ -17,7 +17,7 @@ import "dotenv/config";
 import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import { PrismaNeonHttp } from "@prisma/adapter-neon";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "../../generated/prisma/client";
 import {
   normalizeWineName,
   normalizeProducerName,
@@ -43,6 +43,12 @@ function createPrismaClient(): PrismaClient {
 // Constants
 // ---------------------------------------------------------------------------
 
+// WARNING: The TTB Public COLA API endpoint below is EXPERIMENTAL/UNTESTED.
+// The TTB does not publish a stable public REST API for COLA data. This URL
+// is a best-guess based on their website; it may not exist or may change
+// without notice. The RELIABLE path for bulk import is CSV mode:
+//   npx tsx src/lib/importers/ttb.ts --csv /path/to/cola_data.csv
+// CSV bulk downloads are available at: https://www.ttb.gov/foia/xls/frl-spirits-702010.zip
 const TTB_API_URL = "https://www.ttb.gov/public-cola/api/search";
 const RATE_LIMIT_MS = 500;
 const MAX_RETRIES = 3;

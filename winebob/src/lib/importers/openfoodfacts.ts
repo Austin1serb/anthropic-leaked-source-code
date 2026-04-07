@@ -416,6 +416,7 @@ export async function runOpenFoodFactsImport(): Promise<{
 
             pendingBatch.push(mapped);
             newCount++;
+            if (mapped.barcode) seenBarcodes.add(mapped.barcode);
 
             // Flush batch when it reaches the target size
             if (pendingBatch.length >= BATCH_INSERT_SIZE) {
