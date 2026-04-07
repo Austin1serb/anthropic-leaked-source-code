@@ -87,9 +87,15 @@ export function WinesClient({
   }
 
   function onRegionClick(region: string) {
+    // Only fly to — don't navigate (that causes remount and kills the animation)
     setExploreRegion(region);
-    nav({ search: region });
+    setSearch(region);
     setSheet("half");
+  }
+
+  // Navigate when user explicitly confirms explore (e.g. from sheet header)
+  function confirmExplore() {
+    if (exploreRegion) nav({ search: exploreRegion });
   }
 
   function onFav(id: string) {
@@ -243,7 +249,7 @@ export function WinesClient({
           <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
             {exploreRegion && (
               <button
-                onClick={() => { setExploreRegion(null); nav({ search: undefined }); }}
+                onClick={() => { setExploreRegion(null); setSearch(""); }}
                 className="h-10 px-3 rounded-[12px] bg-[#1A1412]/80 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 shadow-[0_2px_12px_rgba(0,0,0,0.2)] active:scale-90 transition-transform"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
@@ -320,7 +326,7 @@ export function WinesClient({
         <div className="absolute right-3 z-20 flex flex-col gap-2" style={{ top: "35%" }}>
           {exploreRegion && (
             <button
-              onClick={() => { setExploreRegion(null); nav({ search: undefined }); setSheet("collapsed"); }}
+              onClick={() => { setExploreRegion(null); setSearch(""); setSheet("collapsed"); }}
               className="h-10 px-3 rounded-[12px] bg-[#1A1412]/80 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 shadow-[0_2px_12px_rgba(0,0,0,0.2)] active:scale-90 transition-transform"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -382,11 +388,20 @@ export function WinesClient({
               <>
                 <div className="px-4 flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-[16px] font-bold text-foreground tracking-tight">{activeSearch || "All Wines"}</h2>
+                    <h2 className="text-[16px] font-bold text-foreground tracking-tight">
+                      {exploreRegion || activeSearch || "All Wines"}
+                    </h2>
                     <span className="text-[10px] font-bold text-muted bg-muted/[0.08] px-1.5 py-0.5 rounded-[4px]">{total}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {hasFilters && <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>}
+                    {exploreRegion && (
+                      <button onClick={confirmExplore} className="text-[11px] font-semibold text-white bg-cherry px-3 py-1 rounded-[8px]">
+                        View wines →
+                      </button>
+                    )}
+                    {hasFilters && !exploreRegion && (
+                      <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>
+                    )}
                     <button onClick={() => setSheet("collapsed")}><ChevronDown className="h-4 w-4 text-muted/30" /></button>
                   </div>
                 </div>
