@@ -74,7 +74,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
 
   return (
     <div className="min-h-dvh safe-top safe-bottom bg-background">
-      <div className="max-w-2xl mx-auto px-5 pt-5 pb-32">
+      <div className="container-app pt-5 pb-32">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Link href="/live" className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted touch-target">

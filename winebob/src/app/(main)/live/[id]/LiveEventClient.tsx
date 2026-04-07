@@ -215,7 +215,7 @@ export function LiveEventClient({ event: initialEvent }: { event: EventData }) {
 
     return (
       <div className="min-h-dvh safe-top safe-bottom bg-hero-gradient">
-        <div className="max-w-lg mx-auto px-5 pt-8 pb-28">
+        <div className="container-app pt-8 pb-28">
           <Link href="/live" className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted mb-6 touch-target">
             <ChevronLeft className="h-4 w-4" /> Back to Live
           </Link>
@@ -271,7 +271,7 @@ export function LiveEventClient({ event: initialEvent }: { event: EventData }) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto px-5 py-4">
+        <div className="container-app py-4">
           {/* Sommelier + event title */}
           <div className="flex items-center gap-2 mb-1">
             <div className="h-6 w-6 rounded-full widget-wine flex items-center justify-center text-[9px] font-bold text-cherry">
@@ -370,7 +370,7 @@ export function LiveEventClient({ event: initialEvent }: { event: EventData }) {
       {/* Sticky guess form */}
       {currentWine && !currentWine.revealed && (
         <div className="border-t border-card-border/30 bg-card-bg safe-bottom">
-          <div className="max-w-lg mx-auto px-5 py-3">
+          <div className="container-app py-3">
             {guessSubmitted ? (
               <div className="flex items-center justify-center gap-2 py-2 text-[13px] font-semibold text-green-600">
                 <Check className="h-4 w-4" /> Guess submitted — you can update anytime

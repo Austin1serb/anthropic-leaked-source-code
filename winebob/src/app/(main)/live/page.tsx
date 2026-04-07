@@ -12,7 +12,7 @@ export default async function LiveEventsPage() {
 
   return (
     <div className="min-h-screen pb-28 safe-top bg-background">
-      <div className="px-5 pt-8 pb-2">
+      <div className="container-app pt-8 pb-2">
         <h1 className="text-2xl font-bold text-foreground tracking-tight">
           Live Tastings
         </h1>
@@ -21,7 +21,7 @@ export default async function LiveEventsPage() {
 
       {/* Live Now */}
       {liveNow.length > 0 && (
-        <section className="px-5 mt-5">
+        <section className="container-app mt-5">
           <div className="flex items-center gap-2 mb-3">
             <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
             <h2 className="text-[15px] font-bold text-foreground">Live Now</h2>
@@ -69,7 +69,7 @@ export default async function LiveEventsPage() {
       )}
 
       {/* Upcoming */}
-      <section className="px-5 mt-7">
+      <section className="container-app mt-7">
         <h2 className="text-[15px] font-bold text-foreground mb-3 flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted" />
           Upcoming

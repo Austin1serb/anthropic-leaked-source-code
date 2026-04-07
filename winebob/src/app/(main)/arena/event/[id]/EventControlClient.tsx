@@ -190,7 +190,7 @@ export function EventControlClient({ event }: EventControlClientProps) {
 
   return (
     <div className="min-h-screen pb-36 pt-6 safe-top bg-background">
-      <div className="max-w-lg mx-auto px-5">
+      <div className="container-app">
         {/* ========== HEADER ========== */}
         <header className="mb-6">
           <Link
@@ -371,7 +371,7 @@ export function EventControlClient({ event }: EventControlClientProps) {
 
       {/* ========== CONTROL BUTTONS (fixed bottom) ========== */}
       <div className="fixed bottom-0 inset-x-0 glass-card border-t border-card-border/30 safe-bottom z-50">
-        <div className="max-w-lg mx-auto px-5 py-4 flex flex-col gap-3">
+        <div className="container-app py-4 flex flex-col gap-3">
           {event.status === "draft" && (
             <button onClick={handleOpenLobby} disabled={isPending} className="btn-primary touch-target">
               <DoorOpen className="h-5 w-5" />

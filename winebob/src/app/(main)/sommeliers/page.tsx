@@ -23,7 +23,7 @@ export default async function SommeliersPage() {
 
   return (
     <div className="min-h-screen pb-28 safe-top bg-background">
-      <div className="px-5 pt-8 pb-2">
+      <div className="container-app pt-8 pb-2">
         <h1 className="text-2xl font-bold text-foreground tracking-tight">
           Winebob Soms
         </h1>
@@ -31,7 +31,7 @@ export default async function SommeliersPage() {
       </div>
 
       {/* Sommelier list */}
-      <div className="px-5 mt-5">
+      <div className="container-app mt-5">
         {sommeliers.length === 0 ? (
           <div className="wine-card flex flex-col items-center justify-center py-16 px-6 text-center">
             <div className="h-16 w-16 rounded-3xl widget-wine flex items-center justify-center mb-4">

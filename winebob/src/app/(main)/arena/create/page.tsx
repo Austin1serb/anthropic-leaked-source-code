@@ -862,7 +862,7 @@ function CreateEventInner() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="max-w-lg mx-auto px-5">
+      <div className="container-app">
         {/* Close / Cancel */}
         <div className="flex items-center justify-between mb-4">
           <Link
@@ -888,7 +888,7 @@ function CreateEventInner() {
       {/* Back / Next sticky footer */}
       {step > 1 && (
         <div className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-card-border/30 safe-bottom">
-          <div className="max-w-lg mx-auto px-5 py-3 flex gap-3">
+          <div className="container-app py-3 flex gap-3">
             <button
               onClick={goBack}
               className="btn-secondary flex-1 touch-target"
