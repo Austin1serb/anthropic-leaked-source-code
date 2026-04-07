@@ -195,11 +195,15 @@ const templates = [
 
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { Pool } from "@neondatabase/serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
+import ws from "ws";
+
+// Required for Node.js — Neon serverless driver needs WebSocket
+neonConfig.webSocketConstructor = ws;
 
 const dbUrl = process.env.DATABASE_URL;
-console.log("DATABASE_URL set:", !!dbUrl, dbUrl ? dbUrl.substring(0, 30) + "..." : "MISSING");
+console.log("DATABASE_URL set:", !!dbUrl);
 
 const pool = new Pool({ connectionString: dbUrl });
 const adapter = new PrismaNeon(pool);
