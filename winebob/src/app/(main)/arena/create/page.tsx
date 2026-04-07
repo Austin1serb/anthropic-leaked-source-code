@@ -10,6 +10,14 @@ import {
   ChevronLeft,
   Wine,
   Check,
+  Grape,
+  MapPin,
+  Globe,
+  Clock,
+  Tag,
+  DollarSign,
+  Sparkles,
+  GlassWater,
 } from "lucide-react";
 import { createEvent, getTemplates, searchWines } from "@/lib/actions";
 
@@ -40,27 +48,22 @@ type WineResult = {
 
 // ============ CONSTANTS ============
 
-const DIFFICULTIES = ["beginner", "intermediate", "advanced", "master"] as const;
-
-const ALL_GUESS_FIELDS = [
-  "grape",
-  "region",
-  "country",
-  "vintage",
-  "producer",
-  "type",
-  "price",
+const DIFFICULTIES = [
+  { value: "beginner", label: "Beginner", emoji: "🌱", color: "bg-widget-sage", textColor: "text-emerald-700" },
+  { value: "intermediate", label: "Intermediate", emoji: "🍷", color: "bg-widget-gold", textColor: "text-amber-700" },
+  { value: "advanced", label: "Advanced", emoji: "🔥", color: "bg-widget-wine", textColor: "text-cherry" },
+  { value: "master", label: "Master", emoji: "👑", color: "bg-widget-lavender", textColor: "text-purple-700" },
 ] as const;
 
-const GUESS_FIELD_LABELS: Record<string, string> = {
-  grape: "Grape",
-  region: "Region",
-  country: "Country",
-  vintage: "Vintage",
-  producer: "Producer",
-  type: "Type",
-  price: "Price",
-};
+const ALL_GUESS_FIELDS = [
+  { key: "grape", label: "Grape", icon: Grape, color: "bg-widget-wine", iconColor: "text-cherry" },
+  { key: "region", label: "Region", icon: MapPin, color: "bg-widget-gold", iconColor: "text-amber-700" },
+  { key: "country", label: "Country", icon: Globe, color: "bg-widget-sky", iconColor: "text-blue-600" },
+  { key: "vintage", label: "Vintage", icon: Clock, color: "bg-widget-sage", iconColor: "text-emerald-700" },
+  { key: "producer", label: "Producer", icon: Tag, color: "bg-widget-lavender", iconColor: "text-purple-600" },
+  { key: "type", label: "Type", icon: Wine, color: "bg-widget-peach", iconColor: "text-orange-600" },
+  { key: "price", label: "Price", icon: DollarSign, color: "bg-widget-gold", iconColor: "text-amber-700" },
+] as const;
 
 const DEFAULT_SCORING: Record<string, number> = {
   grape: 25,
@@ -71,6 +74,7 @@ const DEFAULT_SCORING: Record<string, number> = {
   type: 10,
 };
 
+const STEP_ICONS = [Sparkles, Wine, GlassWater, Check];
 const STEP_LABELS = ["Start", "Configure", "Wines", "Review"];
 
 // ============ INNER COMPONENT (uses useSearchParams) ============
@@ -115,7 +119,6 @@ function CreateEventInner() {
       setTemplates(data as Template[]);
       setTemplatesLoading(false);
 
-      // If template param exists, pre-fill from it
       if (templateParam) {
         const tmpl = (data as Template[]).find((t) => t.id === templateParam);
         if (tmpl) {
@@ -193,7 +196,6 @@ function CreateEventInner() {
         timePerWine: timerEnabled ? timePerWine : undefined,
         wineIds: selectedWines.map((w) => w.id),
       });
-      // createEvent redirects on success
     });
   }
 
@@ -209,29 +211,41 @@ function CreateEventInner() {
 
   function renderProgress() {
     return (
-      <div className="flex items-center gap-1 mb-8">
+      <div className="flex items-center gap-2 mb-8 px-2">
         {STEP_LABELS.map((label, i) => {
           const stepNum = i + 1;
           const isActive = step === stepNum;
           const isDone = step > stepNum;
+          const Icon = STEP_ICONS[i];
           return (
-            <div key={label} className="flex-1 flex flex-col items-center gap-1.5">
+            <div key={label} className="flex-1 flex flex-col items-center gap-2">
+              {/* Step circle */}
               <div
-                className={`h-1.5 w-full rounded-full transition-colors ${
+                className={`h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                   isDone
-                    ? "bg-wine-burgundy"
+                    ? "bg-cherry text-white shadow-sm"
                     : isActive
-                    ? "bg-wine-burgundy-light"
-                    : "bg-card-border"
+                    ? "bg-cherry/10 text-cherry"
+                    : "bg-card-bg text-muted border border-card-border"
                 }`}
-              />
+              >
+                {isDone ? (
+                  <Check className="h-4 w-4" strokeWidth={3} />
+                ) : (
+                  <Icon className="h-4 w-4" />
+                )}
+              </div>
+              {/* Progress bar */}
+              <div className="h-1 w-full rounded-full overflow-hidden bg-card-border/60">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ease-out ${
+                    isDone ? "bg-cherry w-full" : isActive ? "bg-cherry/50 w-1/2" : "w-0"
+                  }`}
+                />
+              </div>
               <span
-                className={`text-[10px] font-medium uppercase tracking-wider ${
-                  isActive
-                    ? "text-wine-burgundy"
-                    : isDone
-                    ? "text-wine-burgundy/70"
-                    : "text-muted"
+                className={`text-[10px] font-semibold tracking-wide ${
+                  isActive ? "text-cherry" : isDone ? "text-foreground" : "text-muted/60"
                 }`}
               >
                 {label}
@@ -248,88 +262,96 @@ function CreateEventInner() {
   function renderStep1() {
     return (
       <div className="animate-fade-in-up">
-        <h1 className="font-serif text-2xl font-bold text-foreground mb-2">
+        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-1">
           New Blind Tasting
         </h1>
-        <p className="text-muted text-sm mb-8">
+        <p className="text-muted text-[15px] mb-8">
           Start from scratch or pick a template.
         </p>
 
+        {/* From scratch */}
         <button
           onClick={() => {
             setSelectedTemplateId(null);
             setStep(2);
           }}
-          className="touch-target wine-card w-full flex items-center gap-4 p-5 mb-4 active:scale-[0.98] transition-transform"
+          className="touch-target wine-card w-full flex items-center gap-4 p-5 mb-6 active:scale-[0.98] transition-transform"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-wine-burgundy/10">
-            <Plus className="h-6 w-6 text-wine-burgundy" />
+          <div className="h-14 w-14 rounded-2xl bg-cherry/8 flex items-center justify-center flex-shrink-0">
+            <Plus className="h-6 w-6 text-cherry" />
           </div>
           <div className="text-left flex-1">
-            <p className="font-serif font-semibold text-foreground">
+            <p className="font-bold text-[16px] text-foreground">
               Start from scratch
             </p>
-            <p className="text-xs text-muted mt-0.5">
+            <p className="text-[13px] text-muted mt-0.5">
               Full control over every detail
             </p>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted" />
+          <ChevronRight className="h-5 w-5 text-muted/40" />
         </button>
 
         {templatesLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="h-8 w-8 rounded-full border-2 border-wine-burgundy border-t-transparent animate-spin" />
+          <div className="flex justify-center py-16">
+            <div className="h-8 w-8 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
           </div>
         ) : templates.length > 0 ? (
           <>
-            <h2 className="font-serif text-sm font-semibold text-muted uppercase tracking-wide mb-3 mt-8">
+            <h2 className="text-[13px] font-bold text-muted uppercase tracking-wider mb-4">
               Templates
             </h2>
-            <div className="flex flex-col gap-3">
-              {templates.map((tmpl) => (
-                <button
-                  key={tmpl.id}
-                  onClick={() => {
-                    applyTemplate(tmpl);
-                    setStep(2);
-                  }}
-                  className="touch-target wine-card w-full text-left p-4 active:scale-[0.98] transition-transform"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-serif font-semibold text-sm text-foreground leading-tight line-clamp-1">
-                        {tmpl.name}
-                      </h3>
-                      {tmpl.description && (
-                        <p className="mt-1 text-xs text-muted line-clamp-2 leading-relaxed">
-                          {tmpl.description}
-                        </p>
-                      )}
-                      <div className="mt-2.5 flex items-center gap-2 flex-wrap">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            tmpl.difficulty === "beginner"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : tmpl.difficulty === "intermediate"
-                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                              : tmpl.difficulty === "advanced"
-                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                              : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                          }`}
-                        >
-                          {tmpl.difficulty.charAt(0).toUpperCase() +
-                            tmpl.difficulty.slice(1)}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-xs text-muted">
-                          <Wine className="h-3 w-3" />
-                          {tmpl.wineCount} wines
-                        </span>
+            <div className="space-y-3 stagger-children">
+              {templates.map((tmpl, i) => {
+                const color = [
+                  "bg-widget-wine", "bg-widget-gold", "bg-widget-sage",
+                  "bg-widget-sky", "bg-widget-lavender", "bg-widget-peach",
+                ][i % 6];
+                const iconColor = [
+                  "text-cherry", "text-amber-700", "text-emerald-700",
+                  "text-blue-600", "text-purple-600", "text-orange-600",
+                ][i % 6];
+
+                return (
+                  <button
+                    key={tmpl.id}
+                    onClick={() => {
+                      applyTemplate(tmpl);
+                      setStep(2);
+                    }}
+                    className="touch-target wine-card w-full text-left p-4 active:scale-[0.98] transition-transform"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className={`h-12 w-12 rounded-2xl ${color} flex items-center justify-center flex-shrink-0`}>
+                        <Wine className={`h-5 w-5 ${iconColor}`} />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-[15px] text-foreground leading-tight line-clamp-1">
+                          {tmpl.name}
+                        </h3>
+                        {tmpl.description && (
+                          <p className="mt-1 text-[12px] text-muted line-clamp-1 leading-relaxed">
+                            {tmpl.description}
+                          </p>
+                        )}
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-muted">
+                            {tmpl.wineCount} wines
+                          </span>
+                          <span className="text-muted/30">·</span>
+                          <span className={`text-[11px] font-semibold capitalize ${
+                            tmpl.difficulty === "beginner" ? "text-emerald-600" :
+                            tmpl.difficulty === "intermediate" ? "text-amber-600" :
+                            tmpl.difficulty === "advanced" ? "text-red-600" : "text-purple-600"
+                          }`}>
+                            {tmpl.difficulty}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted/30 flex-shrink-0" />
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted flex-shrink-0 mt-0.5" />
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </>
         ) : null}
@@ -342,13 +364,16 @@ function CreateEventInner() {
   function renderStep2() {
     return (
       <div className="animate-fade-in-up">
-        <h1 className="font-serif text-2xl font-bold text-foreground mb-6">
-          Configure Event
+        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-1">
+          Configure
         </h1>
+        <p className="text-muted text-[15px] mb-7">
+          Set up the details for your tasting.
+        </p>
 
         {/* Title */}
-        <label className="block mb-5">
-          <span className="text-sm font-semibold text-foreground">
+        <label className="block mb-6">
+          <span className="text-[13px] font-bold text-foreground uppercase tracking-wide">
             Event Title
           </span>
           <input
@@ -356,70 +381,90 @@ function CreateEventInner() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Friday Night Flight"
-            className="touch-target mt-2 block w-full rounded-xl border border-card-border bg-card-bg px-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-wine-burgundy/40"
+            className="input-field touch-target mt-2 block w-full"
           />
         </label>
 
         {/* Description */}
-        <label className="block mb-5">
-          <span className="text-sm font-semibold text-foreground">
+        <label className="block mb-6">
+          <span className="text-[13px] font-bold text-foreground uppercase tracking-wide">
             Description{" "}
-            <span className="font-normal text-muted">(optional)</span>
+            <span className="font-normal normal-case text-muted tracking-normal">(optional)</span>
           </span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="A few words about this tasting..."
             rows={3}
-            className="mt-2 block w-full rounded-xl border border-card-border bg-card-bg px-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-wine-burgundy/40 resize-none"
+            className="input-field mt-2 block w-full resize-none"
           />
         </label>
 
-        {/* Difficulty */}
-        <div className="mb-5">
-          <span className="text-sm font-semibold text-foreground block mb-2">
+        {/* Difficulty — card selector */}
+        <div className="mb-6">
+          <span className="text-[13px] font-bold text-foreground uppercase tracking-wide block mb-3">
             Difficulty
           </span>
-          <div className="flex gap-2 flex-wrap">
-            {DIFFICULTIES.map((d) => (
-              <button
-                key={d}
-                onClick={() => setDifficulty(d)}
-                className={`touch-target rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  difficulty === d
-                    ? "bg-wine-burgundy text-white"
-                    : "bg-card-bg border border-card-border text-foreground active:bg-wine-cream-dark"
-                }`}
-              >
-                {d.charAt(0).toUpperCase() + d.slice(1)}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-2.5">
+            {DIFFICULTIES.map((d) => {
+              const isActive = difficulty === d.value;
+              return (
+                <button
+                  key={d.value}
+                  onClick={() => setDifficulty(d.value)}
+                  className={`touch-target rounded-2xl p-3.5 text-left transition-all ${
+                    isActive
+                      ? `${d.color} ring-2 ring-cherry/30 shadow-sm`
+                      : "bg-card-bg border border-card-border"
+                  }`}
+                >
+                  <span className="text-xl">{d.emoji}</span>
+                  <p className={`mt-1.5 font-bold text-[14px] ${isActive ? d.textColor : "text-foreground"}`}>
+                    {d.label}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Guess Fields */}
-        <div className="mb-5">
-          <span className="text-sm font-semibold text-foreground block mb-2">
+        {/* Guess Fields — widget grid */}
+        <div className="mb-6">
+          <span className="text-[13px] font-bold text-foreground uppercase tracking-wide block mb-1">
             Guess Fields
           </span>
-          <p className="text-xs text-muted mb-3">
+          <p className="text-[12px] text-muted mb-3">
             What will your guests try to identify?
           </p>
-          <div className="flex gap-2 flex-wrap">
+          <div className="grid grid-cols-2 gap-2.5">
             {ALL_GUESS_FIELDS.map((field) => {
-              const active = guessFields.includes(field);
+              const active = guessFields.includes(field.key);
+              const Icon = field.icon;
               return (
                 <button
-                  key={field}
-                  onClick={() => toggleGuessField(field)}
-                  className={`touch-target inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  key={field.key}
+                  onClick={() => toggleGuessField(field.key)}
+                  className={`touch-target rounded-2xl p-3.5 flex items-center gap-3 transition-all ${
                     active
-                      ? "bg-wine-burgundy text-white"
-                      : "bg-card-bg border border-card-border text-foreground active:bg-wine-cream-dark"
+                      ? `${field.color} ring-2 ring-cherry/20 shadow-sm`
+                      : "bg-card-bg border border-card-border"
                   }`}
                 >
-                  {active && <Check className="h-3.5 w-3.5" />}
-                  {GUESS_FIELD_LABELS[field]}
+                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    active ? "bg-white/50" : "bg-card-border/30"
+                  }`}>
+                    <Icon className={`h-4 w-4 ${active ? field.iconColor : "text-muted"}`} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className={`font-semibold text-[13px] ${active ? "text-foreground" : "text-muted"}`}>
+                      {field.label}
+                    </p>
+                  </div>
+                  {active && (
+                    <div className="h-5 w-5 rounded-full bg-cherry flex items-center justify-center flex-shrink-0">
+                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -427,26 +472,30 @@ function CreateEventInner() {
         </div>
 
         {/* Timer */}
-        <div className="mb-2">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-foreground">
-              Timer per wine
-            </span>
+        <div className="wine-card p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl widget-sky flex items-center justify-center">
+                <Clock className="h-4.5 w-4.5 text-blue-600" />
+              </div>
+              <div>
+                <span className="text-[14px] font-bold text-foreground">Timer per wine</span>
+                {timerEnabled && (
+                  <p className="text-[12px] text-muted mt-0.5">
+                    {Math.floor(timePerWine / 60)}:{String(timePerWine % 60).padStart(2, "0")} per wine
+                  </p>
+                )}
+              </div>
+            </div>
             <button
               onClick={() => setTimerEnabled(!timerEnabled)}
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                timerEnabled ? "bg-wine-burgundy" : "bg-card-border"
-              }`}
+              className={`toggle-track ${timerEnabled ? "toggle-track-on" : "toggle-track-off"}`}
             >
-              <span
-                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                  timerEnabled ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
+              <span className={`toggle-thumb ${timerEnabled ? "toggle-thumb-on" : "toggle-thumb-off"}`} />
             </button>
           </div>
           {timerEnabled && (
-            <div className="flex items-center gap-3 mt-2">
+            <div className="mt-4 pt-3 border-t border-card-border/40">
               <input
                 type="range"
                 min={30}
@@ -454,11 +503,12 @@ function CreateEventInner() {
                 step={30}
                 value={timePerWine}
                 onChange={(e) => setTimePerWine(Number(e.target.value))}
-                className="flex-1 accent-wine-burgundy"
+                className="w-full accent-cherry h-1.5"
               />
-              <span className="text-sm font-medium text-foreground w-16 text-right">
-                {Math.floor(timePerWine / 60)}:{String(timePerWine % 60).padStart(2, "0")}
-              </span>
+              <div className="flex justify-between mt-1">
+                <span className="text-[10px] text-muted">0:30</span>
+                <span className="text-[10px] text-muted">10:00</span>
+              </div>
             </div>
           )}
         </div>
@@ -471,63 +521,62 @@ function CreateEventInner() {
   function renderStep3() {
     return (
       <div className="animate-fade-in-up">
-        <h1 className="font-serif text-2xl font-bold text-foreground mb-2">
+        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-1">
           Add Wines
         </h1>
-        <p className="text-muted text-sm mb-6">
-          Search and add wines for your tasting flight.
+        <p className="text-muted text-[15px] mb-6">
+          Search and add wines for your flight.
         </p>
 
         {/* Search */}
-        <div className="relative mb-5">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted pointer-events-none" />
+        <div className="relative mb-6">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted/50 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search by name, producer, region..."
-            className="touch-target block w-full rounded-xl border border-card-border bg-card-bg pl-11 pr-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-wine-burgundy/40"
+            className="input-field touch-target block w-full pl-12 pr-4"
           />
           {searching && (
-            <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-              <div className="h-4 w-4 rounded-full border-2 border-wine-burgundy border-t-transparent animate-spin" />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <div className="h-4 w-4 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
             </div>
           )}
         </div>
 
         {/* Search Results */}
         {searchResults.length > 0 && (
-          <div className="flex flex-col gap-2 mb-6 max-h-64 overflow-y-auto scroll-smooth">
-            {searchResults.map((wine) => {
+          <div className="mb-6 max-h-72 overflow-y-auto rounded-2xl border border-card-border bg-card-bg">
+            {searchResults.map((wine, i) => {
               const alreadyAdded = selectedWines.some((w) => w.id === wine.id);
               return (
                 <button
                   key={wine.id}
                   onClick={() => addWine(wine)}
                   disabled={alreadyAdded}
-                  className={`touch-target wine-card w-full text-left p-3.5 transition-all ${
-                    alreadyAdded
-                      ? "opacity-50"
-                      : "active:scale-[0.98]"
-                  }`}
+                  className={`touch-target w-full text-left px-4 py-3.5 flex items-center gap-3 transition-all ${
+                    i > 0 ? "border-t border-card-border/40" : ""
+                  } ${alreadyAdded ? "opacity-40" : "active:bg-widget-wine/30"}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-foreground line-clamp-1">
-                        {wine.name}
-                      </p>
-                      <p className="text-xs text-muted mt-0.5">
-                        {wine.producer} &middot; {wine.region} &middot;{" "}
-                        {wine.type}
-                        {wine.vintage ? ` &middot; ${wine.vintage}` : ""}
-                      </p>
-                    </div>
-                    {alreadyAdded ? (
-                      <Check className="h-5 w-5 text-wine-sage flex-shrink-0" />
-                    ) : (
-                      <Plus className="h-5 w-5 text-wine-burgundy flex-shrink-0" />
-                    )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[14px] text-foreground line-clamp-1">
+                      {wine.name}
+                    </p>
+                    <p className="text-[12px] text-muted mt-0.5">
+                      {wine.producer} · {wine.region} · {wine.type}
+                      {wine.vintage ? ` · ${wine.vintage}` : ""}
+                    </p>
                   </div>
+                  {alreadyAdded ? (
+                    <div className="h-7 w-7 rounded-full bg-cherry/10 flex items-center justify-center flex-shrink-0">
+                      <Check className="h-3.5 w-3.5 text-cherry" strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="h-7 w-7 rounded-full bg-cherry/8 flex items-center justify-center flex-shrink-0">
+                      <Plus className="h-4 w-4 text-cherry" />
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -535,45 +584,46 @@ function CreateEventInner() {
         )}
 
         {/* Selected Wines */}
-        <div className="mt-2">
+        <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-serif text-sm font-semibold text-foreground">
+            <h2 className="text-[13px] font-bold text-foreground uppercase tracking-wide">
               Flight Order
             </h2>
-            <span className="text-xs font-medium text-muted">
-              {selectedWines.length} wine{selectedWines.length !== 1 ? "s" : ""}{" "}
-              selected
+            <span className="text-[12px] font-semibold text-muted">
+              {selectedWines.length} wine{selectedWines.length !== 1 ? "s" : ""}
             </span>
           </div>
 
           {selectedWines.length === 0 ? (
-            <div className="wine-card flex flex-col items-center justify-center py-10 px-6 text-center">
-              <Wine className="h-10 w-10 text-wine-gold/50 mb-3" />
-              <p className="text-sm text-muted">
-                Search above to add wines to your flight.
+            <div className="wine-card flex flex-col items-center justify-center py-14 px-6 text-center">
+              <div className="h-14 w-14 rounded-2xl widget-gold flex items-center justify-center mb-3">
+                <Wine className="h-6 w-6 text-amber-600/40" />
+              </div>
+              <p className="text-[14px] font-semibold text-muted">
+                Search above to add wines
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="space-y-2">
               {selectedWines.map((wine, idx) => (
                 <div
                   key={wine.id}
                   className="wine-card flex items-center gap-3 p-3.5"
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-wine-burgundy/10 text-xs font-bold text-wine-burgundy flex-shrink-0">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl widget-wine text-[13px] font-bold text-cherry flex-shrink-0">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-foreground line-clamp-1">
+                    <p className="font-semibold text-[14px] text-foreground line-clamp-1">
                       {wine.name}
                     </p>
-                    <p className="text-xs text-muted mt-0.5 line-clamp-1">
-                      {wine.producer} &middot; {wine.region}
+                    <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
+                      {wine.producer} · {wine.region}
                     </p>
                   </div>
                   <button
                     onClick={() => removeWine(wine.id)}
-                    className="touch-target flex h-8 w-8 items-center justify-center rounded-full text-muted hover:text-red-500 active:bg-red-50 transition-colors flex-shrink-0"
+                    className="touch-target flex h-9 w-9 items-center justify-center rounded-xl text-muted/60 active:bg-red-50 active:text-red-500 transition-colors flex-shrink-0"
                     aria-label={`Remove ${wine.name}`}
                   >
                     <X className="h-4 w-4" />
@@ -590,78 +640,100 @@ function CreateEventInner() {
   // ============ STEP 4: REVIEW & CREATE ============
 
   function renderStep4() {
+    const selectedDifficulty = DIFFICULTIES.find((d) => d.value === difficulty);
+
     return (
       <div className="animate-fade-in-up">
-        <h1 className="font-serif text-2xl font-bold text-foreground mb-6">
+        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-1">
           Review & Create
         </h1>
+        <p className="text-muted text-[15px] mb-7">
+          Everything look good?
+        </p>
 
+        {/* Event summary card */}
         <div className="wine-card p-5 mb-4">
-          <h2 className="font-serif text-lg font-bold text-foreground">
+          <h2 className="text-xl font-bold text-foreground tracking-tight">
             {title || "Blind Tasting"}
           </h2>
           {description && (
-            <p className="text-sm text-muted mt-1">{description}</p>
+            <p className="text-[13px] text-muted mt-1.5 leading-relaxed">{description}</p>
           )}
 
-          <div className="mt-4 flex flex-col gap-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted">Difficulty</span>
-              <span className="font-medium text-foreground capitalize">
-                {difficulty}
-              </span>
+          <div className="mt-5 space-y-4">
+            {/* Difficulty */}
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] text-muted">Difficulty</span>
+              <div className="flex items-center gap-1.5">
+                <span>{selectedDifficulty?.emoji}</span>
+                <span className={`text-[13px] font-semibold ${selectedDifficulty?.textColor ?? "text-foreground"}`}>
+                  {selectedDifficulty?.label ?? difficulty}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Timer</span>
-              <span className="font-medium text-foreground">
+
+            {/* Timer */}
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] text-muted">Timer</span>
+              <span className="text-[13px] font-semibold text-foreground">
                 {timerEnabled
-                  ? `${Math.floor(timePerWine / 60)}:${String(
-                      timePerWine % 60
-                    ).padStart(2, "0")} per wine`
+                  ? `${Math.floor(timePerWine / 60)}:${String(timePerWine % 60).padStart(2, "0")} per wine`
                   : "Off"}
               </span>
             </div>
+
+            {/* Guess Fields */}
             <div>
-              <span className="text-muted block mb-1.5">Guess Fields</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {guessFields.map((f) => (
-                  <span
-                    key={f}
-                    className="inline-flex items-center rounded-full bg-wine-burgundy/10 px-2.5 py-0.5 text-xs font-medium text-wine-burgundy"
-                  >
-                    {GUESS_FIELD_LABELS[f] ?? f}
-                  </span>
-                ))}
+              <span className="text-[13px] text-muted block mb-2">Guess Fields</span>
+              <div className="flex gap-2 flex-wrap">
+                {guessFields.map((f) => {
+                  const field = ALL_GUESS_FIELDS.find((gf) => gf.key === f);
+                  const Icon = field?.icon ?? Wine;
+                  return (
+                    <span
+                      key={f}
+                      className={`inline-flex items-center gap-1.5 rounded-xl ${field?.color ?? "bg-widget-wine"} px-3 py-1.5 text-[12px] font-semibold ${field?.iconColor ?? "text-cherry"}`}
+                    >
+                      <Icon className="h-3 w-3" />
+                      {field?.label ?? f}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="wine-card p-5 mb-6">
-          <h3 className="font-serif text-sm font-semibold text-foreground mb-3">
-            Wines ({selectedWines.length})
-          </h3>
-          <div className="flex flex-col gap-2">
+        {/* Wines card */}
+        <div className="wine-card p-5 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[13px] font-bold text-foreground uppercase tracking-wide">
+              Wines
+            </h3>
+            <span className="text-[13px] font-bold text-cherry">{selectedWines.length}</span>
+          </div>
+          <div className="space-y-3">
             {selectedWines.map((wine, idx) => (
               <div key={wine.id} className="flex items-center gap-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-wine-burgundy/10 text-[10px] font-bold text-wine-burgundy flex-shrink-0">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl widget-wine text-[11px] font-bold text-cherry flex-shrink-0">
                   {idx + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground line-clamp-1">
+                  <p className="text-[13px] font-semibold text-foreground line-clamp-1">
                     {wine.name}
                   </p>
-                  <p className="text-xs text-muted">{wine.producer}</p>
+                  <p className="text-[11px] text-muted">{wine.producer}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Create button */}
         <button
           onClick={handleCreate}
           disabled={isPending}
-          className="touch-target w-full rounded-2xl bg-wine-burgundy py-4 text-white text-lg font-serif font-semibold shadow-lg active:scale-[0.98] transition-transform disabled:opacity-60 flex items-center justify-center gap-2"
+          className="btn-primary touch-target"
         >
           {isPending ? (
             <>
@@ -671,7 +743,7 @@ function CreateEventInner() {
           ) : (
             <>
               <Wine className="h-5 w-5" />
-              Create Event
+              Create Tasting
             </>
           )}
         </button>
@@ -682,7 +754,7 @@ function CreateEventInner() {
   // ============ MAIN RENDER ============
 
   return (
-    <div className="min-h-screen px-4 pb-28 pt-6 safe-top">
+    <div className="min-h-screen px-5 pb-32 pt-6 safe-top bg-background">
       {renderProgress()}
 
       {step === 1 && renderStep1()}
@@ -690,26 +762,26 @@ function CreateEventInner() {
       {step === 3 && renderStep3()}
       {step === 4 && renderStep4()}
 
-      {/* Back / Next buttons */}
+      {/* Back / Next sticky footer */}
       {step > 1 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-t border-card-border px-4 py-3 safe-bottom flex gap-3">
+        <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-card-border/30 px-5 py-3 safe-bottom flex gap-3 z-40">
           <button
             onClick={() => setStep((s) => s - 1)}
-            className="touch-target flex-1 rounded-xl border border-card-border bg-card-bg py-3 text-foreground font-medium flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform"
+            className="btn-secondary flex-1 touch-target"
           >
             <ChevronLeft className="h-4 w-4" />
             Back
           </button>
-          {step < 4 ? (
+          {step < 4 && (
             <button
               onClick={() => setStep((s) => s + 1)}
               disabled={!canGoNext()}
-              className="touch-target flex-1 rounded-xl bg-wine-burgundy py-3 text-white font-medium flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-40"
+              className="btn-primary flex-1 touch-target"
             >
               Next
               <ChevronRight className="h-4 w-4" />
             </button>
-          ) : null}
+          )}
         </div>
       )}
     </div>
@@ -723,7 +795,7 @@ export default function CreateEventPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <div className="h-8 w-8 rounded-full border-2 border-wine-burgundy border-t-transparent animate-spin" />
+          <div className="h-8 w-8 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
         </div>
       }
     >
