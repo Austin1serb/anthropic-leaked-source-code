@@ -24,10 +24,15 @@ export default async function SommeliersPage() {
   return (
     <div className="min-h-screen pb-28 safe-top bg-background">
       <div className="container-app pt-8 pb-2">
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">
-          Winebob Soms
-        </h1>
-        <p className="text-[13px] text-muted mt-0.5">Our community of wine experts</p>
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="heading-xl text-foreground">Winebob Soms</h1>
+            <p className="body-sm mt-0.5">Our community of wine experts</p>
+          </div>
+          <Link href="/sommeliers/become" className="btn-primary px-4 py-2.5 text-[13px] w-auto">
+            Become a Som
+          </Link>
+        </div>
       </div>
 
       {/* Sommelier list */}

@@ -6,8 +6,17 @@ import { revalidatePath } from "next/cache";
 
 // ============ SOMMELIER PROFILE ============
 
-export async function getSommelierProfile(userId: string) {
+export async function getSommelierProfile(userId?: string) {
+  if (!userId) {
+    const session = await requireAuth();
+    userId = session.user.id;
+  }
   return prisma.sommelierProfile.findUnique({ where: { userId } });
+}
+
+export async function getMyProfile() {
+  const session = await requireAuth();
+  return prisma.sommelierProfile.findUnique({ where: { userId: session.user.id } });
 }
 
 export async function createSommelierProfile(data: {

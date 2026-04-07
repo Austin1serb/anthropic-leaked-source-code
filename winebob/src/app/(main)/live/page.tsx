@@ -1,6 +1,6 @@
 import { getUpcomingLiveEvents } from "@/lib/liveActions";
 import Link from "next/link";
-import { Radio, Calendar, Users, Wine, BadgeCheck, Clock } from "lucide-react";
+import { Radio, Calendar, Users, Wine, BadgeCheck, Clock, Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +13,15 @@ export default async function LiveEventsPage() {
   return (
     <div className="min-h-screen pb-28 safe-top bg-background">
       <div className="container-app pt-8 pb-2">
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">
-          Live Tastings
-        </h1>
-        <p className="text-[13px] text-muted mt-0.5">Join sommeliers tasting wine in real-time</p>
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="heading-xl text-foreground">Live Tastings</h1>
+            <p className="body-sm mt-0.5">Join sommeliers tasting wine in real-time</p>
+          </div>
+          <Link href="/live/create" className="h-11 w-11 rounded-xl bg-cherry flex items-center justify-center float-action active:scale-90 transition-transform">
+            <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
+          </Link>
+        </div>
       </div>
 
       {/* Live Now */}

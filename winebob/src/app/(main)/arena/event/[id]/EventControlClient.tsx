@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import Link from "next/link";
+import QRCode from "qrcode";
 import {
   Copy,
   QrCode,
@@ -18,6 +19,8 @@ import {
   Flag,
   Crown,
   Plus,
+  X,
+  Download,
 } from "lucide-react";
 import {
   updateEventStatus,
@@ -131,6 +134,8 @@ export function EventControlClient({ event }: EventControlClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => router.refresh(), 5000);
@@ -171,9 +176,66 @@ export function EventControlClient({ event }: EventControlClientProps) {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handleShareQR() {
-    const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(event.joinCode)}`;
-    window.open(url, "_blank");
+  async function handleShowQR() {
+    setShowQR(true);
+    // Wait for canvas to mount, then render QR
+    setTimeout(async () => {
+      if (!qrCanvasRef.current) return;
+      const joinUrl = `${window.location.origin}/join/${event.joinCode}`;
+      const canvas = qrCanvasRef.current;
+      await QRCode.toCanvas(canvas, joinUrl, {
+        width: 240,
+        margin: 2,
+        color: { dark: "#6B0F18", light: "#FAF6EF" },
+        errorCorrectionLevel: "M",
+      });
+    }, 50);
+  }
+
+  function handleDownloadQR() {
+    if (!qrCanvasRef.current) return;
+    // Create a branded image with logo + code
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = 400;
+    exportCanvas.height = 520;
+    const ctx = exportCanvas.getContext("2d");
+    if (!ctx) return;
+
+    // Background
+    ctx.fillStyle = "#FAF6EF";
+    ctx.fillRect(0, 0, 400, 520);
+
+    // Header
+    ctx.fillStyle = "#6B0F18";
+    ctx.font = "bold 24px 'DM Sans', system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Winebob", 200, 48);
+
+    // QR code
+    ctx.drawImage(qrCanvasRef.current, 80, 70, 240, 240);
+
+    // Join code
+    ctx.fillStyle = "#6B0F18";
+    ctx.font = "bold 40px 'DM Sans', monospace";
+    ctx.letterSpacing = "8px";
+    ctx.fillText(event.joinCode, 200, 360);
+
+    // Event title
+    ctx.fillStyle = "#8E8278";
+    ctx.font = "500 16px 'DM Sans', system-ui";
+    ctx.letterSpacing = "0px";
+    ctx.fillText(event.title, 200, 400);
+
+    // URL
+    ctx.fillStyle = "#B8AFA6";
+    ctx.font = "14px 'DM Sans', system-ui";
+    ctx.fillText("winebob.vercel.app", 200, 480);
+
+    // Download
+    const link = document.createElement("a");
+    link.download = `winebob-${event.joinCode}.png`;
+    link.href = exportCanvas.toDataURL("image/png");
+    link.click();
   }
 
   const currentWineObj = event.wines.find((w) => w.position === event.currentWine);
@@ -223,7 +285,7 @@ export function EventControlClient({ event }: EventControlClientProps) {
                 {copied ? <><Check className="h-4 w-4 text-green-600" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy</>}
               </button>
               <button
-                onClick={handleShareQR}
+                onClick={handleShowQR}
                 className="touch-target inline-flex items-center gap-2 rounded-xl bg-widget-sky px-4 py-2.5 text-[13px] font-semibold text-foreground active:scale-95 transition-transform"
               >
                 <QrCode className="h-4 w-4" /> Share QR
@@ -423,6 +485,41 @@ export function EventControlClient({ event }: EventControlClientProps) {
           )}
         </div>
       </div>
+
+      {/* ========== QR CODE MODAL ========== */}
+      {showQR && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowQR(false)}>
+          <div className="wine-card p-8 max-w-[340px] w-full mx-4 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            {/* Close */}
+            <button onClick={() => setShowQR(false)} className="absolute top-4 right-4 h-8 w-8 rounded-lg bg-card-border/20 flex items-center justify-center touch-target">
+              <X className="h-4 w-4 text-stone" />
+            </button>
+
+            {/* Logo */}
+            <p className="heading-md text-cherry mb-1">Winebob</p>
+            <p className="caption mb-5">Scan to join this tasting</p>
+
+            {/* QR Canvas */}
+            <div className="flex justify-center mb-5">
+              <div className="p-4 rounded-2xl" style={{ background: "#FAF6EF" }}>
+                <canvas ref={qrCanvasRef} />
+              </div>
+            </div>
+
+            {/* Join code */}
+            <p className="font-mono text-3xl font-black tracking-[0.25em] text-cherry mb-1">
+              {event.joinCode}
+            </p>
+            <p className="caption mb-5">{event.title}</p>
+
+            {/* Download */}
+            <button onClick={handleDownloadQR} className="btn-secondary w-full touch-target">
+              <Download className="h-4 w-4" />
+              Download Image
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
