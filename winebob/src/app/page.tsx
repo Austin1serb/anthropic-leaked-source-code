@@ -1,74 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ArrowRight, Swords } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-function LandingAnimation({ onComplete }: { onComplete: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onComplete, 4800);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-
-  return (
-    <div className="sky-scene sky-scene-exit">
-      {/* Clouds */}
-      <div className="cloud cloud-1" />
-      <div className="cloud cloud-2" />
-      <div className="cloud cloud-3" />
-
-      {/* Wine bottles falling */}
-      <div className="bottle bottle-1">
-        <svg width="48" height="120" viewBox="0 0 48 120" fill="none">
-          <rect x="18" y="0" width="12" height="20" rx="2" fill="#4A2518" />
-          <rect x="16" y="18" width="16" height="6" rx="1" fill="#6B3A2A" />
-          <path d="M16 24 C16 24 12 40 12 50 L12 110 C12 115 16 120 24 120 C32 120 36 115 36 110 L36 50 C36 40 32 24 32 24 Z" fill="#74070E" />
-          <path d="M16 24 C16 24 12 40 12 50 L12 110 C12 115 16 120 24 120 C24 120 20 115 20 110 L20 50 C20 40 22 24 22 24 Z" fill="#8B1A22" opacity="0.5" />
-          <ellipse cx="24" cy="80" rx="6" ry="12" fill="#FFEEBC" opacity="0.15" />
-        </svg>
-      </div>
-      <div className="bottle bottle-2">
-        <svg width="48" height="120" viewBox="0 0 48 120" fill="none">
-          <rect x="18" y="0" width="12" height="20" rx="2" fill="#4A2518" />
-          <rect x="16" y="18" width="16" height="6" rx="1" fill="#6B3A2A" />
-          <path d="M16 24 C16 24 12 40 12 50 L12 110 C12 115 16 120 24 120 C32 120 36 115 36 110 L36 50 C36 40 32 24 32 24 Z" fill="#74070E" />
-          <path d="M16 24 C16 24 12 40 12 50 L12 110 C12 115 16 120 24 120 C24 120 20 115 20 110 L20 50 C20 40 22 24 22 24 Z" fill="#8B1A22" opacity="0.5" />
-          <ellipse cx="24" cy="80" rx="6" ry="12" fill="#FFEEBC" opacity="0.15" />
-        </svg>
-      </div>
-      <div className="bottle bottle-3">
-        <svg width="48" height="120" viewBox="0 0 48 120" fill="none">
-          <rect x="18" y="0" width="12" height="20" rx="2" fill="#4A2518" />
-          <rect x="16" y="18" width="16" height="6" rx="1" fill="#6B3A2A" />
-          <path d="M16 24 C16 24 12 40 12 50 L12 110 C12 115 16 120 24 120 C32 120 36 115 36 110 L36 50 C36 40 32 24 32 24 Z" fill="#5A3020" />
-          <path d="M16 24 C16 24 12 40 12 50 L12 110 C12 115 16 120 24 120 C24 120 20 115 20 110 L20 50 C20 40 22 24 22 24 Z" fill="#6B3A2A" opacity="0.5" />
-          <ellipse cx="24" cy="80" rx="6" ry="12" fill="#FFEEBC" opacity="0.15" />
-        </svg>
-      </div>
-
-      {/* Antique table */}
-      <div className="antique-table">
-        <div className="table-runner" />
-      </div>
-
-      {/* Logo appears after bottles land */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-        <div className="animate-logo-reveal">
-          <h1 className="text-5xl font-bold font-serif text-cherry-dark drop-shadow-sm">
-            Winebob
-          </h1>
-          <p className="text-sm text-leather mt-2 text-center">
-            Blind tasting made social
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function HomePage() {
-  const [showAnimation, setShowAnimation] = useState(true);
   const [joinCode, setJoinCode] = useState("");
   const router = useRouter();
 
@@ -81,16 +18,7 @@ export default function HomePage() {
   }
 
   return (
-    <>
-      {showAnimation && (
-        <LandingAnimation onComplete={() => setShowAnimation(false)} />
-      )}
-
-      <div
-        className={`min-h-screen flex flex-col items-center justify-center bg-background px-6 safe-top safe-bottom transition-opacity duration-500 ${
-          showAnimation ? "opacity-0" : "opacity-100"
-        }`}
-      >
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6 safe-top safe-bottom">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10 animate-fade-in-up">
           <div className="w-20 h-20 rounded-full bg-cherry flex items-center justify-center mb-4 shadow-lg shadow-cherry/20">
@@ -151,6 +79,5 @@ export default function HomePage() {
           Sign in required to host events
         </p>
       </div>
-    </>
   );
 }
