@@ -61,6 +61,109 @@ const REGION_SUB_CITIES: Record<string, { name: string; coords: [number, number]
     { name: "Piesport", coords: [6.92, 49.88] },
     { name: "Trittenheim", coords: [6.90, 49.83] },
   ],
+  "Rhone Valley": [
+    { name: "Châteauneuf-du-Pape", coords: [4.83, 44.06] },
+    { name: "Hermitage", coords: [4.84, 45.07] },
+    { name: "Côte-Rôtie", coords: [4.81, 45.47] },
+    { name: "Gigondas", coords: [5.00, 44.17] },
+  ],
+  "Loire Valley": [
+    { name: "Tours", coords: [0.69, 47.39] },
+    { name: "Sancerre", coords: [2.84, 47.33] },
+    { name: "Vouvray", coords: [0.80, 47.41] },
+    { name: "Chinon", coords: [0.24, 47.17] },
+    { name: "Angers", coords: [-0.55, 47.47] },
+  ],
+  "Alsace": [
+    { name: "Colmar", coords: [7.36, 48.08] },
+    { name: "Riquewihr", coords: [7.30, 48.17] },
+    { name: "Strasbourg", coords: [7.75, 48.57] },
+    { name: "Kaysersberg", coords: [7.26, 48.14] },
+  ],
+  "Provence": [
+    { name: "Aix-en-Provence", coords: [5.45, 43.53] },
+    { name: "Bandol", coords: [5.75, 43.14] },
+    { name: "Cassis", coords: [5.54, 43.21] },
+    { name: "Nice", coords: [7.26, 43.70] },
+  ],
+  "Veneto": [
+    { name: "Verona", coords: [10.99, 45.44] },
+    { name: "Valpolicella", coords: [10.89, 45.52] },
+    { name: "Soave", coords: [11.25, 45.39] },
+    { name: "Conegliano", coords: [12.30, 45.89] },
+  ],
+  "Sicily": [
+    { name: "Etna", coords: [15.00, 37.75] },
+    { name: "Marsala", coords: [12.44, 37.80] },
+    { name: "Noto", coords: [15.07, 36.89] },
+    { name: "Palermo", coords: [13.36, 38.12] },
+  ],
+  "Ribera del Duero": [
+    { name: "Peñafiel", coords: [-4.11, 41.60] },
+    { name: "Aranda de Duero", coords: [-3.69, 41.67] },
+    { name: "Roa", coords: [-3.93, 41.69] },
+  ],
+  "Priorat": [
+    { name: "Gratallops", coords: [0.77, 41.17] },
+    { name: "Porrera", coords: [0.88, 41.19] },
+    { name: "Falset", coords: [0.82, 41.15] },
+  ],
+  "Alentejo": [
+    { name: "Évora", coords: [-7.91, 38.57] },
+    { name: "Estremoz", coords: [-7.59, 38.84] },
+    { name: "Reguengos de Monsaraz", coords: [-7.53, 38.43] },
+  ],
+  "Rheingau": [
+    { name: "Rüdesheim", coords: [7.93, 49.98] },
+    { name: "Eltville", coords: [8.12, 50.03] },
+    { name: "Johannisberg", coords: [8.00, 50.00] },
+  ],
+  "Sonoma": [
+    { name: "Healdsburg", coords: [-122.87, 38.61] },
+    { name: "Sonoma", coords: [-122.46, 38.29] },
+    { name: "Sebastopol", coords: [-122.82, 38.40] },
+    { name: "Glen Ellen", coords: [-122.53, 38.36] },
+  ],
+  "Willamette Valley": [
+    { name: "Dundee", coords: [-123.01, 45.28] },
+    { name: "McMinnville", coords: [-123.20, 45.21] },
+    { name: "Carlton", coords: [-123.18, 45.29] },
+  ],
+  "Mendoza": [
+    { name: "Luján de Cuyo", coords: [-68.87, -33.04] },
+    { name: "Valle de Uco", coords: [-69.25, -33.63] },
+    { name: "Maipú", coords: [-68.75, -32.94] },
+  ],
+  "Maipo Valley": [
+    { name: "Santiago", coords: [-70.65, -33.45] },
+    { name: "Buin", coords: [-70.74, -33.73] },
+    { name: "Pirque", coords: [-70.58, -33.64] },
+  ],
+  "Colchagua Valley": [
+    { name: "Santa Cruz", coords: [-71.37, -34.64] },
+    { name: "Marchigüe", coords: [-71.62, -34.39] },
+    { name: "Lolol", coords: [-71.64, -34.73] },
+  ],
+  "Barossa Valley": [
+    { name: "Tanunda", coords: [138.96, -34.53] },
+    { name: "Angaston", coords: [139.05, -34.50] },
+    { name: "Nuriootpa", coords: [138.99, -34.48] },
+  ],
+  "Margaret River": [
+    { name: "Margaret River", coords: [115.04, -33.95] },
+    { name: "Yallingup", coords: [115.03, -33.65] },
+    { name: "Cowaramup", coords: [115.09, -33.85] },
+  ],
+  "Marlborough": [
+    { name: "Blenheim", coords: [173.96, -41.51] },
+    { name: "Renwick", coords: [173.83, -41.50] },
+    { name: "Seddon", coords: [174.07, -41.66] },
+  ],
+  "Stellenbosch": [
+    { name: "Stellenbosch", coords: [18.86, -33.93] },
+    { name: "Franschhoek", coords: [19.12, -33.91] },
+    { name: "Paarl", coords: [18.97, -33.73] },
+  ],
 };
 
 type WineRegionMapProps = {
