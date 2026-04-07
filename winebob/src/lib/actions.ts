@@ -466,9 +466,148 @@ export async function searchWines(query: string) {
 
 export async function getBrowseWines() {
   return prisma.wine.findMany({
+    where: { isPublic: true },
     take: 30,
     orderBy: { name: "asc" },
   });
+}
+
+// ============ WINE LIBRARY ============
+
+export async function getWineLibrary(filters?: {
+  type?: string;
+  country?: string;
+  priceRange?: string;
+  search?: string;
+  page?: number;
+}) {
+  const PAGE_SIZE = 24;
+  const page = filters?.page ?? 1;
+
+  const where: Record<string, unknown> = { isPublic: true };
+  if (filters?.type) where.type = filters.type;
+  if (filters?.country) where.country = filters.country;
+  if (filters?.priceRange) where.priceRange = filters.priceRange;
+  if (filters?.search) {
+    where.OR = [
+      { name: { contains: filters.search, mode: "insensitive" } },
+      { producer: { contains: filters.search, mode: "insensitive" } },
+      { region: { contains: filters.search, mode: "insensitive" } },
+    ];
+  }
+
+  const [wines, total] = await Promise.all([
+    prisma.wine.findMany({
+      where,
+      take: PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
+      orderBy: { name: "asc" },
+    }),
+    prisma.wine.count({ where }),
+  ]);
+
+  return { wines, total, pages: Math.ceil(total / PAGE_SIZE), page };
+}
+
+export async function getWineById(id: string) {
+  return prisma.wine.findUnique({ where: { id } });
+}
+
+export async function getWineCountries() {
+  const wines = await prisma.wine.findMany({
+    where: { isPublic: true },
+    select: { country: true },
+    distinct: ["country"],
+    orderBy: { country: "asc" },
+  });
+  return wines.map((w) => w.country);
+}
+
+export async function addWine(data: {
+  name: string;
+  producer: string;
+  vintage?: number;
+  grapes: string[];
+  region: string;
+  country: string;
+  appellation?: string;
+  type: string;
+  description?: string;
+  labelImage?: string;
+  priceRange?: string;
+  abv?: number;
+  tastingNotes?: string;
+  foodPairing?: string;
+}) {
+  const session = await requireAuth();
+
+  return prisma.wine.create({
+    data: {
+      ...data,
+      vintage: data.vintage ?? null,
+      addedById: session.user.id,
+      isPublic: true,
+    },
+  });
+}
+
+export async function toggleFavorite(wineId: string) {
+  const session = await requireAuth();
+
+  const existing = await prisma.wineFavorite.findUnique({
+    where: { userId_wineId: { userId: session.user.id, wineId } },
+  });
+
+  if (existing) {
+    await prisma.wineFavorite.delete({ where: { id: existing.id } });
+    return { favorited: false };
+  }
+
+  await prisma.wineFavorite.create({
+    data: { userId: session.user.id, wineId },
+  });
+  return { favorited: true };
+}
+
+export async function getUserFavorites() {
+  const session = await requireAuth();
+
+  const favs = await prisma.wineFavorite.findMany({
+    where: { userId: session.user.id },
+    select: { wineId: true },
+  });
+  return new Set(favs.map((f) => f.wineId));
+}
+
+export async function getMyWines() {
+  const session = await requireAuth();
+
+  return prisma.wine.findMany({
+    where: { addedById: session.user.id },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function getMyCellar() {
+  const session = await requireAuth();
+
+  const favorites = await prisma.wineFavorite.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (favorites.length === 0) return [];
+
+  const wineIds = favorites.map((f) => f.wineId);
+  const wines = await prisma.wine.findMany({
+    where: { id: { in: wineIds } },
+  });
+
+  const wineMap = new Map(wines.map((w) => [w.id, w]));
+  return favorites.map((f) => ({
+    ...f,
+    wine: wineMap.get(f.wineId) ?? null,
+  }));
 }
 
 export async function getHostEvents() {

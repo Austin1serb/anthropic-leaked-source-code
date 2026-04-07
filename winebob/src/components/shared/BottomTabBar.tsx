@@ -2,10 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Wine, User } from "lucide-react";
+import { Wine, Library, User } from "lucide-react";
 
 const tabs = [
   { href: "/arena", label: "Tastings", icon: Wine },
+  { href: "/wines", label: "Wines", icon: Library },
   { href: "/profile", label: "Profile", icon: User },
 ] as const;
 
