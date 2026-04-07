@@ -143,10 +143,17 @@ export async function revealWine(eventId: string, position: number) {
     throw new Error("Not authorized");
   }
 
-  await prisma.blindWine.updateMany({
+  // Find the specific blind wine first, then update it (avoids updateMany which
+  // can trigger implicit transactions on some adapters)
+  const blindWine = await prisma.blindWine.findFirst({
     where: { eventId, position },
-    data: { revealed: true },
   });
+  if (blindWine) {
+    await prisma.blindWine.update({
+      where: { id: blindWine.id },
+      data: { revealed: true },
+    });
+  }
 
   revalidatePath(`/arena/event/${eventId}`);
 }
@@ -251,15 +258,27 @@ export async function scoreEvent(eventId: string) {
 
   const event = await prisma.blindTastingEvent.findUnique({
     where: { id: eventId },
-    include: {
-      wines: { include: { wine: true }, orderBy: { position: "asc" } },
-      guesses: true,
-    },
   });
-
   if (!event || event.hostId !== session.user.id) {
     throw new Error("Not authorized");
   }
+
+  // Fetch wines, actual wine data, and guesses separately to avoid nested
+  // includes which can trigger implicit transactions on the Neon HTTP adapter.
+  const blindWines = await prisma.blindWine.findMany({
+    where: { eventId },
+    orderBy: { position: "asc" },
+  });
+
+  const wineIds = blindWines.map((bw) => bw.wineId);
+  const wines = await prisma.wine.findMany({
+    where: { id: { in: wineIds } },
+  });
+  const wineMap = new Map(wines.map((w) => [w.id, w]));
+
+  const guesses = await prisma.blindGuess.findMany({
+    where: { eventId },
+  });
 
   const weights = (event.scoringConfig as Record<string, number>) ?? {
     grape: 25,
@@ -270,50 +289,54 @@ export async function scoreEvent(eventId: string) {
     type: 10,
   };
 
-  for (const guess of event.guesses) {
-    const blindWine = event.wines.find((w) => w.position === guess.winePosition);
-    if (!blindWine) continue;
-    const actual = blindWine.wine;
+  // Score each guess and update individually
+  await Promise.all(
+    guesses.map((guess) => {
+      const blindWine = blindWines.find((w) => w.position === guess.winePosition);
+      if (!blindWine) return Promise.resolve();
+      const actual = wineMap.get(blindWine.wineId);
+      if (!actual) return Promise.resolve();
 
-    let score = 0;
+      let score = 0;
 
-    if (weights.grape && guess.guessedGrape) {
-      const guessLower = guess.guessedGrape.toLowerCase();
-      if (actual.grapes.some((g) => g.toLowerCase().includes(guessLower))) {
-        score += weights.grape;
+      if (weights.grape && guess.guessedGrape) {
+        const guessLower = guess.guessedGrape.toLowerCase();
+        if (actual.grapes.some((g: string) => g.toLowerCase().includes(guessLower))) {
+          score += weights.grape;
+        }
       }
-    }
-    if (weights.region && guess.guessedRegion) {
-      if (actual.region.toLowerCase().includes(guess.guessedRegion.toLowerCase())) {
-        score += weights.region;
+      if (weights.region && guess.guessedRegion) {
+        if (actual.region.toLowerCase().includes(guess.guessedRegion.toLowerCase())) {
+          score += weights.region;
+        }
       }
-    }
-    if (weights.country && guess.guessedCountry) {
-      if (actual.country.toLowerCase() === guess.guessedCountry.toLowerCase()) {
-        score += weights.country;
+      if (weights.country && guess.guessedCountry) {
+        if (actual.country.toLowerCase() === guess.guessedCountry.toLowerCase()) {
+          score += weights.country;
+        }
       }
-    }
-    if (weights.vintage && guess.guessedVintage) {
-      if (actual.vintage === guess.guessedVintage) {
-        score += weights.vintage;
+      if (weights.vintage && guess.guessedVintage) {
+        if (actual.vintage === guess.guessedVintage) {
+          score += weights.vintage;
+        }
       }
-    }
-    if (weights.producer && guess.guessedProducer) {
-      if (actual.producer.toLowerCase().includes(guess.guessedProducer.toLowerCase())) {
-        score += weights.producer;
+      if (weights.producer && guess.guessedProducer) {
+        if (actual.producer.toLowerCase().includes(guess.guessedProducer.toLowerCase())) {
+          score += weights.producer;
+        }
       }
-    }
-    if (weights.type && guess.guessedType) {
-      if (actual.type.toLowerCase() === guess.guessedType.toLowerCase()) {
-        score += weights.type;
+      if (weights.type && guess.guessedType) {
+        if (actual.type.toLowerCase() === guess.guessedType.toLowerCase()) {
+          score += weights.type;
+        }
       }
-    }
 
-    await prisma.blindGuess.update({
-      where: { id: guess.id },
-      data: { score },
-    });
-  }
+      return prisma.blindGuess.update({
+        where: { id: guess.id },
+        data: { score },
+      });
+    })
+  );
 
   revalidatePath(`/arena/event/${eventId}`);
 }
@@ -332,18 +355,34 @@ export async function getEventByJoinCode(joinCode: string) {
 }
 
 export async function getEventById(id: string) {
-  return prisma.blindTastingEvent.findUnique({
+  // Fetch event with flat relations first, then enrich blind wines with
+  // actual wine data separately — avoids nested includes which trigger
+  // implicit transactions on the Neon HTTP adapter.
+  const event = await prisma.blindTastingEvent.findUnique({
     where: { id },
     include: {
       host: { select: { displayName: true, name: true, image: true } },
-      wines: {
-        include: { wine: true },
-        orderBy: { position: "asc" },
-      },
+      wines: { orderBy: { position: "asc" } },
       guests: true,
       guesses: true,
     },
   });
+  if (!event) return null;
+
+  // Fetch the actual Wine records for each blind wine
+  const wineIds = event.wines.map((bw) => bw.wineId);
+  const wines = wineIds.length > 0
+    ? await prisma.wine.findMany({ where: { id: { in: wineIds } } })
+    : [];
+  const wineMap = new Map(wines.map((w) => [w.id, w]));
+
+  return {
+    ...event,
+    wines: event.wines.map((bw) => ({
+      ...bw,
+      wine: wineMap.get(bw.wineId) ?? null,
+    })),
+  };
 }
 
 export async function getTemplates() {
