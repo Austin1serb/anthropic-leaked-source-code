@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useState, useTransition, useRef, useCallback } from "react";
 import { toggleFavorite } from "@/lib/actions";
-import { WineRegionMap } from "@/components/shared/WineRegionMap";
+import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
 
 /* ── Types ── */
 
@@ -68,6 +68,7 @@ export function WinesClient({
   const [favSet, setFavSet] = useState<Set<string>>(new Set());
   const [sheet, setSheet] = useState<SheetState>("collapsed");
   const [exploreRegion, setExploreRegion] = useState<string | null>(null);
+  const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -233,7 +234,7 @@ export function WinesClient({
       <div className="hidden lg:flex fixed inset-0">
         {/* Map */}
         <div className="flex-1 relative">
-          <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} height="100%" />
+          <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} height="100%" />
 
           {/* Search overlay */}
           <div className="absolute top-4 left-4 z-20 w-full max-w-sm">
@@ -261,13 +262,26 @@ export function WinesClient({
             </Link>
           </div>
 
-          {/* Explore region badge */}
+          {/* Explore: region badge + city hopping pills */}
           {exploreRegion && (
-            <div className="absolute left-4 bottom-16 z-20">
+            <div className="absolute left-4 bottom-16 z-20 flex flex-col gap-2">
               <div className="px-4 py-2.5 rounded-[12px] bg-cherry/90 backdrop-blur-xl shadow-[0_2px_12px_rgba(116,7,14,0.3)]">
                 <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Exploring</p>
                 <p className="text-[16px] font-bold text-white">{exploreRegion}</p>
               </div>
+              {getRegionCities(exploreRegion).length > 0 && (
+                <div className="flex gap-1.5 flex-wrap max-w-[300px]">
+                  {getRegionCities(exploreRegion).map((city) => (
+                    <button
+                      key={city.name}
+                      onClick={() => setFlyToCoords(city.coords)}
+                      className="px-2.5 py-1 rounded-[8px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] text-[11px] font-semibold text-white/70 active:scale-95 transition-transform active:bg-cherry active:text-white"
+                    >
+                      {city.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -306,7 +320,7 @@ export function WinesClient({
       <div className="lg:hidden fixed inset-0">
         {/* Map background */}
         <div className="absolute inset-0">
-          <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} height="100%" />
+          <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} height="100%" />
         </div>
 
         {/* Top overlays */}
@@ -338,13 +352,26 @@ export function WinesClient({
           </button>
         </div>
 
-        {/* Explore region badge */}
+        {/* Explore: region badge + city pills */}
         {exploreRegion && (
-          <div className="absolute left-3 z-20" style={{ top: "35%" }}>
+          <div className="absolute left-3 z-20 flex flex-col gap-2" style={{ top: "30%" }}>
             <div className="px-3 py-2 rounded-[12px] bg-cherry/90 backdrop-blur-xl shadow-[0_2px_12px_rgba(116,7,14,0.3)]">
               <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Exploring</p>
               <p className="text-[14px] font-bold text-white">{exploreRegion}</p>
             </div>
+            {getRegionCities(exploreRegion).length > 0 && (
+              <div className="flex flex-col gap-1 max-w-[140px]">
+                {getRegionCities(exploreRegion).map((city) => (
+                  <button
+                    key={city.name}
+                    onClick={() => setFlyToCoords(city.coords)}
+                    className="px-2.5 py-1.5 rounded-[8px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] text-[11px] font-semibold text-white/70 text-left active:bg-cherry active:text-white transition-colors"
+                  >
+                    {city.name} →
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

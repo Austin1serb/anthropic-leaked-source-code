@@ -7,19 +7,88 @@ import { wineRegions } from "@/data/wineRegions";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
+/** Sub-cities within each wine region for hopping */
+const REGION_SUB_CITIES: Record<string, { name: string; coords: [number, number] }[]> = {
+  "Bordeaux": [
+    { name: "Saint-Émilion", coords: [-0.15, 44.89] },
+    { name: "Pauillac", coords: [-0.75, 45.20] },
+    { name: "Margaux", coords: [-0.67, 45.04] },
+    { name: "Sauternes", coords: [-0.35, 44.53] },
+    { name: "Pessac-Léognan", coords: [-0.68, 44.77] },
+  ],
+  "Burgundy": [
+    { name: "Beaune", coords: [4.84, 47.02] },
+    { name: "Nuits-Saint-Georges", coords: [4.95, 47.14] },
+    { name: "Chablis", coords: [3.80, 47.81] },
+    { name: "Meursault", coords: [4.77, 46.98] },
+    { name: "Gevrey-Chambertin", coords: [4.97, 47.23] },
+  ],
+  "Champagne": [
+    { name: "Reims", coords: [3.88, 49.25] },
+    { name: "Épernay", coords: [3.95, 49.04] },
+    { name: "Ay", coords: [3.99, 49.06] },
+  ],
+  "Tuscany": [
+    { name: "Montalcino", coords: [11.49, 43.06] },
+    { name: "Montepulciano", coords: [11.78, 43.10] },
+    { name: "Chianti", coords: [11.25, 43.47] },
+    { name: "Bolgheri", coords: [10.61, 43.23] },
+    { name: "San Gimignano", coords: [11.04, 43.47] },
+  ],
+  "Piedmont": [
+    { name: "Barolo", coords: [7.94, 44.61] },
+    { name: "Barbaresco", coords: [8.08, 44.73] },
+    { name: "Asti", coords: [8.21, 44.90] },
+    { name: "Alba", coords: [8.03, 44.70] },
+  ],
+  "Rioja": [
+    { name: "Haro", coords: [-2.85, 42.58] },
+    { name: "Logroño", coords: [-2.45, 42.47] },
+    { name: "Laguardia", coords: [-2.58, 42.55] },
+  ],
+  "Napa Valley": [
+    { name: "St. Helena", coords: [-122.47, 38.51] },
+    { name: "Yountville", coords: [-122.36, 38.40] },
+    { name: "Calistoga", coords: [-122.58, 38.58] },
+    { name: "Rutherford", coords: [-122.42, 38.46] },
+  ],
+  "Douro Valley": [
+    { name: "Pinhão", coords: [-7.55, 41.19] },
+    { name: "Peso da Régua", coords: [-7.79, 41.16] },
+  ],
+  "Mosel": [
+    { name: "Bernkastel-Kues", coords: [7.07, 49.92] },
+    { name: "Piesport", coords: [6.92, 49.88] },
+    { name: "Trittenheim", coords: [6.90, 49.83] },
+  ],
+};
+
 type WineRegionMapProps = {
   onRegionClick?: (region: string, country: string) => void;
+  onCityClick?: (city: string, coords: [number, number]) => void;
   regionCounts?: Record<string, number>;
   height?: string;
   className?: string;
-  /** When set, map flies to this region and zooms in */
   exploreRegion?: string | null;
+  /** Fly to specific coordinates (city hopping) */
+  flyToCoords?: [number, number] | null;
 };
 
-export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", className = "", exploreRegion }: WineRegionMapProps) {
+/** Get sub-cities for a region */
+export function getRegionCities(region: string) {
+  return REGION_SUB_CITIES[region] ?? [];
+}
+
+export function WineRegionMap({ onRegionClick, onCityClick, regionCounts, height = "100%", className = "", exploreRegion, flyToCoords }: WineRegionMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
+
+  // Fly to specific coords (city hopping)
+  useEffect(() => {
+    if (!flyToCoords || !map.current) return;
+    map.current.flyTo({ center: flyToCoords, zoom: 13, pitch: 30, duration: 1200 });
+  }, [flyToCoords]);
 
   const handleRegionClick = useCallback((region: string, country: string) => {
     onRegionClick?.(region, country);
@@ -319,40 +388,54 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
     return () => { popup.current?.remove(); map.current?.remove(); };
   }, [handleRegionClick, regionCounts]);
 
+  /* City centers for each region — zooms to the main wine town, not the polygon center */
+  const REGION_CITIES: Record<string, [number, number]> = {
+    "Bordeaux": [-0.58, 44.84], "Burgundy": [4.84, 47.02], "Champagne": [3.96, 49.25],
+    "Rhone Valley": [4.83, 44.93], "Loire Valley": [0.69, 47.38], "Alsace": [7.35, 48.08],
+    "Provence": [5.93, 43.53], "Piedmont": [7.68, 44.69], "Tuscany": [11.25, 43.77],
+    "Veneto": [11.87, 45.44], "Sicily": [13.36, 37.60], "Rioja": [-2.73, 42.47],
+    "Ribera del Duero": [-3.69, 41.63], "Priorat": [0.75, 41.20], "Douro Valley": [-7.79, 41.16],
+    "Alentejo": [-7.91, 38.57], "Mosel": [6.63, 49.73], "Rheingau": [8.06, 50.01],
+    "Napa Valley": [-122.31, 38.50], "Sonoma": [-122.72, 38.44], "Willamette Valley": [-123.09, 45.07],
+    "Mendoza": [-68.83, -32.89], "Maipo Valley": [-70.60, -33.73], "Colchagua Valley": [-71.22, -34.66],
+    "Barossa Valley": [138.95, -34.56], "Margaret River": [115.04, -33.95],
+    "Marlborough": [173.95, -41.51], "Stellenbosch": [18.86, -33.93],
+  };
+
   // Fly to region or back to world
   useEffect(() => {
     if (!map.current) return;
 
+    const regionLayers = ["wine-regions-fill", "wine-regions-border", "wine-regions-label"];
+
     if (!exploreRegion) {
-      // Fly back to world view
+      // Show regions, fly back to world
+      for (const id of regionLayers) {
+        try { map.current.setLayoutProperty(id, "visibility", "visible"); } catch {}
+      }
       map.current.flyTo({ center: [12, 44], zoom: 3.5, pitch: 0, duration: 1200 });
       return;
     }
 
-    const feature = wineRegions.features.find((f) => f.properties.name === exploreRegion);
-    if (!feature) return;
-
-    // Compute bounding box from polygon coords
-    const coords = feature.geometry.coordinates[0];
-    let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
-    for (const [lng, lat] of coords) {
-      if (lng < minLng) minLng = lng;
-      if (lng > maxLng) maxLng = lng;
-      if (lat < minLat) minLat = lat;
-      if (lat > maxLat) maxLat = lat;
+    // Hide region overlays when zoomed in
+    for (const id of regionLayers) {
+      try { map.current.setLayoutProperty(id, "visibility", "none"); } catch {}
     }
 
-    // Calculate center and fly to zoom 10 minimum (enough to see POIs)
-    const centerLng = (minLng + maxLng) / 2;
-    const centerLat = (minLat + maxLat) / 2;
-
-    map.current.flyTo({
-      center: [centerLng, centerLat],
-      zoom: 10,
-      pitch: 35,
-      duration: 2000,
-      essential: true,
-    });
+    // Fly to city center (not polygon center)
+    const city = REGION_CITIES[exploreRegion];
+    if (city) {
+      map.current.flyTo({ center: city, zoom: 12, pitch: 30, duration: 2000, essential: true });
+    } else {
+      // Fallback: compute center from polygon
+      const feature = wineRegions.features.find((f) => f.properties.name === exploreRegion);
+      if (feature) {
+        const coords = feature.geometry.coordinates[0];
+        let sumLng = 0, sumLat = 0;
+        for (const [lng, lat] of coords) { sumLng += lng; sumLat += lat; }
+        map.current.flyTo({ center: [sumLng / coords.length, sumLat / coords.length], zoom: 12, pitch: 30, duration: 2000, essential: true });
+      }
+    }
   }, [exploreRegion]);
 
   // ── Fallback without token ──
