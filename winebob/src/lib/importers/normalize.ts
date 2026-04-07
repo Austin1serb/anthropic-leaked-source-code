@@ -150,7 +150,10 @@ export function normalizeProducerName(name: string): string {
   // Remove multiple spaces
   normalized = normalized.replace(/\s+/g, " ");
 
-  // Standardize accents
+  // Expand common abbreviations (Ch. -> Château, Dom. -> Domaine, etc.)
+  normalized = expandAbbreviations(normalized);
+
+  // Standardize accents (preserve for display)
   normalized = normalizeAccents(normalized);
 
   // Proper case
@@ -188,8 +191,9 @@ export function generateWineFingerprint(
   producer: string,
   vintage?: number | null
 ): string {
-  const normalizedName = normalizeWineName(name).toLowerCase();
-  const normalizedProducer = normalizeProducerName(producer).toLowerCase();
+  // Strip accents so "Château" and "Chateau" produce the same fingerprint
+  const normalizedName = stripAccents(normalizeWineName(name).toLowerCase());
+  const normalizedProducer = stripAccents(normalizeProducerName(producer).toLowerCase());
   const vintageStr = vintage != null ? String(vintage) : "nv";
 
   const input = `${normalizedName}|${normalizedProducer}|${vintageStr}`;
