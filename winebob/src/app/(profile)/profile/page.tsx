@@ -27,10 +27,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-screen pb-28 safe-top bg-profile-gradient">
-      {/* ── Header ── */}
-      <header className="container-app pt-8 pb-2">
-        <h1 className="text-lg font-bold text-foreground tracking-tight">Profile</h1>
-      </header>
+      {/* Header provided by (profile)/layout.tsx */}
 
       {/* ── Avatar + Name ── */}
       <section className="flex flex-col items-center pt-4 pb-6 px-5">

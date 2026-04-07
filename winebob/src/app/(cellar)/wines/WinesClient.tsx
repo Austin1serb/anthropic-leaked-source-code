@@ -114,8 +114,8 @@ export function WinesClient({
       <div className="container-wide pt-8 pb-4">
         <div className="flex items-end justify-between mb-6">
           <div>
-            <p className="label mb-1">Wine Library</p>
             <h1 className="heading-xl text-foreground">{total} Wines</h1>
+            <p className="body-sm mt-0.5">Browse the collection</p>
           </div>
           <Link
             href="/wines/add"

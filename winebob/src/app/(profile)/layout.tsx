@@ -8,21 +8,31 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-screen bg-[#FAF8F5] dark:bg-[#121110]">
-      {/* Top bar */}
+    <div className="min-h-dvh bg-[#FAF8F5] dark:bg-[#121110]">
+      {/* Header — calm and minimal */}
       <header className="safe-top">
-        <div className="container-app flex items-center justify-between py-4">
-          <h1 className="heading-md text-ink dark:text-foreground">Profile</h1>
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-stone-light/20 dark:bg-stone/20">
-            <User className="w-5 h-5 text-stone dark:text-stone-light" />
+        <div className="container-app flex items-center justify-between" style={{ height: 60 }}>
+          <h1
+            style={{
+              fontFamily: "var(--font-serif, Georgia, serif)",
+              fontSize: 20,
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+            }}
+            className="text-foreground"
+          >
+            Profile
+          </h1>
+          <div className="h-9 w-9 rounded-full bg-stone-light/15 dark:bg-stone/15 flex items-center justify-center">
+            <User size={18} strokeWidth={1.8} className="text-stone" />
           </div>
         </div>
-        {/* Subtle separator */}
-        <div className="h-px bg-card-border" />
+        <div className="container-app">
+          <div className="h-px bg-card-border" />
+        </div>
       </header>
 
-      {/* Content area with bottom padding for floating portal button */}
-      <main className="flex-1 pb-24">{children}</main>
+      <main className="pb-24">{children}</main>
     </div>
   );
 }

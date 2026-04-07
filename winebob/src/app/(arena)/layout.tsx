@@ -96,14 +96,41 @@ export default function ArenaLayout({
         </div>
       </header>
 
+      {/* Force dark theme for arena content */}
+      <style>{`
+        .arena-root {
+          --background: transparent;
+          --foreground: #F0DCC0;
+          --card-bg: rgba(30, 24, 18, 0.85);
+          --card-border: rgba(200, 160, 80, 0.1);
+          --muted: #9A8A70;
+          --widget-wine: rgba(120, 30, 40, 0.15);
+          --widget-gold: rgba(200, 160, 80, 0.1);
+          --widget-sage: rgba(80, 120, 60, 0.1);
+          --widget-sky: rgba(60, 100, 140, 0.1);
+          --widget-lavender: rgba(100, 70, 120, 0.1);
+          --widget-peach: rgba(160, 100, 60, 0.1);
+        }
+        .arena-root .wine-card {
+          background: rgba(30, 24, 18, 0.85) !important;
+          border-color: rgba(200, 160, 80, 0.1) !important;
+          backdrop-filter: blur(8px);
+        }
+        .arena-root .input-field {
+          background: rgba(30, 24, 18, 0.6) !important;
+          border-color: rgba(200, 160, 80, 0.15) !important;
+          color: #F0DCC0 !important;
+        }
+        .arena-root [class*="bg-hero-gradient"],
+        .arena-root [class*="bg-background"],
+        .arena-root [class*="bg-profile-gradient"] {
+          background: transparent !important;
+        }
+        .arena-root .min-h-screen { min-height: auto !important; }
+      `}</style>
+
       {/* ── Content ── */}
-      <main className="relative z-10 pb-24">
-        {/* Override text colors for dark arena background */}
-        <style>{`
-          .min-h-screen { min-height: auto !important; }
-          [class*="bg-hero-gradient"] { background: none !important; }
-          [class*="bg-background"] { background: none !important; }
-        `}</style>
+      <main className="arena-root relative z-10 pb-24">
         {children}
       </main>
     </div>
