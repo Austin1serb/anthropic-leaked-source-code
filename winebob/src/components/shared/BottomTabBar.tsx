@@ -9,12 +9,20 @@ const tabs = [
   { href: "/profile", label: "Profile", icon: User },
 ] as const;
 
+/** Routes where the tab bar should be hidden (focused flows) */
+const HIDDEN_ROUTES = ["/arena/create", "/arena/event/"];
+
 export function BottomTabBar() {
   const pathname = usePathname();
 
+  // Hide tab bar on focused flows (create, event control)
+  if (HIDDEN_ROUTES.some((r) => pathname.startsWith(r))) {
+    return null;
+  }
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-card-border/30 tab-bar-safe">
-      <div className="flex items-center justify-around px-6 pt-2.5 pb-1.5">
+      <div className="max-w-lg mx-auto flex items-center justify-around px-6 pt-2.5 pb-1.5">
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
           const Icon = tab.icon;
