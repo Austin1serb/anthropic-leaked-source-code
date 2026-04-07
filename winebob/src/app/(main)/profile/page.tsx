@@ -28,7 +28,7 @@ export default async function ProfilePage() {
   return (
     <div className="min-h-screen pb-28 safe-top bg-profile-gradient">
       {/* ── Header ── */}
-      <header className="px-5 pt-8 pb-2">
+      <header className="container-app pt-8 pb-2">
         <h1 className="text-lg font-bold text-foreground tracking-tight">Profile</h1>
       </header>
 
@@ -56,7 +56,7 @@ export default async function ProfilePage() {
       </section>
 
       {/* ── Stats Widgets ── */}
-      <section className="px-5 stagger-children">
+      <section className="container-app stagger-children">
         <div className="flex items-stretch gap-3">
           <div className="flex-1 widget-card widget-wine p-4 text-center">
             <div className="h-10 w-10 rounded-2xl bg-cherry/10 flex items-center justify-center mx-auto mb-2">
@@ -83,7 +83,7 @@ export default async function ProfilePage() {
       </section>
 
       {/* ── Settings List ── */}
-      <section className="px-5 mt-7">
+      <section className="container-app mt-7">
         <h3 className="text-[13px] font-bold text-muted uppercase tracking-wider mb-3 px-1">
           Settings
         </h3>
@@ -112,7 +112,7 @@ export default async function ProfilePage() {
       </section>
 
       {/* ── Sign out ── */}
-      <section className="px-5 mt-5 mb-6">
+      <section className="container-app mt-5 mb-6">
         <a
           href="/api/auth/signout"
           className="wine-card px-4 py-4 flex items-center gap-3.5 active:scale-[0.98] transition-transform"

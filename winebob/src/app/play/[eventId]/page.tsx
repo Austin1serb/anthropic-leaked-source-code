@@ -324,7 +324,7 @@ export default function PlayPage({
     const actual = currentBlindWine.wine;
     return (
       <div className="fixed inset-0 flex flex-col bg-background safe-top safe-bottom overflow-y-auto">
-        <div className="max-w-lg mx-auto w-full px-5 pt-6 pb-8">
+        <div className="container-app w-full pt-6 pb-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -392,7 +392,7 @@ export default function PlayPage({
   return (
     <div className="fixed inset-0 flex flex-col bg-background safe-top safe-bottom">
       {/* Header */}
-      <div className="max-w-lg mx-auto w-full px-5 pt-5 pb-3 flex items-center justify-between">
+      <div className="container-app w-full pt-5 pb-3 flex items-center justify-between">
         <div>
           <p className="text-[11px] font-bold text-muted uppercase tracking-widest">
             {event.title}
@@ -408,7 +408,7 @@ export default function PlayPage({
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto scroll-smooth">
-        <div className="max-w-lg mx-auto px-5 pb-32">
+        <div className="container-app pb-32">
           {submitted && !editing ? (
             /* ---- Submitted confirmation ---- */
             <div className="wine-card p-6 animate-scale-in">
@@ -629,7 +629,7 @@ export default function PlayPage({
       {/* Sticky submit button — hidden when wine is locked (revealed) */}
       {(!submitted || editing) && !isWineLocked && (
         <div className="fixed bottom-0 left-0 right-0 safe-bottom z-50">
-          <div className="max-w-lg mx-auto px-5 pb-5 pt-3 bg-gradient-to-t from-background via-background to-transparent">
+          <div className="container-app pb-5 pt-3 bg-gradient-to-t from-background via-background to-transparent">
             <button
               onClick={handleSubmit}
               disabled={submitting}
@@ -760,7 +760,7 @@ function CompletedView({
 
   return (
     <div className="fixed inset-0 flex flex-col bg-hero-gradient safe-top safe-bottom overflow-y-auto">
-      <div className="max-w-lg mx-auto w-full px-5 pt-8 pb-8">
+      <div className="container-app w-full pt-8 pb-8">
         {/* Trophy header */}
         <div className="text-center mb-8 animate-fade-in-up">
           <div className="h-20 w-20 rounded-3xl widget-gold flex items-center justify-center mx-auto mb-5 animate-cheers">

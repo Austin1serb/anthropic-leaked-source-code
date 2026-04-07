@@ -140,7 +140,7 @@ export function ArenaClient({ events, templates, userName }: ArenaClientProps) {
   return (
     <div className="min-h-screen pb-28 safe-top bg-hero-gradient">
       {/* ── Header ── */}
-      <div className="px-5 pt-8 pb-2">
+      <div className="container-app pt-8 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="relative">
@@ -164,7 +164,7 @@ export function ArenaClient({ events, templates, userName }: ArenaClientProps) {
       </div>
 
       {/* ── Stats Widgets ── */}
-      <div className="px-5 mt-5 stagger-children">
+      <div className="container-app mt-5 stagger-children">
         <div className="flex items-stretch gap-3">
           <div className="flex-1 widget-card widget-wine p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -198,7 +198,7 @@ export function ArenaClient({ events, templates, userName }: ArenaClientProps) {
 
       {/* ── Live / Active Events ── */}
       {liveEvents.length > 0 && (
-        <div className="px-5 mt-6">
+        <div className="container-app mt-6">
           {liveEvents.map((event) => (
             <Link
               key={event.id}
@@ -246,13 +246,13 @@ export function ArenaClient({ events, templates, userName }: ArenaClientProps) {
       {/* ── Templates — Start a Tasting ── */}
       {templates.length > 0 && (
         <section className="mt-7">
-          <div className="flex items-center justify-between px-5 mb-4">
+          <div className="flex items-center justify-between container-app mb-4">
             <h2 className="text-lg font-bold text-foreground tracking-tight">
               Start a Tasting
             </h2>
             <span className="text-[12px] font-medium text-muted">{templates.length} templates</span>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-3 px-5 scroll-smooth snap-x snap-mandatory scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-3 container-app scroll-smooth snap-x snap-mandatory scrollbar-hide">
             {/* From scratch card */}
             <Link
               href="/arena/create"
@@ -305,7 +305,7 @@ export function ArenaClient({ events, templates, userName }: ArenaClientProps) {
       )}
 
       {/* ── Activity Feed ── */}
-      <section className="px-5 mt-7">
+      <section className="container-app mt-7">
         <h2 className="text-lg font-bold text-foreground tracking-tight mb-4">
           Activity
         </h2>
