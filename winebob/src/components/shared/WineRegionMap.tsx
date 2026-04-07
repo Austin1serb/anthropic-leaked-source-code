@@ -83,10 +83,11 @@ export function WineRegionMap({ onRegionClick, onCityClick, regionCounts, height
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
+  const mapLoaded = useRef(false);
 
-  // Fly to specific coords (city hopping)
+  // City hopping — only flyTo, don't touch region visibility
   useEffect(() => {
-    if (!flyToCoords || !map.current) return;
+    if (!flyToCoords || !map.current || !mapLoaded.current) return;
     map.current.flyTo({ center: flyToCoords, zoom: 13, pitch: 30, duration: 1200 });
   }, [flyToCoords]);
 
@@ -255,6 +256,7 @@ export function WineRegionMap({ onRegionClick, onCityClick, regionCounts, height
 
     map.current.on("load", () => {
       if (!map.current) return;
+      mapLoaded.current = true;
 
       // Add wine region polygons
       map.current.addSource("wine-regions", {
@@ -402,29 +404,33 @@ export function WineRegionMap({ onRegionClick, onCityClick, regionCounts, height
     "Marlborough": [173.95, -41.51], "Stellenbosch": [18.86, -33.93],
   };
 
-  // Fly to region or back to world
+  /* Helper: hide or show region layers */
+  function setRegionVisibility(visible: boolean) {
+    if (!map.current || !mapLoaded.current) return;
+    try {
+      map.current.setPaintProperty("wine-regions-fill", "fill-opacity", visible ? ["case", ["boolean", ["feature-state", "hover"], false], 0.45, 0.2] : 0);
+      map.current.setPaintProperty("wine-regions-border", "line-opacity", visible ? 0.6 : 0);
+      map.current.setLayoutProperty("wine-regions-label", "visibility", visible ? "visible" : "none");
+    } catch {}
+  }
+
+  // Explore region: fly + hide polygons. Separate from flyToCoords.
+  const prevExploreRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapLoaded.current) return;
+    // Skip if same region (prevents re-triggering)
+    if (exploreRegion === prevExploreRef.current) return;
+    prevExploreRef.current = exploreRegion;
 
     if (!exploreRegion) {
-      // Show regions, fly back to world
-      try {
-        map.current.setPaintProperty("wine-regions-fill", "fill-opacity", ["case", ["boolean", ["feature-state", "hover"], false], 0.45, 0.2]);
-        map.current.setPaintProperty("wine-regions-border", "line-opacity", 0.6);
-        map.current.setLayoutProperty("wine-regions-label", "visibility", "visible");
-      } catch {}
+      setRegionVisibility(true);
       map.current.flyTo({ center: [12, 44], zoom: 3.5, pitch: 0, duration: 1200 });
       return;
     }
 
-    // Hide region overlays when zoomed in — set opacity to 0
-    try {
-      map.current.setPaintProperty("wine-regions-fill", "fill-opacity", 0);
-      map.current.setPaintProperty("wine-regions-border", "line-opacity", 0);
-      map.current.setLayoutProperty("wine-regions-label", "visibility", "none");
-    } catch {}
+    setRegionVisibility(false);
 
-    // Fly to first sub-city if available, otherwise region city center
+    // Fly to first sub-city, or region city, or polygon center
     const subCities = REGION_SUB_CITIES[exploreRegion];
     const firstCity = subCities?.[0]?.coords;
     const regionCity = REGION_CITIES[exploreRegion];
@@ -433,7 +439,6 @@ export function WineRegionMap({ onRegionClick, onCityClick, regionCounts, height
     if (target) {
       map.current.flyTo({ center: target, zoom: 13, pitch: 30, duration: 2000, essential: true });
     } else {
-      // Fallback: compute center from polygon
       const feature = wineRegions.features.find((f) => f.properties.name === exploreRegion);
       if (feature) {
         const coords = feature.geometry.coordinates[0];
