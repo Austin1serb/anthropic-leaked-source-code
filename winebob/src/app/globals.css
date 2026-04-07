@@ -6,19 +6,20 @@
    ================================================================ */
 
 :root {
-  /* Core palette */
-  --cherry: #6B0F18;
-  --cherry-light: #8A1E2A;
-  --cherry-dark: #4A0810;
-  --cream: #FAF6EF;
-  --cream-dark: #EDE4D4;
-  --ink: #1C1714;
+  /* Core palette — original Winebob colors */
+  --cherry: #74070E;
+  --cherry-light: #8B1A22;
+  --cherry-dark: #5A0509;
+  --cream: #FFF8EE;
+  --cream-dark: #F5E6C8;
+  --cream-light: #FFFCF5;
+  --ink: #1A1412;
   --ink-light: #3D352E;
-  --stone: #8E8278;
+  --stone: #8C7E6E;
   --stone-light: #B8AFA6;
 
   /* Semantic */
-  --background: var(--cream);
+  --background: #FEF9F0;
   --foreground: var(--ink);
   --card-bg: #FFFFFF;
   --card-border: rgba(0, 0, 0, 0.06);
@@ -36,13 +37,27 @@
   --terracotta: #C47D5A;
   --terracotta-light: #F0DDD0;
 
-  /* Widget tints */
-  --tint-wine: #F4E4E6;
-  --tint-gold: #FBF2DE;
-  --tint-sage: #E6F0E2;
-  --tint-sky: #E0ECF4;
-  --tint-plum: #EDE4F2;
-  --tint-terracotta: #F6EAE2;
+  /* Original widget colors */
+  --widget-wine: #F9E8EA;
+  --widget-wine-strong: #E8C4C8;
+  --widget-gold: #FFF3D6;
+  --widget-gold-strong: #F0DCA0;
+  --widget-sage: #E8F0E4;
+  --widget-sage-strong: #C8DCC0;
+  --widget-sky: #E4EEF8;
+  --widget-sky-strong: #B8D4F0;
+  --widget-lavender: #F0E8F8;
+  --widget-lavender-strong: #D8C8F0;
+  --widget-peach: #FEF0E8;
+  --widget-peach-strong: #F0D8C4;
+
+  /* Tint aliases (used by wine detail pages) */
+  --tint-wine: var(--widget-wine);
+  --tint-gold: var(--widget-gold);
+  --tint-sage: var(--widget-sage);
+  --tint-sky: var(--widget-sky);
+  --tint-plum: var(--widget-lavender);
+  --tint-terracotta: var(--widget-peach);
 }
 
 @theme inline {
@@ -94,21 +109,21 @@
   --color-wine-sage: var(--sage);
   --color-tab-inactive: var(--stone);
   --color-tab-active: var(--cherry);
-  /* Widget compat */
-  --color-widget-wine: var(--tint-wine);
-  --color-widget-wine-strong: #E0C4C8;
-  --color-widget-gold: var(--tint-gold);
-  --color-widget-gold-strong: #E8D5A8;
-  --color-widget-sage: var(--tint-sage);
-  --color-widget-sage-strong: #C4DCC0;
-  --color-widget-sky: var(--tint-sky);
-  --color-widget-sky-strong: #B0D0E8;
-  --color-widget-lavender: var(--tint-plum);
-  --color-widget-lavender-strong: #D0C0E0;
-  --color-widget-peach: var(--tint-terracotta);
-  --color-widget-peach-strong: #E8D0C0;
+  /* Widget colors */
+  --color-widget-wine: var(--widget-wine);
+  --color-widget-wine-strong: var(--widget-wine-strong);
+  --color-widget-gold: var(--widget-gold);
+  --color-widget-gold-strong: var(--widget-gold-strong);
+  --color-widget-sage: var(--widget-sage);
+  --color-widget-sage-strong: var(--widget-sage-strong);
+  --color-widget-sky: var(--widget-sky);
+  --color-widget-sky-strong: var(--widget-sky-strong);
+  --color-widget-lavender: var(--widget-lavender);
+  --color-widget-lavender-strong: var(--widget-lavender-strong);
+  --color-widget-peach: var(--widget-peach);
+  --color-widget-peach-strong: var(--widget-peach-strong);
   /* Typography */
-  --font-sans: var(--font-sans, 'DM Sans', system-ui, -apple-system, sans-serif);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: var(--font-serif, 'Playfair Display', Georgia, serif);
 }
 
@@ -117,17 +132,23 @@
    ================================================================ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0F0D0B;
-    --foreground: #EDE4D4;
-    --card-bg: #1A1714;
-    --card-border: rgba(255, 255, 255, 0.07);
-    --muted: #7A7068;
-    --tint-wine: #221618;
-    --tint-gold: #201C14;
-    --tint-sage: #141E12;
-    --tint-sky: #121A22;
-    --tint-plum: #1A1420;
-    --tint-terracotta: #201814;
+    --background: #1A1510;
+    --foreground: #F5EAD6;
+    --card-bg: #2A2218;
+    --card-border: #3D3228;
+    --muted: #8A7E6A;
+    --widget-wine: #2A1A1C;
+    --widget-wine-strong: #3A2228;
+    --widget-gold: #2A2418;
+    --widget-gold-strong: #3A3220;
+    --widget-sage: #1A2218;
+    --widget-sage-strong: #243020;
+    --widget-sky: #182028;
+    --widget-sky-strong: #1E2A38;
+    --widget-lavender: #201A28;
+    --widget-lavender-strong: #2A2238;
+    --widget-peach: #281E18;
+    --widget-peach-strong: #382820;
   }
 }
 
