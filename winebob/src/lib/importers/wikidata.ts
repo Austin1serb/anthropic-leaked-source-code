@@ -352,17 +352,13 @@ async function importWines(
 
   console.log(`  ${toInsert.length} new wines to insert, ${stats.recordsSkipped} skipped (duplicates).`);
 
-  // Batch insert
-  for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
-    const batch = toInsert.slice(i, i + BATCH_SIZE);
-    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-    const totalBatches = Math.ceil(toInsert.length / BATCH_SIZE);
-
+  // Insert wines one-by-one (Neon HTTP adapter doesn't support transactions,
+  // so createMany fails. Individual creates are slower but reliable.)
+  for (let i = 0; i < toInsert.length; i++) {
+    const wine = toInsert[i];
     try {
-      // Note: skipDuplicates is intentionally omitted — it may not work with
-      // the Neon HTTP adapter, and we already do manual dedup above.
-      await prisma.wine.createMany({
-        data: batch.map((wine) => ({
+      await prisma.wine.create({
+        data: {
           name: wine.name,
           producer: wine.producer,
           vintage: wine.vintage,
@@ -375,15 +371,16 @@ async function importWines(
           externalIds: { wikidata: wine.wikidataId },
           importBatchId,
           isPublic: true,
-        })),
+        },
       });
+      stats.recordsCreated++;
+    } catch {
+      stats.recordsFailed++;
+    }
 
-      stats.recordsCreated += batch.length;
-      console.log(`  Batch ${batchNum}/${totalBatches}: inserted ${batch.length} wines.`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`  Batch ${batchNum}/${totalBatches} failed: ${message}`);
-      stats.recordsFailed += batch.length;
+    // Progress log every 50 wines
+    if ((i + 1) % 50 === 0 || i === toInsert.length - 1) {
+      console.log(`  Progress: ${i + 1}/${toInsert.length} (${stats.recordsCreated} created, ${stats.recordsFailed} failed)`);
     }
   }
 
