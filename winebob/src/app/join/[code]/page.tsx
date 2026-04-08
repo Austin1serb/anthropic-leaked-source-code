@@ -203,14 +203,14 @@ export default function JoinPage({
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
           <div className="text-4xl mb-3">🍷</div>
-          <h1 className="text-3xl font-serif font-bold text-foreground mb-1">
+          <h1 className="text-3xl font-serif font-bold text-foreground tracking-tight mb-1">
             {event.title}
           </h1>
-          <p className="text-muted text-base">
+          <p className="text-muted text-[15px]">
             Hosted by <span className="font-medium text-foreground">{hostName}</span>
           </p>
           {event.guests.length > 0 && (
-            <p className="text-sm text-muted mt-1">
+            <p className="text-[13px] text-muted mt-1 nums">
               {event.guests.length} guest{event.guests.length !== 1 ? "s" : ""}{" "}
               already joined
             </p>

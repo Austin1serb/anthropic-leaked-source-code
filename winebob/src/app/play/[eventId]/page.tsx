@@ -19,6 +19,8 @@ import {
   MapPin,
   Globe,
   Tag,
+  DollarSign,
+  Search,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -34,19 +36,28 @@ type BlindGuess = EventData["guesses"][number];
 // Constants
 // ---------------------------------------------------------------------------
 
-const GRAPE_SUGGESTIONS = [
-  "Cabernet Sauvignon",
-  "Pinot Noir",
-  "Merlot",
-  "Chardonnay",
-  "Sauvignon Blanc",
-  "Syrah",
-  "Riesling",
-  "Nebbiolo",
-  "Tempranillo",
-  "Sangiovese",
-  "Grenache",
-  "Gamay",
+const GRAPE_CATEGORIES = [
+  {
+    label: "Red Grapes",
+    grapes: [
+      "Cabernet Sauvignon", "Pinot Noir", "Merlot", "Syrah", "Nebbiolo",
+      "Tempranillo", "Sangiovese", "Grenache", "Gamay", "Malbec",
+      "Zinfandel", "Barbera", "Pinotage",
+    ],
+  },
+  {
+    label: "White Grapes",
+    grapes: [
+      "Chardonnay", "Sauvignon Blanc", "Riesling", "Pinot Grigio",
+      "Viognier", "Chenin Blanc", "Albariño",
+      "Marsanne", "Vermentino", "Muscadet",
+    ],
+  },
+];
+
+const QUICK_GRAPES = [
+  "Cabernet Sauvignon", "Pinot Noir", "Merlot",
+  "Chardonnay", "Sauvignon Blanc", "Syrah",
 ];
 
 const WINE_TYPES = [
@@ -59,9 +70,30 @@ const WINE_TYPES = [
 ];
 
 const WINE_COUNTRIES = [
-  "Argentina", "Australia", "Austria", "Chile", "France", "Germany",
-  "Greece", "Hungary", "Italy", "Lebanon", "New Zealand", "Portugal",
-  "South Africa", "Spain", "United States", "Uruguay",
+  { name: "France", flag: "🇫🇷" },
+  { name: "Italy", flag: "🇮🇹" },
+  { name: "Spain", flag: "🇪🇸" },
+  { name: "Portugal", flag: "🇵🇹" },
+  { name: "Germany", flag: "🇩🇪" },
+  { name: "Austria", flag: "🇦🇹" },
+  { name: "Greece", flag: "🇬🇷" },
+  { name: "Hungary", flag: "🇭🇺" },
+  { name: "United States", flag: "🇺🇸" },
+  { name: "Argentina", flag: "🇦🇷" },
+  { name: "Chile", flag: "🇨🇱" },
+  { name: "Australia", flag: "🇦🇺" },
+  { name: "New Zealand", flag: "🇳🇿" },
+  { name: "South Africa", flag: "🇿🇦" },
+  { name: "Lebanon", flag: "🇱🇧" },
+  { name: "Uruguay", flag: "🇺🇾" },
+];
+
+const LOBBY_TIPS = [
+  "Swirl, sniff, sip — get ready!",
+  "Look at the color and clarity first",
+  "Trust your nose — it knows more than you think",
+  "Don't overthink it — go with your gut",
+  "Pay attention to the finish",
 ];
 
 const POLL_INTERVAL = 3000;
@@ -109,6 +141,20 @@ export default function PlayPage({
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
+
+  // Accordion & bottom sheet state
+  const [openField, setOpenField] = useState<string | null>("type");
+  const [countrySheetOpen, setCountrySheetOpen] = useState(false);
+  const [grapeSheetOpen, setGrapeSheetOpen] = useState(false);
+  const [sheetSearch, setSheetSearch] = useState("");
+  const sheetSearchRef = useRef<HTMLInputElement>(null);
+
+  // Lobby tip rotation
+  const [tipIndex, setTipIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTipIndex((i) => (i + 1) % LOBBY_TIPS.length), 4000);
+    return () => clearInterval(id);
+  }, []);
 
   // ---- Polling ----
   const fetchEvent = useCallback(async () => {
@@ -262,32 +308,64 @@ export default function PlayPage({
 
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="animate-fade-in-up text-center">
-            <div className="h-20 w-20 rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] flex items-center justify-center mx-auto mb-6">
-              <Wine className="h-10 w-10 text-cherry animate-pulse" />
+            <div className="h-20 w-20 rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] flex items-center justify-center mx-auto mb-6 animate-gentle-bob">
+              <Wine className="h-10 w-10 text-cherry" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">
+            <h1 className="text-3xl font-bold font-serif text-foreground tracking-tight">
               {event.title}
             </h1>
             {event.description && (
-              <p className="mt-2 text-muted text-[16px] max-w-md mx-auto">
+              <p className="mt-2 text-muted text-[15px] max-w-md mx-auto">
                 {event.description}
               </p>
             )}
-            <div className="mt-8 flex items-center gap-2 justify-center text-cherry">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="text-[16px] font-medium">
+
+            {/* Rotating tips */}
+            <div className="mt-6 h-8 flex items-center justify-center">
+              <p key={tipIndex} className="text-[14px] text-cherry/70 font-medium italic animate-fade-in-up">
+                {LOBBY_TIPS[tipIndex]}
+              </p>
+            </div>
+
+            <div className="mt-4 flex items-center gap-2 justify-center text-muted">
+              <Loader2 className="h-4 w-4 animate-spin text-cherry" />
+              <span className="text-[14px] font-medium">
                 Waiting for host to start...
               </span>
             </div>
           </div>
 
+          {/* Avatar stack + guest list */}
           <div className="mt-10 w-full max-w-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="h-4 w-4 text-muted" />
-              <span className="text-[13px] font-semibold text-muted">
-                {event.guests.length} guest{event.guests.length !== 1 && "s"} joined
-              </span>
-            </div>
+            {/* Overlapping avatar stack */}
+            {event.guests.length > 0 && (
+              <div className="flex items-center justify-center mb-4">
+                <div className="flex -space-x-2">
+                  {event.guests.slice(0, 6).map((g: GuestParticipant) => (
+                    <div
+                      key={g.id}
+                      className={`h-10 w-10 rounded-full border-2 border-background flex items-center justify-center text-[12px] font-bold ${
+                        g.id === guestId
+                          ? "bg-cherry text-white"
+                          : "bg-cherry/10 text-cherry"
+                      }`}
+                    >
+                      {g.displayName.charAt(0).toUpperCase()}
+                    </div>
+                  ))}
+                  {event.guests.length > 6 && (
+                    <div className="h-10 w-10 rounded-full border-2 border-background bg-card-border/30 flex items-center justify-center text-[11px] font-bold text-muted">
+                      +{event.guests.length - 6}
+                    </div>
+                  )}
+                </div>
+                <span className="ml-3 text-[14px] font-semibold text-foreground nums">
+                  {event.guests.length} <span className="text-muted font-medium">joined</span>
+                </span>
+              </div>
+            )}
+
+            {/* Full guest list card */}
             <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] divide-y divide-card-border/40">
               {event.guests.map((g: GuestParticipant) => (
                 <div
@@ -329,7 +407,7 @@ export default function PlayPage({
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-[12px] font-bold text-cherry uppercase tracking-widest">
-                Wine #{event.currentWine} — Revealed
+                Wine <span className="nums">#{event.currentWine}</span> — Revealed
               </p>
             </div>
             <div className="h-10 w-10 rounded-[16px] bg-amber-50 border border-amber-200 flex items-center justify-center">
@@ -339,7 +417,7 @@ export default function PlayPage({
 
           {/* Wine name card */}
           <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-6 mb-4 animate-scale-in">
-            <h2 className="text-2xl font-bold text-foreground tracking-tight mb-1">
+            <h2 className="text-2xl font-bold font-serif text-foreground tracking-tight mb-1">
               {actual.name}
             </h2>
             <p className="text-[14px] text-muted">
@@ -347,23 +425,21 @@ export default function PlayPage({
             </p>
           </div>
 
-          {/* Comparison cards */}
-          <div className="space-y-2.5 stagger-children">
-            <RevealCard label="Grape" icon={<Grape className="h-4 w-4" />} actual={actual.grapes.join(", ")} guessed={currentGuess?.guessedGrape} />
-            <RevealCard label="Region" icon={<MapPin className="h-4 w-4" />} actual={actual.region} guessed={currentGuess?.guessedRegion} />
-            <RevealCard label="Country" icon={<Globe className="h-4 w-4" />} actual={actual.country} guessed={currentGuess?.guessedCountry} />
-            <RevealCard label="Vintage" icon={<Clock className="h-4 w-4" />} actual={actual.vintage?.toString() ?? "NV"} guessed={currentGuess?.guessedVintage?.toString()} />
-            <RevealCard label="Type" icon={<Wine className="h-4 w-4" />} actual={actual.type} guessed={currentGuess?.guessedType} />
-            <RevealCard label="Producer" icon={<Tag className="h-4 w-4" />} actual={actual.producer} guessed={currentGuess?.guessedProducer} />
+          {/* Comparison cards — staggered entrance */}
+          <div className="space-y-2.5">
+            <RevealCard label="Grape" icon={<Grape className="h-4 w-4" />} actual={actual.grapes.join(", ")} guessed={currentGuess?.guessedGrape} delay={0} />
+            <RevealCard label="Region" icon={<MapPin className="h-4 w-4" />} actual={actual.region} guessed={currentGuess?.guessedRegion} delay={80} />
+            <RevealCard label="Country" icon={<Globe className="h-4 w-4" />} actual={actual.country} guessed={currentGuess?.guessedCountry} delay={160} />
+            <RevealCard label="Vintage" icon={<Clock className="h-4 w-4" />} actual={actual.vintage?.toString() ?? "NV"} guessed={currentGuess?.guessedVintage?.toString()} delay={240} />
+            <RevealCard label="Type" icon={<Wine className="h-4 w-4" />} actual={actual.type} guessed={currentGuess?.guessedType} delay={320} />
+            <RevealCard label="Producer" icon={<Tag className="h-4 w-4" />} actual={actual.producer} guessed={currentGuess?.guessedProducer} delay={400} />
           </div>
 
-          {/* Score */}
+          {/* Score — animated count-up */}
           {currentGuess?.score != null && (
-            <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-5 mt-4 flex items-center justify-between animate-scale-in">
+            <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-5 mt-4 flex items-center justify-between">
               <span className="text-[14px] font-medium text-muted">Your score</span>
-              <span className="text-3xl font-bold text-cherry tracking-tight">
-                {currentGuess.score} <span className="text-[14px] font-semibold text-muted">pts</span>
-              </span>
+              <AnimatedScore value={currentGuess.score} />
             </div>
           )}
 
@@ -376,7 +452,7 @@ export default function PlayPage({
                   ? "Waiting for next wine..."
                   : "Last wine — waiting for results..."}
               </p>
-              <p className="text-[12px] text-muted mt-0.5">
+              <p className="text-[12px] text-muted mt-0.5 nums">
                 Wine {event.currentWine} of {event.wines.length}
               </p>
             </div>
@@ -389,26 +465,47 @@ export default function PlayPage({
   // ---- STATE 2: Active Wine (guessing) ----
   const guessFields = event.guessFields ?? [];
 
+  // Toggle accordion — only one open at a time
+  const toggleField = (field: string) => {
+    setOpenField((prev) => (prev === field ? null : field));
+  };
+
+  // Filtered countries for bottom sheet search
+  const filteredCountries = WINE_COUNTRIES.filter((c) =>
+    c.name.toLowerCase().includes(sheetSearch.toLowerCase())
+  );
+
+  // Filtered grapes for bottom sheet search
+  const filteredGrapeCategories = GRAPE_CATEGORIES.map((cat) => ({
+    ...cat,
+    grapes: cat.grapes.filter((g) => g.toLowerCase().includes(sheetSearch.toLowerCase())),
+  })).filter((cat) => cat.grapes.length > 0);
+
   return (
     <div className="fixed inset-0 flex flex-col bg-background safe-top safe-bottom">
       {/* Header */}
-      <div className="px-4 md:px-8 lg:px-10 pt-5 pb-3 flex items-center justify-between">
-        <div>
-          <p className="text-[11px] font-bold text-muted uppercase tracking-widest">
-            {event.title}
-          </p>
-          <h1 className="text-[26px] font-bold text-foreground tracking-tight mt-0.5">
-            Wine #{event.currentWine}
-          </h1>
+      <div className="px-4 md:px-8 lg:px-10 pt-5 pb-2">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-[11px] font-bold text-muted uppercase tracking-widest">
+              {event.title}
+            </p>
+            <h1 className="text-[26px] font-bold text-foreground tracking-tight mt-0.5">
+              Wine <span className="nums">#{event.currentWine}</span>
+            </h1>
+          </div>
+          <div className="h-12 w-12 rounded-[16px] bg-cherry/10 flex items-center justify-center">
+            <Wine className="h-6 w-6 text-cherry" />
+          </div>
         </div>
-        <div className="h-12 w-12 rounded-[16px] bg-cherry/10 flex items-center justify-center">
-          <Wine className="h-6 w-6 text-cherry" />
-        </div>
+
+        {/* Wine Progress Bar */}
+        <WineProgressBar current={event.currentWine} total={event.wines.length} />
       </div>
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto scroll-smooth">
-        <div className="px-4 md:px-8 lg:px-10 pb-32">
+        <div className="px-4 md:px-8 lg:px-10 pb-32 pt-2">
           {submitted && !editing ? (
             /* ---- Submitted confirmation ---- */
             <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-6 animate-scale-in">
@@ -450,163 +547,210 @@ export default function PlayPage({
               )}
             </div>
           ) : (
-            /* ---- Guess form ---- */
-            <div className="space-y-5">
-              {/* Type — visual pill cards */}
+            /* ---- Accordion Guess form ---- */
+            <div className="space-y-2">
+              {/* Type */}
               {guessFields.includes("type") && (
-                <fieldset>
-                  <legend className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-3">
-                    Type
-                  </legend>
-                  <div className="grid grid-cols-3 gap-2">
+                <AccordionField
+                  label="Type"
+                  icon={<Wine className="h-4 w-4" />}
+                  value={form.type}
+                  isOpen={openField === "type"}
+                  onToggle={() => toggleField("type")}
+                >
+                  <div className="grid grid-cols-2 gap-2 pt-3">
                     {WINE_TYPES.map((t) => (
                       <button
                         key={t.value}
                         type="button"
-                        onClick={() =>
-                          setForm((f) => ({ ...f, type: f.type === t.value ? "" : t.value }))
-                        }
-                        className={`touch-target rounded-[16px] p-3 text-center transition-all ${
+                        onClick={() => {
+                          setForm((f) => ({ ...f, type: f.type === t.value ? "" : t.value }));
+                        }}
+                        className={`touch-target rounded-[16px] py-4 px-3 text-center transition-all ${
                           form.type === t.value
-                            ? "bg-cherry text-white shadow-sm ring-2 ring-cherry/30"
-                            : "bg-card-bg border border-card-border text-foreground"
+                            ? "bg-cherry text-white shadow-sm ring-2 ring-cherry/30 scale-[1.02]"
+                            : "bg-card-bg border border-card-border text-foreground active:scale-[0.97]"
                         }`}
                       >
-                        <span className="text-lg block">{t.emoji}</span>
-                        <span className="text-[12px] font-semibold mt-1 block">{t.value}</span>
+                        <span className="text-2xl block">{t.emoji}</span>
+                        <span className="text-[13px] font-semibold mt-1.5 block">{t.value}</span>
                       </button>
                     ))}
                   </div>
-                </fieldset>
+                </AccordionField>
               )}
 
-              {/* Grape — input + suggestion chips */}
+              {/* Grape */}
               {guessFields.includes("grape") && (
-                <fieldset>
-                  <legend className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-2">
-                    Grape
-                  </legend>
-                  <input
-                    type="text"
-                    value={form.grape}
-                    onChange={(e) => setForm((f) => ({ ...f, grape: e.target.value }))}
-                    placeholder="e.g. Pinot Noir"
-                    className="input-field w-full touch-target"
-                  />
-                  <div className="flex flex-wrap gap-1.5 mt-2.5">
-                    {GRAPE_SUGGESTIONS.map((g) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => setForm((f) => ({ ...f, grape: g }))}
-                        className={`px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-all ${
-                          form.grape === g
-                            ? "bg-cherry text-white shadow-sm"
-                            : "bg-card-bg border border-card-border text-foreground"
-                        }`}
-                      >
-                        {g}
-                      </button>
-                    ))}
+                <AccordionField
+                  label="Grape"
+                  icon={<Grape className="h-4 w-4" />}
+                  value={form.grape}
+                  isOpen={openField === "grape"}
+                  onToggle={() => toggleField("grape")}
+                >
+                  <div className="pt-3 space-y-3">
+                    <input
+                      type="text"
+                      value={form.grape}
+                      onChange={(e) => setForm((f) => ({ ...f, grape: e.target.value }))}
+                      placeholder="e.g. Pinot Noir"
+                      className="input-field w-full touch-target"
+                    />
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUICK_GRAPES.map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, grape: g }))}
+                          className={`px-3 py-2 rounded-[10px] text-[13px] font-medium transition-all ${
+                            form.grape === g
+                              ? "bg-cherry text-white shadow-sm"
+                              : "bg-card-bg border border-card-border text-foreground active:scale-[0.95]"
+                          }`}
+                        >
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSheetSearch(""); setGrapeSheetOpen(true); }}
+                      className="w-full py-2.5 rounded-[12px] border-2 border-dashed border-cherry/20 text-cherry text-[13px] font-semibold touch-target active:bg-cherry/5 transition-colors"
+                    >
+                      Browse all grapes
+                    </button>
                   </div>
-                </fieldset>
+                </AccordionField>
               )}
 
               {/* Region */}
               {guessFields.includes("region") && (
-                <fieldset>
-                  <legend className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-2">
-                    Region
-                  </legend>
-                  <input
-                    type="text"
-                    value={form.region}
-                    onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
-                    placeholder="e.g. Burgundy, Napa Valley"
-                    className="input-field w-full touch-target"
-                  />
-                </fieldset>
+                <AccordionField
+                  label="Region"
+                  icon={<MapPin className="h-4 w-4" />}
+                  value={form.region}
+                  isOpen={openField === "region"}
+                  onToggle={() => toggleField("region")}
+                >
+                  <div className="pt-3">
+                    <input
+                      type="text"
+                      value={form.region}
+                      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
+                      placeholder="e.g. Burgundy, Napa Valley"
+                      className="input-field w-full touch-target"
+                    />
+                  </div>
+                </AccordionField>
               )}
 
-              {/* Country — visual selector */}
+              {/* Country */}
               {guessFields.includes("country") && (
-                <fieldset>
-                  <legend className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-2">
-                    Country
-                  </legend>
-                  <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
-                    <select
-                      value={form.country}
-                      onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-                      className="w-full px-4 py-3.5 bg-transparent text-foreground text-[15px] touch-target appearance-none"
+                <AccordionField
+                  label="Country"
+                  icon={<Globe className="h-4 w-4" />}
+                  value={form.country ? `${WINE_COUNTRIES.find((c) => c.name === form.country)?.flag ?? ""} ${form.country}` : ""}
+                  isOpen={openField === "country"}
+                  onToggle={() => toggleField("country")}
+                >
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => { setSheetSearch(""); setCountrySheetOpen(true); }}
+                      className={`w-full py-3.5 px-4 rounded-[16px] border text-left touch-target transition-colors ${
+                        form.country
+                          ? "bg-card-bg border-card-border text-foreground"
+                          : "border-dashed border-cherry/20 text-muted"
+                      }`}
                     >
-                      <option value="">Select a country</option>
-                      {WINE_COUNTRIES.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
+                      {form.country ? (
+                        <span className="text-[15px] font-medium">
+                          {WINE_COUNTRIES.find((c) => c.name === form.country)?.flag} {form.country}
+                        </span>
+                      ) : (
+                        <span className="text-[15px]">Tap to select country</span>
+                      )}
+                    </button>
                   </div>
-                </fieldset>
+                </AccordionField>
               )}
 
               {/* Vintage */}
               {guessFields.includes("vintage") && (
-                <fieldset>
-                  <legend className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-2">
-                    Vintage
-                  </legend>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={form.vintage}
-                    onChange={(e) => setForm((f) => ({ ...f, vintage: e.target.value }))}
-                    placeholder="e.g. 2019"
-                    min={1900}
-                    max={2099}
-                    className="input-field w-full touch-target"
-                  />
-                </fieldset>
+                <AccordionField
+                  label="Vintage"
+                  icon={<Clock className="h-4 w-4" />}
+                  value={form.vintage}
+                  isOpen={openField === "vintage"}
+                  onToggle={() => toggleField("vintage")}
+                >
+                  <div className="pt-3 flex justify-center">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={form.vintage}
+                      onChange={(e) => setForm((f) => ({ ...f, vintage: e.target.value }))}
+                      placeholder="2020"
+                      min={1900}
+                      max={2099}
+                      className="input-field w-full text-center text-2xl font-bold nums touch-target tracking-wide"
+                    />
+                  </div>
+                </AccordionField>
               )}
 
               {/* Producer */}
               {guessFields.includes("producer") && (
-                <fieldset>
-                  <legend className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-2">
-                    Producer
-                  </legend>
-                  <input
-                    type="text"
-                    value={form.producer}
-                    onChange={(e) => setForm((f) => ({ ...f, producer: e.target.value }))}
-                    placeholder="e.g. Domaine de la Romanée-Conti"
-                    className="input-field w-full touch-target"
-                  />
-                </fieldset>
+                <AccordionField
+                  label="Producer"
+                  icon={<Tag className="h-4 w-4" />}
+                  value={form.producer}
+                  isOpen={openField === "producer"}
+                  onToggle={() => toggleField("producer")}
+                >
+                  <div className="pt-3">
+                    <input
+                      type="text"
+                      value={form.producer}
+                      onChange={(e) => setForm((f) => ({ ...f, producer: e.target.value }))}
+                      placeholder="e.g. Domaine de la Romanée-Conti"
+                      className="input-field w-full touch-target"
+                    />
+                  </div>
+                </AccordionField>
               )}
 
               {/* Price */}
               {guessFields.includes("price") && (
-                <fieldset>
-                  <legend className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-2">
-                    Price ($)
-                  </legend>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={form.price}
-                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                    placeholder="e.g. 45"
-                    min={0}
-                    className="input-field w-full touch-target"
-                  />
-                </fieldset>
+                <AccordionField
+                  label="Price"
+                  icon={<DollarSign className="h-4 w-4" />}
+                  value={form.price ? `$${form.price}` : ""}
+                  isOpen={openField === "price"}
+                  onToggle={() => toggleField("price")}
+                >
+                  <div className="pt-3 relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 mt-1.5 text-[16px] font-semibold text-muted">$</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={form.price}
+                      onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                      placeholder="45"
+                      min={0}
+                      className="input-field w-full touch-target pl-8 nums"
+                    />
+                  </div>
+                </AccordionField>
               )}
 
-              {/* Notes — always shown */}
-              <fieldset>
-                <legend className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-2">
+              {/* Tasting Notes — always visible, not in accordion */}
+              <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-4">
+                <label className="text-[11px] font-bold text-muted uppercase tracking-wide block mb-2">
                   Tasting Notes
-                </legend>
+                </label>
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
@@ -614,7 +758,7 @@ export default function PlayPage({
                   rows={3}
                   className="input-field w-full resize-none"
                 />
-              </fieldset>
+              </div>
 
               {error && (
                 <div className="rounded-[16px] bg-red-50 border border-red-200 p-3">
@@ -626,7 +770,7 @@ export default function PlayPage({
         </div>
       </div>
 
-      {/* Sticky submit button — hidden when wine is locked (revealed) */}
+      {/* Sticky submit button */}
       {(!submitted || editing) && !isWineLocked && (
         <div className="fixed bottom-0 left-0 right-0 safe-bottom z-50">
           <div className="px-4 md:px-8 lg:px-10 pb-5 pt-3 bg-gradient-to-t from-background via-background to-transparent">
@@ -650,7 +794,232 @@ export default function PlayPage({
           </div>
         </div>
       )}
+
+      {/* Country Bottom Sheet */}
+      <BottomSheet
+        open={countrySheetOpen}
+        onClose={() => setCountrySheetOpen(false)}
+        title="Select Country"
+      >
+        <div className="px-5 pb-3 pt-1">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+            <input
+              ref={sheetSearchRef}
+              type="text"
+              value={sheetSearch}
+              onChange={(e) => setSheetSearch(e.target.value)}
+              placeholder="Search countries..."
+              className="input-field w-full pl-10 touch-target"
+              autoFocus
+            />
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-2 pb-safe">
+          {filteredCountries.map((c) => (
+            <button
+              key={c.name}
+              type="button"
+              onClick={() => {
+                setForm((f) => ({ ...f, country: c.name }));
+                setCountrySheetOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-[12px] touch-target transition-colors ${
+                form.country === c.name
+                  ? "bg-cherry/10 text-cherry"
+                  : "text-foreground active:bg-card-border/20"
+              }`}
+            >
+              <span className="text-xl">{c.flag}</span>
+              <span className="text-[15px] font-medium flex-1 text-left">{c.name}</span>
+              {form.country === c.name && <Check className="h-4 w-4 text-cherry" />}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
+
+      {/* Grape Bottom Sheet */}
+      <BottomSheet
+        open={grapeSheetOpen}
+        onClose={() => setGrapeSheetOpen(false)}
+        title="Select Grape"
+      >
+        <div className="px-5 pb-3 pt-1">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+            <input
+              type="text"
+              value={sheetSearch}
+              onChange={(e) => setSheetSearch(e.target.value)}
+              placeholder="Search grapes..."
+              className="input-field w-full pl-10 touch-target"
+              autoFocus
+            />
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-2 pb-safe">
+          {filteredGrapeCategories.map((cat) => (
+            <div key={cat.label}>
+              <div className="px-4 pt-3 pb-1.5 sticky top-0 bg-card-bg z-10">
+                <span className="text-[11px] font-bold text-muted uppercase tracking-wide">{cat.label}</span>
+              </div>
+              {cat.grapes.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => {
+                    setForm((f) => ({ ...f, grape: g }));
+                    setGrapeSheetOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-[12px] touch-target transition-colors ${
+                    form.grape === g
+                      ? "bg-cherry/10 text-cherry"
+                      : "text-foreground active:bg-card-border/20"
+                  }`}
+                >
+                  <span className="text-[15px] font-medium flex-1 text-left">{g}</span>
+                  {form.grape === g && <Check className="h-4 w-4 text-cherry" />}
+                </button>
+              ))}
+            </div>
+          ))}
+          {/* Custom entry */}
+          {sheetSearch && !GRAPE_CATEGORIES.some((c) => c.grapes.some((g) => g.toLowerCase() === sheetSearch.toLowerCase())) && (
+            <button
+              type="button"
+              onClick={() => {
+                setForm((f) => ({ ...f, grape: sheetSearch }));
+                setGrapeSheetOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-[12px] touch-target text-cherry active:bg-cherry/5 transition-colors"
+            >
+              <span className="text-[15px] font-medium flex-1 text-left">Use &ldquo;{sheetSearch}&rdquo;</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </BottomSheet>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Wine Progress Bar
+// ---------------------------------------------------------------------------
+
+function WineProgressBar({ current, total }: { current: number; total: number }) {
+  return (
+    <div>
+      <div className="flex gap-1.5">
+        {Array.from({ length: total }, (_, i) => {
+          const pos = i + 1;
+          const state = pos < current ? "done" : pos === current ? "current" : "future";
+          return (
+            <div
+              key={pos}
+              className="progress-segment flex-1"
+              data-state={state}
+            />
+          );
+        })}
+      </div>
+      <p className="text-[11px] font-semibold text-muted mt-1.5 nums">
+        Wine {current} of {total}
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Accordion Field
+// ---------------------------------------------------------------------------
+
+function AccordionField({
+  label,
+  icon,
+  value,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  value: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 px-4 py-3.5 touch-target"
+      >
+        <div className={`h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0 ${
+          value ? "bg-green-50 text-green-600" : "bg-cherry/10 text-cherry"
+        }`}>
+          {value ? <Check className="h-4 w-4" strokeWidth={2.5} /> : icon}
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <span className="text-[11px] font-bold text-muted uppercase tracking-wide">{label}</span>
+          {value && (
+            <p className="text-[14px] font-semibold text-foreground truncate mt-0.5">{value}</p>
+          )}
+        </div>
+        <ChevronRight
+          className="h-4 w-4 text-muted flex-shrink-0 accordion-chevron"
+          data-open={isOpen ? "true" : "false"}
+        />
+      </button>
+      <div className="accordion-body" data-open={isOpen ? "true" : "false"}>
+        <div>
+          <div className="px-4 pb-4">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Bottom Sheet
+// ---------------------------------------------------------------------------
+
+function BottomSheet({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <div
+        className="bottom-sheet-overlay"
+        data-open={open ? "true" : "false"}
+        onClick={onClose}
+      />
+      <div className="bottom-sheet safe-bottom" data-open={open ? "true" : "false"}>
+        <div className="bottom-sheet-handle" />
+        <div className="flex items-center justify-between px-5 py-3">
+          <h3 className="text-[17px] font-bold text-foreground">{title}</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-8 w-8 rounded-[8px] bg-card-border/20 flex items-center justify-center touch-target"
+          >
+            <X className="h-4 w-4 text-muted" />
+          </button>
+        </div>
+        {children}
+      </div>
+    </>
   );
 }
 
@@ -661,7 +1030,7 @@ export default function PlayPage({
 function SummaryPill({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-2 px-1">
-      <span className="text-[12px] font-semibold text-muted uppercase tracking-wide">{label}</span>
+      <span className="text-[11px] font-bold text-muted uppercase tracking-wide">{label}</span>
       <span className="text-[14px] font-medium text-foreground">{value}</span>
     </div>
   );
@@ -676,11 +1045,13 @@ function RevealCard({
   icon,
   actual,
   guessed,
+  delay,
 }: {
   label: string;
   icon: React.ReactNode;
   actual: string;
   guessed?: string | null;
+  delay?: number;
 }) {
   const isMatch =
     guessed != null &&
@@ -688,23 +1059,26 @@ function RevealCard({
     actual.toLowerCase().includes(guessed.toLowerCase());
 
   return (
-    <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-4 flex items-center gap-3.5">
+    <div
+      className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-4 flex items-center gap-3.5 animate-card-reveal"
+      style={delay ? { animationDelay: `${delay}ms` } : undefined}
+    >
       <div className={`h-10 w-10 rounded-[12px] bg-card-bg border border-card-border flex items-center justify-center flex-shrink-0 ${
         !guessed ? "text-muted/40" : isMatch ? "text-green-600" : "text-red-500"
       }`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-muted uppercase tracking-wide">{label}</p>
+        <p className="text-[11px] font-bold text-muted uppercase tracking-wide">{label}</p>
         <p className="text-[15px] font-bold text-foreground mt-0.5">{actual}</p>
         {guessed && !isMatch && (
-          <p className="text-[12px] text-red-400 line-through mt-0.5">{guessed}</p>
+          <p className="text-[12px] text-red-400 line-through mt-0.5 animate-gentle-shake">{guessed}</p>
         )}
       </div>
       <div className="flex-shrink-0">
         {guessed ? (
           isMatch ? (
-            <div className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center">
+            <div className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center animate-match-pulse">
               <Check className="h-4 w-4 text-green-600" strokeWidth={3} />
             </div>
           ) : (
@@ -713,10 +1087,39 @@ function RevealCard({
             </div>
           )
         ) : (
-          <div className="h-7 w-7 rounded-full border-2 border-card-border" />
+          <div className="h-7 w-7 rounded-full border-2 border-dashed border-card-border" />
         )}
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Animated Score Counter
+// ---------------------------------------------------------------------------
+
+function AnimatedScore({ value }: { value: number }) {
+  const [display, setDisplay] = useState(0);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (hasAnimated.current) return;
+    hasAnimated.current = true;
+    const duration = 600;
+    const start = performance.now();
+    function step(now: number) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setDisplay(Math.round(eased * value));
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }, [value]);
+
+  return (
+    <span className="text-4xl font-bold nums text-cherry animate-score-reveal">
+      {display} <span className="text-[14px] font-semibold text-muted">pts</span>
+    </span>
   );
 }
 
@@ -750,6 +1153,11 @@ function CompletedView({
 
   const myRank = ranked.findIndex((g) => g.id === guestId) + 1;
 
+  // Per-wine score breakdown for current player
+  const myWineScores = event.guesses
+    .filter((g) => g.guestId === guestId)
+    .sort((a, b) => a.winePosition - b.winePosition);
+
   const MEDAL_COLORS = [
     "bg-amber-400 text-white",     // gold
     "bg-gray-300 text-gray-700",   // silver
@@ -764,28 +1172,49 @@ function CompletedView({
           <div className="h-20 w-20 rounded-[16px] bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-5 animate-cheers">
             <Trophy className="h-10 w-10 text-amber-600" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Tasting Complete!</h1>
-          <p className="text-muted mt-2 text-[16px]">{event.title}</p>
+          <h1 className="text-3xl font-bold font-serif text-foreground tracking-tight">Tasting Complete!</h1>
+          <p className="text-muted mt-2 text-[15px]">{event.title}</p>
           {myRank > 0 && (
-            <p className="mt-3 text-cherry font-bold text-[18px]">
+            <p className="mt-3 text-cherry font-bold text-[18px] nums">
               You placed #{myRank} of {ranked.length}
             </p>
           )}
         </div>
 
+        {/* Per-wine breakdown */}
+        {myWineScores.length > 0 && (
+          <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-4 mb-6 animate-fade-in-up">
+            <h3 className="text-[11px] font-bold text-muted uppercase tracking-wide mb-3">Your Breakdown</h3>
+            <div className="space-y-1.5">
+              {myWineScores.map((ws) => (
+                <div key={ws.id} className="flex items-center justify-between py-1">
+                  <span className="text-[13px] text-muted font-medium nums">Wine #{ws.winePosition}</span>
+                  <span className="text-[14px] font-bold text-foreground nums">{ws.score ?? 0} pts</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Scoreboard */}
-        <h2 className="text-[13px] font-bold text-foreground uppercase tracking-wide mb-3">
+        <h2 className="text-[11px] font-bold text-muted uppercase tracking-wide mb-3">
           Scoreboard
         </h2>
-        <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] divide-y divide-card-border/40">
+        <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] overflow-hidden stagger-children">
           {ranked.map((g, i) => (
             <div
               key={g.id}
-              className={`flex items-center gap-3.5 px-4 py-3.5 ${
-                g.id === guestId ? "bg-cherry/5" : ""
+              className={`flex items-center gap-3.5 px-4 ${
+                i < 3 ? "py-4" : "py-3.5"
+              } ${
+                i === 0 ? "bg-widget-gold/30" : g.id === guestId ? "bg-cherry/5" : ""
+              } ${
+                g.id === guestId ? "border-l-4 border-cherry" : ""
+              } ${
+                i < ranked.length - 1 ? "border-b border-card-border/30" : ""
               }`}
             >
-              <div className={`h-9 w-9 rounded-[12px] flex items-center justify-center text-[13px] font-bold flex-shrink-0 ${
+              <div className={`${i < 3 ? "h-10 w-10" : "h-9 w-9"} rounded-[12px] flex items-center justify-center text-[13px] font-bold flex-shrink-0 ${
                 i < 3 ? MEDAL_COLORS[i] : "bg-card-border/30 text-muted"
               }`}>
                 {i === 0 ? <Crown className="h-4 w-4" /> : i + 1}
@@ -800,7 +1229,7 @@ function CompletedView({
                   )}
                 </p>
               </div>
-              <span className="text-[16px] font-bold tabular-nums text-foreground">
+              <span className="text-[16px] font-bold nums text-foreground">
                 {g.totalScore}
               </span>
             </div>

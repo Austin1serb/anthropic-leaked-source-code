@@ -626,3 +626,163 @@ body {
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
 }
+
+/* ============ ACCORDION ============ */
+
+.accordion-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.accordion-body[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.accordion-body > div {
+  overflow: hidden;
+}
+
+/* Chevron rotation for accordion headers */
+.accordion-chevron {
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.accordion-chevron[data-open="true"] {
+  transform: rotate(90deg);
+}
+
+/* ============ BOTTOM SHEET ============ */
+
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.bottom-sheet-overlay[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 101;
+  background: var(--card-bg);
+  border-radius: 20px 20px 0 0;
+  max-height: 70dvh;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+.bottom-sheet[data-open="true"] {
+  transform: translateY(0);
+}
+
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--card-border);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+/* ============ WINE PROGRESS BAR ============ */
+
+.progress-track {
+  height: 4px;
+  background: var(--card-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--cherry);
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Segmented progress — individual dots */
+.progress-segment {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--card-border);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+.progress-segment[data-state="done"] {
+  background: var(--cherry);
+}
+.progress-segment[data-state="current"] {
+  background: var(--cherry);
+  box-shadow: 0 0 0 2px rgba(116, 7, 14, 0.2);
+  animation: segmentPulse 2s ease-in-out infinite;
+}
+@keyframes segmentPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(116, 7, 14, 0.15); }
+  50% { box-shadow: 0 0 0 4px rgba(116, 7, 14, 0.08); }
+}
+
+/* ============ GAME ANIMATIONS ============ */
+
+/* Score reveal */
+@keyframes scoreReveal {
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-score-reveal {
+  animation: scoreReveal 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Card reveal with stagger */
+@keyframes cardRevealIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-card-reveal {
+  animation: cardRevealIn 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* Match pulse (green) */
+@keyframes matchPulse {
+  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.3); }
+  70% { box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+.animate-match-pulse {
+  animation: matchPulse 0.6s ease-out;
+}
+
+/* Gentle shake for mismatch */
+@keyframes gentleShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+.animate-gentle-shake {
+  animation: gentleShake 0.3s ease-in-out;
+}
+
+/* Gentle bob for waiting states */
+@keyframes gentleBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-gentle-bob {
+  animation: gentleBob 2.5s ease-in-out infinite;
+}
+
+/* ============ TABULAR NUMBERS ============ */
+
+.nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
