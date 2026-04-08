@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ChevronLeft, Heart, Wine, MapPin, Grape, Calendar, DollarSign, Droplets, Utensils, FileText } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { toggleFavorite } from "@/lib/actions";
 
 type WineData = {
@@ -39,6 +40,8 @@ const PRICE_LABELS: Record<string, string> = { budget: "Under $15", mid: "$15–
 export function WineDetailClient({ wine }: { wine: WineData }) {
   const [favorited, setFavorited] = useState(false);
   const [, startTransition] = useTransition();
+  const { data: session } = useSession();
+  const [checkInStatus, setCheckInStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   function handleFav() {
     startTransition(async () => {
@@ -46,6 +49,51 @@ export function WineDetailClient({ wine }: { wine: WineData }) {
       setFavorited(result.favorited);
     });
   }
+
+  const handleCheckIn = useCallback(async () => {
+    setCheckInStatus("loading");
+
+    let lat: number | undefined;
+    let lng: number | undefined;
+
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 8000,
+          maximumAge: 60000,
+        });
+      });
+      lat = pos.coords.latitude;
+      lng = pos.coords.longitude;
+    } catch {
+      // Location denied or unavailable — proceed without coords
+    }
+
+    if (lat === undefined || lng === undefined) {
+      // Fall back to 0, 0 — the API requires coords
+      lat = 0;
+      lng = 0;
+    }
+
+    try {
+      const res = await fetch("/api/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wineId: wine.id, lat, lng }),
+      });
+
+      if (res.ok) {
+        setCheckInStatus("success");
+        setTimeout(() => setCheckInStatus("idle"), 3000);
+      } else {
+        setCheckInStatus("error");
+        setTimeout(() => setCheckInStatus("idle"), 3000);
+      }
+    } catch {
+      setCheckInStatus("error");
+      setTimeout(() => setCheckInStatus("idle"), 3000);
+    }
+  }, [wine.id]);
 
   return (
     <div className="min-h-screen pb-28 safe-top bg-background">
@@ -124,6 +172,33 @@ export function WineDetailClient({ wine }: { wine: WineData }) {
               <h3 className="label">Food Pairing</h3>
             </div>
             <p className="body leading-relaxed">{wine.foodPairing}</p>
+          </div>
+        )}
+
+        {/* Check-in button — only for authenticated users */}
+        {session?.user && (
+          <div className="mt-4 mb-3 animate-fade-in-up">
+            {checkInStatus === "success" ? (
+              <div className="rounded-full bg-green-800/80 backdrop-blur-sm h-[44px] flex items-center justify-center px-6">
+                <p className="text-[14px] font-semibold text-white">
+                  Checked in! You&apos;re now on the live map.
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={handleCheckIn}
+                disabled={checkInStatus === "loading"}
+                className="w-full h-[44px] rounded-full bg-[#74070E] hover:bg-[#8B0000] active:scale-[0.98] transition-all text-white text-[14px] font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {checkInStatus === "loading" ? (
+                  "Locating..."
+                ) : checkInStatus === "error" ? (
+                  "Something went wrong — tap to retry"
+                ) : (
+                  <>I&apos;m drinking this 🍷</>
+                )}
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { Wine, Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/arena";
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -42,7 +45,7 @@ export default function LoginPage() {
       setError(mode === "signup" ? "Account created but login failed. Try logging in." : "Invalid email or password");
       setLoading(false);
     } else {
-      window.location.href = "/arena";
+      window.location.href = callbackUrl;
     }
   }
 
@@ -142,7 +145,7 @@ export default function LoginPage() {
       {/* OAuth buttons */}
       <div className="w-full max-w-sm space-y-3">
         <button
-          onClick={() => signIn("google", { callbackUrl: "/arena" })}
+          onClick={() => signIn("google", { callbackUrl })}
           className="w-full py-4 bg-card-bg border border-card-border rounded-2xl font-semibold text-sm flex items-center justify-center gap-3 active:scale-[0.98] transition-transform shadow-sm"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
@@ -155,7 +158,7 @@ export default function LoginPage() {
         </button>
 
         <button
-          onClick={() => signIn("apple", { callbackUrl: "/arena" })}
+          onClick={() => signIn("apple", { callbackUrl })}
           className="w-full py-4 bg-foreground text-background rounded-2xl font-semibold text-sm flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -169,5 +172,13 @@ export default function LoginPage() {
         By continuing, you agree to Winebob&apos;s Terms of Service and Privacy Policy.
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

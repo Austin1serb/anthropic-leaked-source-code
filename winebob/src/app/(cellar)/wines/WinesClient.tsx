@@ -4,11 +4,22 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Search, Plus, Wine, Heart, ChevronLeft, ChevronRight,
-  ChevronDown, Bookmark, Grape, Layers,
+  ChevronDown, Bookmark, Grape, Layers, Play, Square, Satellite, Map,
+  CloudRain, Target, Radio, PenTool,
 } from "lucide-react";
 import { useState, useTransition, useRef, useCallback } from "react";
 import { toggleFavorite } from "@/lib/actions";
 import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
+import type { TourStop } from "@/components/shared/WineRegionMap";
+import { TourInfoCard } from "@/components/shared/TourInfoCard";
+import { useMapLayers } from "@/hooks/useMapLayers";
+import { MapLayerDrawer } from "@/components/shared/MapLayerDrawer";
+import type { MapLayer } from "@/components/shared/MapLayerDrawer";
+import { VintageWeatherLayer } from "@/components/layers/VintageWeatherLayer";
+import { FlavorGenomeLayer } from "@/components/layers/FlavorGenomeLayer";
+import { LiveHeatmapLayer } from "@/components/layers/LiveHeatmapLayer";
+import DrawFlightLayer from "@/components/layers/DrawFlightLayer";
+import mapboxgl from "mapbox-gl";
 
 /* ── Types ── */
 
@@ -48,11 +59,19 @@ function buildQ(p: Record<string, string | undefined>) {
 }
 
 /* ── Sheet states ── */
-type SheetState = "collapsed" | "half" | "full";
-const SHEET_HEIGHTS: Record<SheetState, string> = {
-  collapsed: "140px",
-  half: "50vh",
-  full: "88vh",
+type SheetState = "peek" | "half" | "full";
+const SHEET_HEIGHT = "88vh";
+const SHEET_TRANSLATE: Record<SheetState, string> = {
+  peek: "calc(88vh - 44px)",
+  half: "calc(88vh - 50vh)",
+  full: "0",
+};
+
+const LAYER_ICONS: Record<string, React.ReactNode> = {
+  "vintage-weather": <CloudRain size={18} />,
+  "flavor-genome": <Target size={18} />,
+  "live-heatmap": <Radio size={18} />,
+  "draw-flight": <PenTool size={18} />,
 };
 
 /* ══════════════════════════════════════════
@@ -64,11 +83,18 @@ export function WinesClient({
   activeType, activeCountry, activePriceRange, activeSearch,
 }: Props) {
   const router = useRouter();
+  const { layers, toggle, isActive } = useMapLayers();
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const fullLayers: MapLayer[] = layers.map((l) => ({ ...l, icon: LAYER_ICONS[l.id] ?? null }));
   const [search, setSearch] = useState(activeSearch ?? "");
   const [favSet, setFavSet] = useState<Set<string>>(new Set());
-  const [sheet, setSheet] = useState<SheetState>("collapsed");
+  const [sheet, setSheet] = useState<SheetState>("peek");
   const [exploreRegion, setExploreRegion] = useState<string | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
+  const [tourRegion, setTourRegion] = useState<string | null>(null);
+  const [satellite, setSatellite] = useState(false);
+  const [activeCity, setActiveCity] = useState<string | null>(null);
+  const [activeTourStop, setActiveTourStop] = useState<TourStop | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -91,7 +117,8 @@ export function WinesClient({
     // Only fly to — don't navigate (that causes remount and kills the animation)
     setExploreRegion(region);
     setSearch(region);
-    setSheet("half");
+    setActiveCity(null);
+    setTourRegion(null);
   }
 
   // Navigate when user explicitly confirms explore (e.g. from sheet header)
@@ -115,10 +142,10 @@ export function WinesClient({
     if (Math.abs(dy) < 40) return;
     if (dy < 0) {
       // Swipe up
-      setSheet((s) => s === "collapsed" ? "half" : s === "half" ? "full" : s);
+      setSheet((s) => s === "peek" ? "half" : s === "half" ? "full" : s);
     } else {
       // Swipe down
-      setSheet((s) => s === "full" ? "half" : s === "half" ? "collapsed" : s);
+      setSheet((s) => s === "full" ? "half" : s === "half" ? "peek" : s);
     }
   }
 
@@ -229,187 +256,250 @@ export function WinesClient({
      ══════════════════════════════════════════ */
 
   return (
-    <>
-      {/* ═══ DESKTOP (lg+): map left, sidebar right ═══ */}
-      <div className="hidden lg:flex fixed inset-0">
-        {/* Map */}
-        <div className="flex-1 relative">
-          <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} height="100%" />
-
-          {/* Search overlay */}
-          <div className="absolute top-4 left-4 z-20 w-full max-w-sm">
-            <SearchBar />
-          </div>
-
-          {/* Bottom bar: filter pills OR city hopping pills */}
-          <div className="absolute bottom-4 left-4 right-4 z-20">
-            {exploreRegion ? (
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-                <button
-                  onClick={() => { setExploreRegion(null); setSearch(""); }}
-                  className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
-                >
-                  ← {exploreRegion}
-                </button>
-                {getRegionCities(exploreRegion).map((city) => (
-                  <button
-                    key={city.name}
-                    onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
-                    className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-[#1A1412]/60 backdrop-blur-xl text-white/70 border border-white/[0.06] text-[11px] font-semibold active:bg-cherry active:text-white transition-colors"
-                  >
-                    {city.name}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <FilterPills />
-            )}
-          </div>
-
-          {/* Floating buttons */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
-            <Link href="/wines/add" className="h-10 w-10 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center text-white/50 shadow-[0_2px_12px_rgba(0,0,0,0.15)] active:scale-90 transition-transform" title="Add wine">
-              <Plus className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="w-[400px] xl:w-[440px] flex flex-col bg-background border-l border-card-border/40">
-          <div className="px-5 pt-5 pb-3 border-b border-card-border/40">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-[17px] font-bold text-foreground tracking-tight" style={{ fontFamily: "var(--font-serif, Georgia, serif)" }}>
-                {activeSearch || "All Wines"}
-              </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-muted bg-muted/[0.08] px-2 py-0.5 rounded-[5px]">{total}</span>
-                {hasFilters && <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <select value={activeCountry ?? ""} onChange={(e) => nav({ country: e.target.value || undefined })} className="input-field flex-1 text-[11px] py-2">
-                <option value="">All countries</option>
-                {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <select value={activePriceRange ?? ""} onChange={(e) => nav({ priceRange: e.target.value || undefined })} className="input-field flex-1 text-[11px] py-2">
-                <option value="">Any price</option>
-                <option value="budget">Budget</option><option value="mid">Mid-range</option>
-                <option value="premium">Premium</option><option value="luxury">Luxury</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            <WineList />
-          </div>
-        </div>
+    <div className="fixed inset-0">
+      {/* ═══ SINGLE MAP — shared between desktop & mobile ═══ */}
+      <div className="absolute inset-0">
+        <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} tourRegion={tourRegion} onTourEnd={() => { setTourRegion(null); setActiveTourStop(null); }} satellite={satellite} onTourStop={setActiveTourStop} height="100%" mapRef={mapRef} />
       </div>
 
-      {/* ═══ MOBILE (<lg): fullscreen map + bottom sheet ═══ */}
-      <div className="lg:hidden fixed inset-0">
-        {/* Map background */}
-        <div className="absolute inset-0">
-          <WineRegionMap onRegionClick={onRegionClick} regionCounts={regionCounts} exploreRegion={exploreRegion} flyToCoords={flyToCoords} height="100%" />
-        </div>
+      <MapLayerDrawer layers={fullLayers} onToggle={toggle} />
 
-        {/* Top: search + add */}
-        <div className="absolute top-0 left-0 right-0 z-20 safe-top px-3 pt-3">
-          <div className="flex gap-2">
-            <SearchBar className="flex-1" />
-            <Link href="/wines/add" className="h-11 w-11 rounded-[12px] bg-cherry flex items-center justify-center shadow-[0_2px_10px_rgba(116,7,14,0.3)] active:scale-90 transition-transform flex-shrink-0">
-              <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
-            </Link>
-          </div>
-          {/* Filter pills OR city pills — same position, swap based on state */}
-          <div className="mt-2">
-            {exploreRegion ? (
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-                <button
-                  onClick={() => { setExploreRegion(null); setSearch(""); setSheet("collapsed"); }}
-                  className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
-                >
-                  ← {exploreRegion}
-                </button>
-                {getRegionCities(exploreRegion).map((city) => (
-                  <button
-                    key={city.name}
-                    onClick={(e) => { e.stopPropagation(); setFlyToCoords([...city.coords]); }}
-                    className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-[#1A1412]/60 backdrop-blur-xl text-white/70 border border-white/[0.06] text-[11px] font-semibold active:bg-cherry active:text-white transition-colors"
-                  >
-                    {city.name}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <FilterPills />
-            )}
-          </div>
-        </div>
+      {/* Vintage Weather Replay layer */}
+      <VintageWeatherLayer
+        active={isActive("vintage-weather")}
+        mapRef={mapRef}
+        region={exploreRegion}
+      />
 
-        {/* Bottom sheet */}
-        <div
-          ref={sheetRef}
-          className="absolute left-0 right-0 bottom-0 z-30"
-          style={{
-            height: SHEET_HEIGHTS[sheet],
-            transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
-          }}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
+      {/* Flavor Genome Map layer */}
+      <FlavorGenomeLayer
+        active={isActive("flavor-genome")}
+        mapRef={mapRef}
+      />
+
+      {/* Live Social Heatmap layer */}
+      <LiveHeatmapLayer
+        active={isActive("live-heatmap")}
+        mapRef={mapRef}
+      />
+
+      {/* Draw Your Flight layer */}
+      <DrawFlightLayer
+        active={isActive("draw-flight")}
+        mapRef={mapRef}
+      />
+
+      {/* Tour info card — floating overlay */}
+      {activeTourStop && tourRegion && (
+        <>
+          {/* Desktop: bottom-left above filter bar */}
+          <div className="hidden lg:block absolute bottom-16 left-4 z-20">
+            <TourInfoCard stop={activeTourStop} region={exploreRegion ?? undefined} />
+          </div>
+          {/* Mobile: above bottom sheet */}
+          <div className="lg:hidden absolute bottom-16 left-3 z-20">
+            <TourInfoCard stop={activeTourStop} region={exploreRegion ?? undefined} />
+          </div>
+        </>
+      )}
+
+      {/* ═══ DESKTOP (lg+) overlays ═══ */}
+      {/* Search overlay */}
+      <div className="hidden lg:flex absolute top-4 left-4 z-20 gap-2 items-start" style={{ maxWidth: "420px" }}>
+        <SearchBar className="flex-1" />
+        <button
+          onClick={() => setSatellite((s) => !s)}
+          className="h-11 w-11 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center justify-center active:scale-90 transition-transform flex-shrink-0"
+          title={satellite ? "Map view" : "Satellite view"}
         >
-          <div className="h-full flex flex-col bg-background rounded-t-[16px] shadow-[0_-4px_20px_rgba(0,0,0,0.1)] border-t border-card-border/30">
-            {/* Drag handle */}
-            <div className="flex items-center justify-center py-2.5 touch-target" onClick={() => setSheet(sheet === "collapsed" ? "half" : sheet === "half" ? "full" : "half")}>
-              <div className="w-9 h-[3px] rounded-full bg-muted/20" />
-            </div>
+          {satellite ? <Map className="h-4 w-4 text-white/70" /> : <Satellite className="h-4 w-4 text-white/70" />}
+        </button>
+      </div>
 
-            {sheet === "collapsed" ? (
-              /* ── Collapsed: featured wine preview ── */
-              <div className="px-3 pb-2">
-                {featured ? (
-                  <Link href={`/wines/${featured.id}`} className="flex items-center gap-3 p-2.5 rounded-[12px] bg-card-bg border border-card-border shadow-sm active:scale-[0.99] transition-transform">
-                    <div className="w-[52px] h-[52px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: `${typeColor(featured.type)}15` }}>
-                      <Wine className="h-5 w-5" style={{ color: typeColor(featured.type), opacity: 0.5 }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-foreground truncate">{featured.name}</p>
-                      <p className="text-[10px] text-muted mt-0.5 truncate">{featured.producer} · {featured.region}</p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-cherry">Discover →</span>
-                  </Link>
-                ) : (
-                  <p className="text-[12px] text-muted text-center py-3">Tap a region to explore</p>
-                )}
-              </div>
-            ) : (
-              /* ── Half / Full: wine list ── */
-              <>
-                <div className="px-4 flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-[16px] font-bold text-foreground tracking-tight">
-                      {exploreRegion || activeSearch || "All Wines"}
-                    </h2>
-                    <span className="text-[10px] font-bold text-muted bg-muted/[0.08] px-1.5 py-0.5 rounded-[4px]">{total}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {exploreRegion && (
-                      <button onClick={confirmExplore} className="text-[11px] font-semibold text-white bg-cherry px-3 py-1 rounded-[8px]">
-                        View wines →
-                      </button>
-                    )}
-                    {hasFilters && !exploreRegion && (
-                      <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>
-                    )}
-                    <button onClick={() => setSheet("collapsed")}><ChevronDown className="h-4 w-4 text-muted/30" /></button>
-                  </div>
-                </div>
-                <div className="flex-1 overflow-y-auto pb-24">
-                  <WineList />
-                </div>
-              </>
+      {/* Bottom bar: filter pills OR city hopping pills */}
+      <div className="hidden lg:block absolute bottom-4 left-4 z-20" style={{ right: "calc(400px + 1rem)" }}>
+        {exploreRegion ? (
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+            <button
+              onClick={() => { setExploreRegion(null); setSearch(""); setTourRegion(null); setActiveCity(null); }}
+              className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
+            >
+              ← {exploreRegion}
+            </button>
+            {getRegionCities(exploreRegion).length > 1 && (
+              <button
+                onClick={() => setTourRegion(tourRegion ? null : exploreRegion)}
+                className={`flex-shrink-0 h-[30px] px-3 rounded-[8px] text-[11px] font-bold flex items-center gap-1 transition-all ${
+                  tourRegion
+                    ? "bg-white text-cherry border border-white/40"
+                    : "bg-cherry/80 text-white border border-cherry/40"
+                }`}
+              >
+                {tourRegion ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                {tourRegion ? "Stop tour" : "Cinematic tour"}
+              </button>
             )}
+            {getRegionCities(exploreRegion).map((city) => (
+              <button
+                key={city.name}
+                onClick={(e) => { e.stopPropagation(); setTourRegion(null); setActiveCity(city.name); setFlyToCoords([...city.coords]); }}
+                className={`flex-shrink-0 h-[30px] px-3 rounded-[8px] text-[11px] font-semibold transition-colors ${
+                  activeCity === city.name
+                    ? "bg-cherry border-cherry/60 text-white"
+                    : "bg-[#1A1412]/60 backdrop-blur-xl text-white/70 border border-white/[0.06] active:bg-cherry active:text-white"
+                }`}
+              >
+                {city.name}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <FilterPills />
+        )}
+      </div>
+
+      {/* Floating add button (desktop) */}
+      <div className="hidden lg:flex absolute z-20 flex-col gap-2" style={{ right: "calc(400px + 1rem)", top: "50%", transform: "translateY(-50%)" }}>
+        <Link href="/wines/add" className="h-10 w-10 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center text-white/50 shadow-[0_2px_12px_rgba(0,0,0,0.15)] active:scale-90 transition-transform" title="Add wine">
+          <Plus className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:flex absolute top-0 right-0 bottom-0 w-[400px] xl:w-[440px] flex-col bg-background border-l border-card-border/40 z-20">
+        <div className="px-5 pt-5 pb-3 border-b border-card-border/40">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[17px] font-bold text-foreground tracking-tight" style={{ fontFamily: "var(--font-serif, Georgia, serif)" }}>
+              {activeSearch || "All Wines"}
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-muted bg-muted/[0.08] px-2 py-0.5 rounded-[5px]">{total}</span>
+              {hasFilters && <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <select value={activeCountry ?? ""} onChange={(e) => nav({ country: e.target.value || undefined })} className="input-field flex-1 text-[11px] py-2">
+              <option value="">All countries</option>
+              {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select value={activePriceRange ?? ""} onChange={(e) => nav({ priceRange: e.target.value || undefined })} className="input-field flex-1 text-[11px] py-2">
+              <option value="">Any price</option>
+              <option value="budget">Budget</option><option value="mid">Mid-range</option>
+              <option value="premium">Premium</option><option value="luxury">Luxury</option>
+            </select>
           </div>
         </div>
+        <div className="flex-1 overflow-y-auto">
+          <WineList />
+        </div>
       </div>
-    </>
+
+      {/* ═══ MOBILE (<lg) overlays ═══ */}
+      {/* Top: search + add */}
+      <div className="lg:hidden absolute top-0 left-0 right-0 z-20 safe-top px-3 pt-3">
+        <div className="flex gap-2">
+          <SearchBar className="flex-1" />
+          <button
+            onClick={() => setSatellite((s) => !s)}
+            className="h-11 w-11 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center justify-center active:scale-90 transition-transform flex-shrink-0"
+            title={satellite ? "Map view" : "Satellite view"}
+          >
+            {satellite ? <Map className="h-4.5 w-4.5 text-white/70" /> : <Satellite className="h-4.5 w-4.5 text-white/70" />}
+          </button>
+          <Link href="/wines/add" className="h-11 w-11 rounded-[12px] bg-cherry flex items-center justify-center shadow-[0_2px_10px_rgba(116,7,14,0.3)] active:scale-90 transition-transform flex-shrink-0">
+            <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
+          </Link>
+        </div>
+        {/* Filter pills OR city pills */}
+        <div className="mt-2">
+          {exploreRegion ? (
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              <button
+                onClick={() => { setExploreRegion(null); setSearch(""); setSheet("peek"); setTourRegion(null); setActiveCity(null); }}
+                className="flex-shrink-0 h-[30px] px-3 rounded-[8px] bg-cherry text-white text-[11px] font-semibold flex items-center gap-1"
+              >
+                ← {exploreRegion}
+              </button>
+              {getRegionCities(exploreRegion).length > 1 && (
+                <button
+                  onClick={() => setTourRegion(tourRegion ? null : exploreRegion)}
+                  className={`flex-shrink-0 h-[30px] px-3 rounded-[8px] text-[11px] font-bold flex items-center gap-1 transition-all ${
+                    tourRegion
+                      ? "bg-white text-cherry border border-white/40"
+                      : "bg-cherry/80 text-white border border-cherry/40"
+                  }`}
+                >
+                  {tourRegion ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                  {tourRegion ? "Stop" : "Tour"}
+                </button>
+              )}
+              {getRegionCities(exploreRegion).map((city) => (
+                <button
+                  key={city.name}
+                  onClick={(e) => { e.stopPropagation(); setTourRegion(null); setActiveCity(city.name); setFlyToCoords([...city.coords]); }}
+                  className={`flex-shrink-0 h-[30px] px-3 rounded-[8px] text-[11px] font-semibold transition-colors ${
+                    activeCity === city.name
+                      ? "bg-cherry border-cherry/60 text-white"
+                      : "bg-[#1A1412]/60 backdrop-blur-xl text-white/70 border border-white/[0.06] active:bg-cherry active:text-white"
+                  }`}
+                >
+                  {city.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <FilterPills />
+          )}
+        </div>
+      </div>
+
+      {/* Mobile bottom sheet */}
+      <div
+        ref={sheetRef}
+        className="lg:hidden absolute left-0 right-0 bottom-0 z-30 will-change-transform"
+        style={{
+          height: SHEET_HEIGHT,
+          transform: `translateY(${SHEET_TRANSLATE[sheet]})`,
+          transition: "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+        }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="h-full flex flex-col bg-background rounded-t-[16px] shadow-[0_-4px_20px_rgba(0,0,0,0.1)] border-t border-card-border/30">
+          {/* Drag handle */}
+          <div className="flex items-center justify-center py-2.5 touch-target" onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "half")}>
+            <div className="w-9 h-[3px] rounded-full bg-muted/20" />
+          </div>
+
+          {sheet !== "peek" && (
+            /* ── Half / Full: wine list ── */
+            <>
+              <div className="px-4 flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[16px] font-bold text-foreground tracking-tight">
+                    {exploreRegion || activeSearch || "All Wines"}
+                  </h2>
+                  <span className="text-[10px] font-bold text-muted bg-muted/[0.08] px-1.5 py-0.5 rounded-[4px]">{total}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {exploreRegion && (
+                    <button onClick={confirmExplore} className="text-[11px] font-semibold text-white bg-cherry px-3 py-1 rounded-[8px]">
+                      View wines →
+                    </button>
+                  )}
+                  {hasFilters && !exploreRegion && (
+                    <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>
+                  )}
+                  <button onClick={() => setSheet("peek")}><ChevronDown className="h-4 w-4 text-muted/30" /></button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto pb-24">
+                <WineList />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
