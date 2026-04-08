@@ -98,6 +98,8 @@ model Wine {
   // ── Producer relationship ──
   wineryId    String?  // FK to Winery — the producer of this wine
   winery      Winery?  @relation(fields: [wineryId], references: [id], onDelete: SetNull)
+  producerId  String?  // FK to Producer (legacy — prefer wineryId)
+
 
   // ── Data intelligence fields ──
   barcode         String?
@@ -135,6 +137,7 @@ model Wine {
   @@index([canonicalWineId])
   @@index([importBatchId])
   @@index([wineryId])
+  @@index([producerId])
 }
 
 // ============ WINERIES ============
