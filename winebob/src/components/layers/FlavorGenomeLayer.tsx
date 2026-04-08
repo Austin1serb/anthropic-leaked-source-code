@@ -549,54 +549,59 @@ export function FlavorGenomeLayer({ active, mapRef }: Props) {
 
     let currentSize = sizeForZoom(map.getZoom());
 
-    for (const profile of REGION_FLAVORS) {
-      const coords = REGION_CITIES[profile.region];
-      if (!coords) continue;
-
-      const el = buildMarkerEl(profile, currentSize);
-
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        handleMarkerClick(profile);
-        map.flyTo({ center: coords, zoom: 6, duration: 1200 });
-      });
-
-      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-        .setLngLat(coords)
-        .addTo(map);
-
-      markersRef.current.push(marker);
-    }
-
-    // Resize markers on zoom
-    const onZoom = () => {
-      const newSize = sizeForZoom(map.getZoom());
-      if (newSize === currentSize) return;
-      currentSize = newSize;
-
-      // Remove all markers and recreate at new size
+    // Build all markers for visible regions
+    function rebuildMarkers() {
       for (const m of markersRef.current) m.remove();
       markersRef.current = [];
 
-      REGION_FLAVORS.forEach((profile) => {
+      if (!map) return;
+      const bounds = map.getBounds();
+      const size = sizeForZoom(map.getZoom());
+      currentSize = size;
+
+      for (const profile of REGION_FLAVORS) {
         const coords = REGION_CITIES[profile.region];
-        if (!coords) return;
-        const newEl = buildMarkerEl(profile, newSize);
-        newEl.addEventListener("click", (e) => {
+        if (!coords) continue;
+
+        // Only create markers for regions within or near the visible viewport
+        // (with generous padding so they don't pop in/out at edges)
+        const lng = coords[0];
+        const lat = coords[1];
+        const pad = 30; // degrees padding
+        if (bounds && (
+          lng < bounds.getWest() - pad || lng > bounds.getEast() + pad ||
+          lat < bounds.getSouth() - pad || lat > bounds.getNorth() + pad
+        )) continue;
+
+        const el = buildMarkerEl(profile, size);
+        el.addEventListener("click", (e) => {
           e.stopPropagation();
           handleMarkerClick(profile);
           map.flyTo({ center: coords, zoom: 6, duration: 1200 });
         });
-        const marker = new mapboxgl.Marker({ element: newEl, anchor: "center" })
+
+        const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
           .setLngLat(coords)
           .addTo(map);
         markersRef.current.push(marker);
-      });
+      }
+    }
+
+    rebuildMarkers();
+
+    // Rebuild on zoom (size changes) and moveend (viewport changes)
+    let rebuildTimeout: ReturnType<typeof setTimeout>;
+    const onViewChange = () => {
+      clearTimeout(rebuildTimeout);
+      rebuildTimeout = setTimeout(rebuildMarkers, 150);
     };
-    map.on("zoom", onZoom);
+    map.on("zoom", onViewChange);
+    map.on("moveend", onViewChange);
 
     return () => {
-      map.off("zoom", onZoom);
+      clearTimeout(rebuildTimeout);
+      map.off("zoom", onViewChange);
+      map.off("moveend", onViewChange);
       clearMarkers();
     };
   }, [active, mapReady, mapRef, clearMarkers, handleMarkerClick]);
