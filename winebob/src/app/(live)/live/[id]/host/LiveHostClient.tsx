@@ -4,9 +4,8 @@ import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ChevronLeft, Play, Eye, Flag, Radio, Users, Wine,
-  Check, Sparkles, Crown, Trophy, Copy, CheckCircle2,
-  BarChart3,
+  ChevronLeft, Play, Eye, Flag, Users, Wine,
+  Check, Sparkles, Trophy, Copy, CheckCircle2, BarChart3,
 } from "lucide-react";
 import {
   getLiveEventById, startLiveEvent, releaseHint,
@@ -24,247 +23,141 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
   useEffect(() => {
     if (event.status === "completed") return;
     const id = setInterval(async () => {
-      const data = await getLiveEventById(event.id);
-      if (data) setEvent(data);
+      const d = await getLiveEventById(event.id); if (d) setEvent(d);
     }, 3000);
     return () => clearInterval(id);
   }, [event.id, event.status]);
 
-  function handleStart() {
-    startTransition(async () => {
-      await startLiveEvent(event.id);
-      router.refresh();
-      const data = await getLiveEventById(event.id);
-      if (data) setEvent(data);
-    });
-  }
+  const act = (fn: () => Promise<void>) => startTransition(async () => { await fn(); const d = await getLiveEventById(event.id); if (d) setEvent(d); });
 
-  function handleReleaseHint(hintId: string) {
-    startTransition(async () => {
-      await releaseHint(hintId);
-      const data = await getLiveEventById(event.id);
-      if (data) setEvent(data);
-    });
-  }
-
-  function handleRevealWine(position: number) {
-    startTransition(async () => {
-      await revealLiveWine(event.id, position);
-      const data = await getLiveEventById(event.id);
-      if (data) setEvent(data);
-    });
-  }
-
-  function handleComplete() {
-    startTransition(async () => {
-      await completeLiveEvent(event.id);
-      const data = await getLiveEventById(event.id);
-      if (data) setEvent(data);
-    });
-  }
-
-  function copyJoinCode() {
-    if (event.joinCode) {
-      navigator.clipboard.writeText(event.joinCode).catch(() => {});
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2000);
-    }
-  }
-
-  const currentWineIdx = event.wines.findIndex((w) => !w.revealed);
-  const currentWine = currentWineIdx >= 0 ? event.wines[currentWineIdx] : null;
+  const currentWine = event.wines.find((w) => !w.revealed) ?? null;
   const allRevealed = event.wines.every((w) => w.revealed);
-
-  const currentGuessCount = currentWine
-    ? event.guesses.filter((g) => g.winePosition === currentWine.position).length
-    : 0;
-
-  const totalGuesses = event.guesses.length;
+  const currentGuessCount = currentWine ? event.guesses.filter((g) => g.winePosition === currentWine.position).length : 0;
 
   return (
     <div className="min-h-dvh safe-top safe-bottom bg-background">
-      <div className="container-app pt-5 pb-32">
+      <div className="container-app pt-4 pb-28">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/live" className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted touch-target">
-            <ChevronLeft className="h-4 w-4" /> Back
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/live" className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted touch-target">
+            <ChevronLeft className="h-3.5 w-3.5" /> Back
           </Link>
           <div className="flex items-center gap-2">
             {event.status === "live" && (
-              <>
-                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[12px] font-bold text-red-500 uppercase">Live</span>
-              </>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-500 uppercase">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" /> Live
+              </span>
             )}
-            <span className="text-[12px] font-semibold text-muted flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" /> {event.participants.length}
-            </span>
+            <span className="text-[11px] font-semibold text-muted"><Users className="h-3 w-3 inline -mt-px" /> {event.participants.length}</span>
           </div>
         </div>
 
-        <h1 className="text-[22px] font-bold text-foreground tracking-tight mb-1">{event.title}</h1>
-        <p className="text-[13px] text-muted mb-6">Host Control Panel</p>
+        <h1 className="text-[16px] font-bold text-foreground tracking-tight">{event.title}</h1>
+        <p className="text-[11px] text-muted mb-4">Host Control Panel</p>
 
         {/* Join Code */}
         {event.joinCode && (
-          <button
-            onClick={copyJoinCode}
-            className="wine-card flex items-center gap-3 w-full px-4 py-3 mb-5 active:scale-[0.98] transition-transform"
-          >
-            <div className="flex-1 text-left">
-              <p className="label">Join Code</p>
-              <p className="text-[18px] font-bold font-mono tracking-widest text-foreground mt-1">{event.joinCode}</p>
+          <button onClick={() => { navigator.clipboard.writeText(event.joinCode!).catch(() => {}); setCopiedCode(true); setTimeout(() => setCopiedCode(false), 2000); }}
+            className="wine-card flex items-center gap-3 w-full px-3.5 py-2.5 mb-4 active:scale-[0.99] transition-transform text-left">
+            <div>
+              <p className="text-[9px] font-bold text-muted uppercase tracking-wide">Join Code</p>
+              <p className="text-[15px] font-bold font-mono tracking-widest text-foreground">{event.joinCode}</p>
             </div>
-            {copiedCode ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-            ) : (
-              <Copy className="h-5 w-5 text-muted" />
-            )}
+            <div className="ml-auto">
+              {copiedCode ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4 text-muted" />}
+            </div>
           </button>
         )}
 
         {/* Live Stats */}
         {event.status === "live" && (
-          <div className="grid grid-cols-3 gap-3 mb-5">
-            <div className="wine-card p-3 text-center">
-              <p className="text-[20px] font-bold tabular-nums text-foreground">{event.participants.length}</p>
-              <p className="label mt-1">Viewers</p>
-            </div>
-            <div className="wine-card p-3 text-center">
-              <p className="text-[20px] font-bold tabular-nums text-foreground">{currentGuessCount}</p>
-              <p className="label mt-1">Guesses</p>
-            </div>
-            <div className="wine-card p-3 text-center">
-              <p className="text-[20px] font-bold tabular-nums text-foreground">
-                {currentWine?.position ?? event.wines.length}/{event.wines.length}
-              </p>
-              <p className="label mt-1">Wine</p>
-            </div>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[
+              [event.participants.length, "Viewers"],
+              [currentGuessCount, "Guesses"],
+              [`${currentWine?.position ?? event.wines.length}/${event.wines.length}`, "Wine"],
+            ].map(([val, label]) => (
+              <div key={String(label)} className="wine-card px-3 py-2 text-center">
+                <p className="text-[15px] font-bold tabular-nums text-foreground">{val}</p>
+                <p className="text-[9px] font-bold text-muted uppercase tracking-wide">{label}</p>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Scheduled */}
         {event.status === "scheduled" && (
-          <div className="wine-card p-6 text-center mb-6">
-            <p className="text-[14px] text-muted mb-4">{event.participants.length} participants waiting</p>
-            <button onClick={handleStart} disabled={isPending} className="btn-primary touch-target mx-auto max-w-xs">
-              <Play className="h-5 w-5" /> {isPending ? "Starting..." : "Go Live"}
+          <div className="wine-card p-5 text-center mb-4">
+            <p className="text-[13px] text-muted mb-3">{event.participants.length} participants waiting</p>
+            <button onClick={() => act(() => startLiveEvent(event.id))} disabled={isPending}
+              className="btn-primary py-3 text-[14px] mx-auto max-w-xs">
+              <Play className="h-4 w-4" /> {isPending ? "Starting..." : "Go Live"}
             </button>
           </div>
         )}
 
         {/* Wine flight */}
         {event.status === "live" && (
-          <div className="space-y-4">
-            {/* Flight progress */}
-            <div className="flex items-center gap-1.5 mb-2">
+          <div className="space-y-2">
+            {/* Progress */}
+            <div className="flex gap-1 mb-1">
               {event.wines.map((w) => (
-                <div
-                  key={w.id}
-                  className="flex-1 h-1.5 rounded-full transition-all duration-500"
+                <div key={w.id} className="flex-1 h-1 rounded-full transition-all duration-500"
                   style={{
-                    background: w.revealed
-                      ? "var(--cherry)"
-                      : w.id === currentWine?.id
-                        ? "var(--cherry-light)"
-                        : "var(--card-border)",
-                    boxShadow: w.id === currentWine?.id ? "0 0 6px rgba(116, 7, 14, 0.3)" : "none",
-                    opacity: w.revealed ? 1 : w.id === currentWine?.id ? 0.7 : 0.3,
-                  }}
-                />
+                    background: w.revealed ? "var(--cherry)" : w.id === currentWine?.id ? "var(--cherry-light)" : "var(--card-border)",
+                    opacity: w.revealed ? 1 : w.id === currentWine?.id ? 0.6 : 0.2,
+                  }} />
               ))}
             </div>
 
             {event.wines.map((lw) => {
               const isCurrent = lw.id === currentWine?.id;
-              const unreveledHints = lw.hints.filter((h) => !h.revealed);
-              const revealedHints = lw.hints.filter((h) => h.revealed);
-              const nextHint = unreveledHints[0];
-              const guessCount = event.guesses.filter((g) => g.winePosition === lw.position).length;
+              const unrevealed = lw.hints.filter((h) => !h.revealed);
+              const revealed = lw.hints.filter((h) => h.revealed);
+              const next = unrevealed[0];
+              const gc = event.guesses.filter((g) => g.winePosition === lw.position).length;
 
               return (
-                <div
-                  key={lw.id}
-                  className={`wine-card p-4 transition-all ${
-                    isCurrent ? "ring-2 ring-cherry shadow-md" : lw.revealed ? "opacity-50" : "opacity-30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`h-8 w-8 rounded-xl flex items-center justify-center text-[12px] font-bold ${
-                        lw.revealed ? "bg-green-50 text-green-600" : isCurrent ? "bg-cherry text-white" : "bg-card-border/30 text-muted"
-                      }`}>
-                        {lw.revealed ? <Check className="h-4 w-4" strokeWidth={3} /> : lw.position}
-                      </div>
-                      <div>
-                        <span className="text-[14px] font-bold text-foreground">{lw.wine?.name ?? "Wine"}</span>
-                        <p className="text-[11px] text-muted">{lw.wine?.producer}{lw.wine?.vintage ? ` \u00b7 ${lw.wine.vintage}` : ""}</p>
-                      </div>
+                <div key={lw.id} className={`wine-card p-3 transition-all ${isCurrent ? "ring-1.5 ring-cherry" : lw.revealed ? "opacity-50" : "opacity-25"}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`h-6 w-6 rounded-lg flex items-center justify-center text-[10px] font-bold ${
+                      lw.revealed ? "bg-green-50 text-green-600" : isCurrent ? "bg-cherry text-white" : "bg-card-border/30 text-muted"
+                    }`}>
+                      {lw.revealed ? <Check className="h-3 w-3" strokeWidth={3} /> : lw.position}
                     </div>
-                    {isCurrent && (
-                      <span className="text-[11px] font-bold text-cherry animate-pulse">Current</span>
-                    )}
-                    {lw.revealed && (
-                      <span className="text-[11px] font-semibold text-green-600 flex items-center gap-1">
-                        <Eye className="h-3 w-3" /> Revealed
-                      </span>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[12px] font-bold text-foreground truncate block">{lw.wine?.name ?? "Wine"}</span>
+                      <span className="text-[10px] text-muted">{lw.wine?.producer}{lw.wine?.vintage ? ` \u00b7 ${lw.wine.vintage}` : ""}</span>
+                    </div>
+                    {isCurrent && <span className="text-[9px] font-bold text-cherry">Current</span>}
+                    {lw.revealed && <span className="text-[9px] font-semibold text-green-600"><Eye className="h-2.5 w-2.5 inline" /> Revealed</span>}
                   </div>
 
                   {isCurrent && (
-                    <div className="space-y-2 mt-3">
-                      {revealedHints.map((h) => (
-                        <div key={h.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-widget-sage/50">
-                          <Check className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                          <span className="text-[12px] text-foreground flex-1">{h.content}</span>
-                          <span className="text-[10px] text-muted capitalize">{h.hintType}</span>
+                    <div className="mt-2 space-y-1.5">
+                      {revealed.map((h) => (
+                        <div key={h.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-widget-sage/50 text-[11px]">
+                          <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
+                          <span className="text-foreground flex-1">{h.content}</span>
+                          <span className="text-[9px] text-muted capitalize">{h.hintType}</span>
                         </div>
                       ))}
-
-                      {nextHint && (
-                        <button
-                          onClick={() => handleReleaseHint(nextHint.id)}
-                          disabled={isPending}
-                          className="w-full flex items-center gap-2 px-3 py-3 rounded-xl border-2 border-dashed border-cherry/30 text-cherry font-semibold text-[13px] active:bg-widget-wine/30 transition-colors touch-target"
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          <span className="flex-1 text-left">
-                            {isPending ? "Releasing..." : `Drop Hint #${nextHint.position}`}
-                          </span>
-                          <span className="text-[11px] text-muted max-w-[120px] truncate">
-                            &ldquo;{nextHint.content}&rdquo;
-                          </span>
+                      {next && (
+                        <button onClick={() => act(() => releaseHint(next.id))} disabled={isPending}
+                          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg border border-dashed border-cherry/25 text-cherry text-[11px] font-semibold active:bg-widget-wine/20 transition-colors touch-target">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span className="flex-1 text-left">{isPending ? "Releasing..." : `Drop Hint #${next.position}`}</span>
+                          <span className="text-[9px] text-muted max-w-[100px] truncate">{next.content}</span>
                         </button>
                       )}
-
-                      {unreveledHints.length > 1 && (
-                        <p className="text-[11px] text-muted text-center">
-                          {unreveledHints.length - 1} more hint{unreveledHints.length > 2 ? "s" : ""} remaining
-                        </p>
-                      )}
-
-                      <div className="pt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <BarChart3 className="h-3.5 w-3.5 text-muted" />
-                          <span className="text-[12px] text-muted font-semibold tabular-nums">{guessCount} guesses</span>
-                        </div>
-                        <button
-                          onClick={() => handleRevealWine(lw.position)}
-                          disabled={isPending}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cherry text-white text-[13px] font-semibold active:scale-95 transition-transform disabled:opacity-50 touch-target"
-                        >
-                          <Eye className="h-4 w-4" /> {isPending ? "Revealing..." : "Reveal Wine"}
+                      {unrevealed.length > 1 && <p className="text-[9px] text-muted text-center">{unrevealed.length - 1} more hint{unrevealed.length > 2 ? "s" : ""}</p>}
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[10px] text-muted"><BarChart3 className="h-3 w-3 inline -mt-px" /> {gc} guesses</span>
+                        <button onClick={() => act(() => revealLiveWine(event.id, lw.position))} disabled={isPending}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cherry text-white text-[11px] font-semibold active:scale-95 transition-transform disabled:opacity-50 touch-target">
+                          <Eye className="h-3 w-3" /> {isPending ? "..." : "Reveal"}
                         </button>
                       </div>
-                    </div>
-                  )}
-
-                  {lw.revealed && (
-                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-card-border/30">
-                      <span className="text-[11px] font-semibold text-muted">
-                        {event.guesses.filter((g) => g.winePosition === lw.position).length} guesses
-                      </span>
-                      <span className="text-[11px] font-semibold text-muted">{lw.hints.length} hints</span>
                     </div>
                   )}
                 </div>
@@ -272,8 +165,9 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
             })}
 
             {allRevealed && (
-              <button onClick={handleComplete} disabled={isPending} className="btn-primary w-full touch-target mt-4">
-                <Flag className="h-5 w-5" /> {isPending ? "Finishing..." : "End Tasting"}
+              <button onClick={() => act(() => completeLiveEvent(event.id))} disabled={isPending}
+                className="btn-primary w-full py-3 text-[14px] mt-2">
+                <Flag className="h-4 w-4" /> {isPending ? "Finishing..." : "End Tasting"}
               </button>
             )}
           </div>
@@ -281,30 +175,11 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
 
         {/* Completed */}
         {event.status === "completed" && (
-          <div className="wine-card p-8 text-center">
-            <div className="h-16 w-16 rounded-3xl widget-gold flex items-center justify-center mx-auto mb-4">
-              <Trophy className="h-8 w-8 text-amber-600" />
-            </div>
-            <h2 className="text-[18px] font-bold text-foreground">Tasting Complete</h2>
-            <div className="flex items-center justify-center gap-4 mt-3 mb-6">
-              <div className="text-center">
-                <p className="text-[18px] font-bold tabular-nums text-foreground">{event.participants.length}</p>
-                <p className="label mt-0.5">Participants</p>
-              </div>
-              <div className="h-6 w-px bg-card-border" />
-              <div className="text-center">
-                <p className="text-[18px] font-bold tabular-nums text-foreground">{event.wines.length}</p>
-                <p className="label mt-0.5">Wines</p>
-              </div>
-              <div className="h-6 w-px bg-card-border" />
-              <div className="text-center">
-                <p className="text-[18px] font-bold tabular-nums text-foreground">{totalGuesses}</p>
-                <p className="label mt-0.5">Guesses</p>
-              </div>
-            </div>
-            <Link href="/live" className="btn-primary mt-6 inline-flex touch-target px-8">
-              Back to Live Events
-            </Link>
+          <div className="wine-card p-6 text-center">
+            <Trophy className="h-7 w-7 text-amber-500 mx-auto mb-2" />
+            <h2 className="text-[15px] font-bold text-foreground">Tasting Complete</h2>
+            <p className="text-[11px] text-muted mt-1">{event.participants.length} participants \u00b7 {event.wines.length} wines \u00b7 {event.guesses.length} guesses</p>
+            <Link href="/live" className="btn-primary mt-4 inline-flex px-8 py-2.5 text-[13px]">Back to Live</Link>
           </div>
         )}
       </div>
