@@ -481,9 +481,10 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
     });
 
     popup.current = new mapboxgl.Popup({
-      closeButton: false,
+      closeButton: true,
       closeOnClick: true,
-      offset: 8,
+      offset: 12,
+      maxWidth: "320px",
       className: "wb-popup",
     });
 
@@ -669,10 +670,10 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         },
       });
 
-      // Winery click — rich producer card
+      // Winery click — rich producer card (popup stays open until user clicks elsewhere)
       for (const layerId of ["wineries-featured", "wineries-regular"]) {
         map.current.on("mouseenter", layerId, () => { if (map.current) map.current.getCanvas().style.cursor = "pointer"; });
-        map.current.on("mouseleave", layerId, () => { if (map.current) map.current.getCanvas().style.cursor = ""; popup.current?.remove(); });
+        map.current.on("mouseleave", layerId, () => { if (map.current) map.current.getCanvas().style.cursor = ""; });
         map.current.on("click", layerId, (e) => {
           if (!map.current || !e.features?.length) return;
           const p = e.features[0].properties as Record<string, any>;
@@ -859,10 +860,18 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         .wb-popup .mapboxgl-popup-content {
           background: #FFFFFF;
           border-radius: 12px;
-          padding: 10px 14px;
+          padding: 14px 16px;
           box-shadow: 0 4px 20px rgba(0,0,0,0.12);
           border: 1px solid rgba(0,0,0,0.06);
         }
+        .wb-popup .mapboxgl-popup-close-button {
+          font-size: 18px;
+          color: #8C7E6E;
+          padding: 4px 8px;
+          right: 4px;
+          top: 4px;
+        }
+        .wb-popup .mapboxgl-popup-close-button:hover { color: #1A1412; }
         .wb-popup .mapboxgl-popup-tip { border-top-color: #FFFFFF; }
         .mapboxgl-ctrl { display: none !important; }
       `}</style>
