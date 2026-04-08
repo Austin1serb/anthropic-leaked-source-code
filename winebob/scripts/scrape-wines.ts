@@ -329,6 +329,18 @@ async function scrapeWineryWines(page: Page, wineryQuery: string, maxWines: numb
   const wineNames: string[] = [];
   const seen = new Set<string>();
 
+  // Debug: check what page we're on
+  const pageTitle = await page.title().catch(() => "");
+  const currentUrl = page.url();
+  console.log(`  🌐 URL: ${currentUrl}`);
+  console.log(`  📄 Title: ${pageTitle}`);
+
+  // Take screenshot for debugging
+  const debugDir = join(process.cwd(), "scripts", "output");
+  if (!existsSync(debugDir)) mkdirSync(debugDir, { recursive: true });
+  await page.screenshot({ path: join(debugDir, "debug-winery.png") }).catch(() => {});
+  console.log(`  📸 Screenshot saved: scripts/output/debug-winery.png`);
+
   // Get the base wine name from h1 (e.g., "Gaja Barbaresco DOCG")
   const h1 = await page.locator("h1").first().textContent().catch(() => null);
   const baseWineName = h1?.replace(/^\d{4}\s*/, "").trim() || "";
@@ -461,11 +473,15 @@ Output: scripts/output/scrape-{timestamp}.json
   // Launch browser
   console.log(`\n=== Wine Scraper (Playwright) ===`);
   console.log(`Launching headless browser...\n`);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: false,  // Use headed mode — less likely to be blocked
+    args: ["--disable-blink-features=AutomationControlled"],
+  });
   const context = await browser.newContext({
-    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
     locale: "en-US",
-    viewport: { width: 1280, height: 720 },
+    viewport: { width: 1440, height: 900 },
+    javaScriptEnabled: true,
   });
   const page = await context.newPage();
 
