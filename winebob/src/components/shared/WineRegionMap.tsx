@@ -589,7 +589,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         })),
       };
 
-      map.current.addSource("wineries", { type: "geojson", data: mockGeoJSON });
+      map.current.addSource("wineries", { type: "geojson", data: wineryGeoJSON });
 
       // Fetch real wineries from the database and merge with mock data
       fetch("/api/wineries")
@@ -607,7 +607,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
           });
           // Build a set of API slugs to remove duplicates from mock data
           const apiSlugs = new Set(apiFeatures.map((f) => (f.properties as any)?.slug));
-          const dedupedMock = mockGeoJSON.features.filter((f) => !apiSlugs.has((f.properties as any)?.slug));
+          const dedupedMock = wineryGeoJSON.features.filter((f) => !apiSlugs.has((f.properties as any)?.slug));
           src.setData({
             type: "FeatureCollection",
             features: [...dedupedMock, ...apiFeatures],
