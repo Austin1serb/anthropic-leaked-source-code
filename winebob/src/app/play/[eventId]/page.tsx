@@ -255,13 +255,30 @@ export default function PlayPage({
   // ---- Share ----
   const handleShare = async () => {
     if (!event) return;
-    const text = `I just finished a blind tasting: "${event.title}" on WineBob!`;
+
+    // Compute score and rank for richer share text
+    const scoresByGuest = new Map<string, number>();
+    for (const guess of event.guesses) {
+      scoresByGuest.set(guess.guestId, (scoresByGuest.get(guess.guestId) ?? 0) + (guess.score ?? 0));
+    }
+    const ranked = event.guests
+      .map((g: GuestParticipant) => ({ id: g.id, totalScore: scoresByGuest.get(g.id) ?? 0 }))
+      .sort((a, b) => b.totalScore - a.totalScore);
+    const myRank = ranked.findIndex((g) => g.id === guestId) + 1;
+    const myScore = scoresByGuest.get(guestId) ?? 0;
+    const totalWines = event.wines?.length ?? 0;
+
+    const rankText = myRank > 0 ? ` I placed #${myRank} of ${ranked.length}!` : "";
+    const scoreText = myScore > 0 ? ` Score: ${myScore} pts across ${totalWines} wines.` : "";
+    const text = `I just finished "${event.title}" on WineBob \u2014 a blind tasting with ${totalWines} wines.${rankText}${scoreText}`;
+    const url = typeof window !== "undefined" ? window.location.href : "";
+
     if (navigator.share) {
       try {
-        await navigator.share({ title: "WineBob Tasting", text });
+        await navigator.share({ title: `WineBob: ${event.title}`, text, url });
       } catch { /* user cancelled */ }
     } else {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(`${text}\n${url}`);
     }
   };
 
