@@ -42,10 +42,12 @@ export function BottomTabBar() {
             return (
               <button
                 key="search"
+                type="button"
                 onClick={openSearch}
-                className={`flex flex-col items-center justify-center touch-target gap-1 transition-all relative ${
+                className={`flex flex-col items-center justify-center gap-1 transition-all relative bg-transparent border-none outline-none cursor-pointer p-0 ${
                   isActive ? "text-cherry" : "text-muted"
                 }`}
+                style={{ minHeight: 44, minWidth: 44 }}
               >
                 <div className={`relative transition-transform ${isActive ? "scale-105" : ""}`}>
                   {isActive && (
