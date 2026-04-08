@@ -666,7 +666,7 @@ function CreateEventInner() {
                       {wine.name}
                     </p>
                     <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
-                      {wine.producer} &middot; {wine.region}
+                      {[wine.producer, wine.region].filter(Boolean).join(" \u00B7 ")}
                       {wine.vintage ? ` \u00B7 ${wine.vintage}` : ""}
                     </p>
                   </div>
@@ -714,7 +714,7 @@ function CreateEventInner() {
                       {wine.name}
                     </p>
                     <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
-                      {wine.producer} &middot; {wine.region}
+                      {[wine.producer, wine.region].filter(Boolean).join(" \u00B7 ")}
                     </p>
                   </div>
                   <button

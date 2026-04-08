@@ -457,13 +457,19 @@ export async function getTemplates() {
 export async function searchWines(query: string) {
   if (!query || query.trim().length < 2) return [];
 
+  const q = query.trim();
+
   const results = await prisma.wine.findMany({
     where: {
       OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { producer: { contains: query, mode: "insensitive" } },
-        { region: { contains: query, mode: "insensitive" } },
-        { grapes: { hasSome: [query] } },
+        { name: { contains: q, mode: "insensitive" } },
+        { producer: { contains: q, mode: "insensitive" } },
+        { region: { contains: q, mode: "insensitive" } },
+        { country: { contains: q, mode: "insensitive" } },
+        { appellation: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+        { tastingNotes: { contains: q, mode: "insensitive" } },
+        { grapes: { hasSome: [q] } },
       ],
     },
     take: 20,
@@ -471,7 +477,7 @@ export async function searchWines(query: string) {
 
   // Fire-and-forget: track search after results are ready
   const session = await auth().catch(() => null);
-  trackWineSearch(session?.user?.id ?? null, query, results.length).catch(() => {});
+  trackWineSearch(session?.user?.id ?? null, q, results.length).catch(() => {});
 
   return results;
 }
@@ -519,11 +525,26 @@ export async function getWineLibrary(filters?: {
   if (filters?.country) where.country = filters.country;
   if (filters?.priceRange) where.priceRange = filters.priceRange;
   if (filters?.search) {
-    where.OR = [
-      { name: { contains: filters.search, mode: "insensitive" } },
-      { producer: { contains: filters.search, mode: "insensitive" } },
-      { region: { contains: filters.search, mode: "insensitive" } },
-    ];
+    // Split query into words for smarter AND-based matching
+    // Each word must match at least one field (AND logic for words, OR for fields)
+    const words = filters.search
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length >= 2);
+    if (words.length > 0) {
+      where.AND = words.map((word) => ({
+        OR: [
+          { name: { contains: word, mode: "insensitive" } },
+          { producer: { contains: word, mode: "insensitive" } },
+          { region: { contains: word, mode: "insensitive" } },
+          { country: { contains: word, mode: "insensitive" } },
+          { appellation: { contains: word, mode: "insensitive" } },
+          { description: { contains: word, mode: "insensitive" } },
+          { tastingNotes: { contains: word, mode: "insensitive" } },
+          { grapes: { hasSome: [word] } },
+        ],
+      }));
+    }
   }
 
   const [wines, total] = await Promise.all([

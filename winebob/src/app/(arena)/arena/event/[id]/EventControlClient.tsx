@@ -246,6 +246,14 @@ export function EventControlClient({ event }: EventControlClientProps) {
   const rankedGuests = computeGuestScores(event.guests, event.guesses);
   const hasAnyScores = event.guesses.some((g) => g.score > 0);
 
+  // Guests who have submitted for current wine
+  const guestsWhoGuessed = new Set(
+    event.guesses
+      .filter((g) => g.winePosition === event.currentWine)
+      .map((g) => g.guestId)
+  );
+  const guessCount = guestsWhoGuessed.size;
+
   const MEDAL_COLORS = [
     "bg-amber-400 text-white",
     "bg-gray-300 text-gray-700",
@@ -276,9 +284,14 @@ export function EventControlClient({ event }: EventControlClientProps) {
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
               Join Code
             </p>
-            <p className="font-mono text-5xl sm:text-6xl font-black tracking-[0.3em] text-white select-all leading-none">
+            <p className="font-mono text-5xl sm:text-6xl font-black tracking-[0.3em] text-white select-all leading-none nums">
               {event.joinCode}
             </p>
+            {event.guests.length > 0 && (
+              <p className="text-[13px] font-semibold text-white/60 nums">
+                {event.guests.length} participant{event.guests.length !== 1 ? "s" : ""} joined
+              </p>
+            )}
             <div className="flex items-center gap-2.5">
               <button
                 onClick={handleCopyCode}
@@ -305,7 +318,7 @@ export function EventControlClient({ event }: EventControlClientProps) {
                 <Users className="h-3.5 w-3.5 text-emerald-700" />
               </div>
               <h2 className="text-[15px] font-bold text-foreground">Guests</h2>
-              <span className="ml-auto text-[13px] font-semibold text-muted">{event.guests.length}</span>
+              <span className="ml-auto text-[13px] font-semibold text-muted nums">{event.guests.length}</span>
             </div>
 
             {event.guests.length === 0 ? (
@@ -316,16 +329,34 @@ export function EventControlClient({ event }: EventControlClientProps) {
                 <p className="text-[13px] text-muted">No guests yet. Share the join code.</p>
               </div>
             ) : (
-              <div className="bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] divide-y divide-card-border/40">
-                {event.guests.map((guest) => (
-                  <div key={guest.id} className="flex items-center gap-3 px-4 py-3">
-                    <div className="h-9 w-9 rounded-[8px] widget-wine flex items-center justify-center text-[13px] font-bold text-cherry">
-                      {guest.displayName.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-[14px] font-medium text-foreground">{guest.displayName}</span>
+              <>
+                {/* Guess progress indicator (only during live tasting) */}
+                {event.status === "live" && event.currentWine > 0 && !isCurrentRevealed && (
+                  <div className="mb-2 px-1">
+                    <p className="text-[12px] font-semibold text-muted nums">
+                      <span className="text-cherry font-bold">{guessCount}</span> of {event.guests.length} guessed
+                    </p>
                   </div>
-                ))}
-              </div>
+                )}
+                <div className="bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] divide-y divide-card-border/40">
+                  {event.guests.map((guest) => {
+                    const hasGuessed = guestsWhoGuessed.has(guest.id);
+                    return (
+                      <div key={guest.id} className="flex items-center gap-3 px-4 py-3">
+                        <div className="relative">
+                          <div className="h-9 w-9 rounded-[8px] widget-wine flex items-center justify-center text-[13px] font-bold text-cherry">
+                            {guest.displayName.charAt(0).toUpperCase()}
+                          </div>
+                          {event.status === "live" && event.currentWine > 0 && !isCurrentRevealed && hasGuessed && (
+                            <div className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white" />
+                          )}
+                        </div>
+                        <span className="text-[14px] font-medium text-foreground">{guest.displayName}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </section>
 
@@ -336,7 +367,7 @@ export function EventControlClient({ event }: EventControlClientProps) {
                 <Wine className="h-3.5 w-3.5 text-cherry" />
               </div>
               <h2 className="text-[15px] font-bold text-foreground">Wine Flight</h2>
-              <span className="ml-auto text-[13px] font-semibold text-muted">{event.wines.length} wines</span>
+              <span className="ml-auto text-[13px] font-semibold text-muted nums">{event.wines.length} wines</span>
             </div>
 
             <div className="space-y-2">
@@ -352,10 +383,10 @@ export function EventControlClient({ event }: EventControlClientProps) {
                   <div
                     key={bw.id}
                     className={`bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] px-4 py-3.5 flex items-center gap-3 transition-all ${
-                      isCurrent ? "ring-2 ring-cherry shadow-md" : ""
+                      isCurrent ? "ring-2 ring-cherry shadow-md border-l-4 border-l-cherry" : ""
                     } ${isPast && bw.revealed ? "opacity-60" : ""}`}
                   >
-                    <div className={`flex-shrink-0 h-9 w-9 rounded-[8px] flex items-center justify-center text-[13px] font-bold ${
+                    <div className={`flex-shrink-0 h-9 w-9 rounded-[8px] flex items-center justify-center text-[13px] font-bold nums ${
                       isCurrent
                         ? "bg-cherry text-white"
                         : bw.revealed
@@ -368,10 +399,10 @@ export function EventControlClient({ event }: EventControlClientProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <div className={`h-2.5 w-2.5 rounded-full ${typeColor} flex-shrink-0`} />
-                        <p className="text-[14px] font-semibold text-foreground truncate">{bw.wine?.name ?? "Unknown"}</p>
+                        <p className="text-[14px] font-semibold font-serif text-foreground truncate">{bw.wine?.name ?? "Unknown"}</p>
                       </div>
                       <p className="text-[11px] text-muted truncate mt-0.5">
-                        {bw.wine?.producer}{bw.wine?.vintage ? ` ${bw.wine.vintage}` : " NV"} · {bw.wine?.region}, {bw.wine?.country}
+                        {bw.wine?.producer}{bw.wine?.vintage ? <span className="nums"> {bw.wine.vintage}</span> : " NV"} · {bw.wine?.region}, {bw.wine?.country}
                       </p>
                     </div>
 
@@ -419,7 +450,7 @@ export function EventControlClient({ event }: EventControlClientProps) {
                   <span className="flex-1 text-[14px] font-medium text-foreground truncate">
                     {guest.displayName}
                   </span>
-                  <span className="text-[14px] font-bold tabular-nums text-cherry">
+                  <span className="text-[14px] font-bold nums text-cherry">
                     {guest.totalScore} pts
                   </span>
                 </div>
@@ -455,7 +486,7 @@ export function EventControlClient({ event }: EventControlClientProps) {
           {event.status === "lobby" && (
             <button onClick={handleStartTasting} disabled={isPending || event.wines.length === 0} className="btn-primary w-full rounded-[12px] touch-target">
               <Play className="h-5 w-5" />
-              {isPending ? "Starting..." : `Start Tasting (${event.guests.length} guests)`}
+              {isPending ? "Starting..." : `Start Tasting (${event.guests.length} guest${event.guests.length !== 1 ? "s" : ""})`}
             </button>
           )}
 
@@ -464,13 +495,13 @@ export function EventControlClient({ event }: EventControlClientProps) {
               {!isCurrentRevealed && event.currentWine > 0 && (
                 <button onClick={handleRevealWine} disabled={isPending} className="btn-primary w-full rounded-[12px] touch-target">
                   <Eye className="h-5 w-5" />
-                  {isPending ? "Revealing..." : `Reveal Wine #${event.currentWine}`}
+                  {isPending ? "Revealing..." : `Reveal Wine #${event.currentWine} of ${event.wines.length}`}
                 </button>
               )}
               {isCurrentRevealed && !isLastWine && (
                 <button onClick={handleNextWine} disabled={isPending} className="btn-primary w-full rounded-[12px] touch-target">
                   <ChevronRight className="h-5 w-5" />
-                  {isPending ? "Advancing..." : "Next Wine"}
+                  {isPending ? "Advancing..." : `Next Wine (${event.currentWine + 1} of ${event.wines.length})`}
                 </button>
               )}
               {isCurrentRevealed && isLastWine && (

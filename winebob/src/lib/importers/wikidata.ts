@@ -246,12 +246,16 @@ function processWineBindings(bindings: SparqlBinding[]): ParsedWine[] {
         grapes.push(normalizeGrapeName(grape));
       }
 
+      const producerRaw = val(binding, "producerLabel");
+      const countryRaw = val(binding, "countryLabel");
+      const regionRaw = val(binding, "regionLabel");
+
       wineMap.set(qId, {
         wikidataId: qId,
         name: normalizeWineName(label),
-        producer: normalizeProducerName(val(binding, "producerLabel") || "Unknown"),
-        country: val(binding, "countryLabel") || "Unknown",
-        region: val(binding, "regionLabel") || "Unknown",
+        producer: producerRaw && !isQId(producerRaw) ? normalizeProducerName(producerRaw) : "",
+        country: countryRaw && !isQId(countryRaw) ? countryRaw : "",
+        region: regionRaw && !isQId(regionRaw) ? regionRaw : "",
         grapes,
         type: "red", // default, will be refined if grape color info available
         vintage,
@@ -259,7 +263,22 @@ function processWineBindings(bindings: SparqlBinding[]): ParsedWine[] {
     }
   }
 
-  return Array.from(wineMap.values());
+  // Filter out junk entries: non-wine items and entries with no useful data
+  const JUNK_KEYWORDS = ["vinegar", "juice", "grape must", "brandy", "grappa", "spirits", "liqueur", "beer", "cider", "sake"];
+
+  const filtered = Array.from(wineMap.values()).filter((wine) => {
+    const nameLower = wine.name.toLowerCase();
+
+    // Remove non-wine products
+    if (JUNK_KEYWORDS.some((kw) => nameLower.includes(kw))) return false;
+
+    // Require at least a country — wines with no country AND no producer are too low-quality
+    if (!wine.country && !wine.producer) return false;
+
+    return true;
+  });
+
+  return filtered;
 }
 
 /**

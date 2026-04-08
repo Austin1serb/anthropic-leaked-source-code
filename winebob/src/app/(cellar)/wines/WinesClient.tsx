@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Search, Plus, Wine, Heart, ChevronLeft, ChevronRight,
-  ChevronDown, Bookmark, Grape, Layers, Play, Square, Satellite, Map,
+  ChevronDown, Grape, Play, Square, Satellite, Map,
   CloudRain, Target, Radio, PenTool,
 } from "lucide-react";
 import { useState, useTransition, useRef, useCallback } from "react";
 import { toggleFavorite } from "@/lib/actions";
+import { useSearch } from "@/components/shared/SearchContext";
 import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
 import type { TourStop } from "@/components/shared/WineRegionMap";
 import { TourInfoCard } from "@/components/shared/TourInfoCard";
@@ -83,6 +84,7 @@ export function WinesClient({
   activeType, activeCountry, activePriceRange, activeSearch,
 }: Props) {
   const router = useRouter();
+  const { openSearch } = useSearch();
   const { layers, toggle, isActive } = useMapLayers();
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const fullLayers: MapLayer[] = layers.map((l) => ({ ...l, icon: LAYER_ICONS[l.id] ?? null }));
@@ -120,12 +122,6 @@ export function WinesClient({
       }).catch(() => {});
     }
     router.push(`/wines${buildQ(p)}`);
-  }
-
-  function onSearch(e: React.FormEvent) {
-    e.preventDefault();
-    nav({ search: search.trim() || undefined });
-    setSheet("half");
   }
 
   function onRegionClick(region: string) {
@@ -167,24 +163,20 @@ export function WinesClient({
   const hasFilters = !!(activeType || activeCountry || activePriceRange || activeSearch);
   const featured = wines[0];
 
-  /* ── Shared search bar (dark glass, used on map overlay) ── */
+  /* ── Shared search bar (dark glass, used on map overlay) — opens smart search overlay ── */
   function SearchBar({ className = "" }: { className?: string }) {
     return (
-      <form onSubmit={onSearch} className={className}>
+      <button onClick={openSearch} className={`${className} w-full text-left`}>
         <div className="flex items-center h-11 rounded-[12px] bg-[#1A1412]/75 backdrop-blur-xl border border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.15)] px-3.5 gap-2.5">
           <Grape className="h-4 w-4 text-[#E8A08A] flex-shrink-0" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search wines, regions..."
-            className="flex-1 bg-transparent text-[14px] text-white/90 placeholder:text-white/30 focus:outline-none"
-          />
+          <span className="flex-1 text-[14px] text-white/30 truncate">
+            {activeSearch || "Search wines, grapes, regions..."}
+          </span>
           <div className="flex items-center gap-1 pl-2.5 border-l border-white/[0.08]">
-            <Bookmark className="h-3.5 w-3.5 text-white/30" />
+            <Search className="h-3.5 w-3.5 text-white/30" />
           </div>
         </div>
-      </form>
+      </button>
     );
   }
 
@@ -222,7 +214,7 @@ export function WinesClient({
         <div className="flex-1 min-w-0">
           <p className="text-[14px] font-semibold text-foreground truncate">{wine.name}</p>
           <p className="text-[11px] text-muted mt-0.5 truncate">
-            {wine.producer} · {wine.region}, {wine.country}{wine.vintage ? ` · ${wine.vintage}` : ""}
+            {[wine.producer, [wine.region, wine.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}{wine.vintage ? ` · ${wine.vintage}` : ""}
           </p>
         </div>
         {wine.priceRange && (

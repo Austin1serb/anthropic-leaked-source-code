@@ -457,7 +457,7 @@ function mapRecords(records: TtbApiRecord[]): ParsedTtbWine[] {
     if (!rawName) continue;
 
     const name = normalizeWineName(rawName);
-    const producer = normalizeProducerName(record.brandName || "Unknown");
+    const producer = record.brandName ? normalizeProducerName(record.brandName) : "";
     const vintage = parseVintageYear(record.vintageDate);
     const grapes = parseGrapes(record.grapePct, undefined);
     const region = record.appellation?.trim() || "";

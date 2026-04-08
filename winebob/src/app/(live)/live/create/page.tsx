@@ -273,7 +273,7 @@ export default function CreateLiveEventPage() {
                   <span className={`h-3 w-3 rounded-full flex-shrink-0 ${typeColor(wine.type)}`} />
                   <div className="flex-1 min-w-0">
                     <p className="heading-sm text-foreground text-[14px] line-clamp-1">{wine.name}</p>
-                    <p className="caption line-clamp-1">{wine.producer} · {wine.region}{wine.vintage ? ` · ${wine.vintage}` : ""}</p>
+                    <p className="caption line-clamp-1">{[wine.producer, wine.region].filter(Boolean).join(" · ")}{wine.vintage ? ` · ${wine.vintage}` : ""}</p>
                   </div>
                   {added ? (
                     <div className="h-6 w-6 rounded-full bg-cherry flex items-center justify-center flex-shrink-0">

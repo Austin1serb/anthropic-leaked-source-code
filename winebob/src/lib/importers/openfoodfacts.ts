@@ -135,13 +135,13 @@ function inferWineType(categoryTags: string[] | undefined): string {
 }
 
 function extractCountry(countriesField: string | undefined): string {
-  if (!countriesField) return "Unknown";
+  if (!countriesField) return "";
   // Countries field may be comma-separated or contain "en:france" style tags
   const cleaned = countriesField
     .split(/[,;]/)
     .map((c) => c.replace(/^[a-z]{2}:/, "").trim())
     .filter(Boolean)[0];
-  return cleaned ? titleCase(cleaned) : "Unknown";
+  return cleaned ? titleCase(cleaned) : "";
 }
 
 function extractRegion(originsField: string | undefined): string {
@@ -150,7 +150,7 @@ function extractRegion(originsField: string | undefined): string {
     .split(/[,;]/)
     .map((r) => r.replace(/^[a-z]{2}:/, "").trim())
     .filter(Boolean)[0];
-  return cleaned ? titleCase(cleaned) : "Unknown";
+  return cleaned ? titleCase(cleaned) : "";
 }
 
 function extractGrapes(
@@ -264,7 +264,7 @@ function mapProduct(product: OFFProduct, importBatchId: string) {
 
   return {
     name,
-    producer: producer || "Unknown",
+    producer: producer || "",
     barcode: product.code || null,
     country: extractCountry(product.countries),
     region: extractRegion(product.origins),

@@ -351,7 +351,7 @@ export function LiveEventClient({ event: initialEvent }: { event: EventData }) {
               </div>
               <h3 className="text-[16px] font-bold text-foreground">{lastRevealed.wine.name}</h3>
               <p className="text-[12px] text-muted mt-0.5">
-                {lastRevealed.wine.producer}{lastRevealed.wine.vintage ? ` · ${lastRevealed.wine.vintage}` : ""} · {lastRevealed.wine.region}, {lastRevealed.wine.country}
+                {[lastRevealed.wine.producer, lastRevealed.wine.vintage ? String(lastRevealed.wine.vintage) : "", [lastRevealed.wine.region, lastRevealed.wine.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
               </p>
             </div>
           )}
