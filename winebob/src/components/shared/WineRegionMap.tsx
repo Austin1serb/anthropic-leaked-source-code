@@ -568,8 +568,9 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         if (props) onRegionClickRef.current?.(props.name, props.country);
       });
 
-      // ── Winery markers (from mock data) ──
-      const wineryGeoJSON: GeoJSON.FeatureCollection = {
+      // ── Winery markers (mock data + API data) ──
+      // Start with mock data immediately, then overlay DB wineries
+      const mockGeoJSON: GeoJSON.FeatureCollection = {
         type: "FeatureCollection",
         features: mockWineries.map((w, i) => ({
           type: "Feature" as const,
@@ -585,7 +586,31 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         })),
       };
 
-      map.current.addSource("wineries", { type: "geojson", data: wineryGeoJSON });
+      map.current.addSource("wineries", { type: "geojson", data: mockGeoJSON });
+
+      // Fetch real wineries from the database and merge with mock data
+      fetch("/api/wineries")
+        .then((r) => r.json())
+        .then((apiData: GeoJSON.FeatureCollection) => {
+          if (!map.current || !apiData.features?.length) return;
+          const src = map.current.getSource("wineries") as mapboxgl.GeoJSONSource | undefined;
+          if (!src) return;
+          // API features already have grapeVarieties/wineStyles as arrays — stringify for consistency
+          const apiFeatures = apiData.features.map((f, i) => {
+            const p = (f.properties ?? {}) as Record<string, any>;
+            if (Array.isArray(p.grapeVarieties)) p.grapeVarieties = JSON.stringify(p.grapeVarieties);
+            if (Array.isArray(p.wineStyles)) p.wineStyles = JSON.stringify(p.wineStyles);
+            return { ...f, id: 10000 + i, properties: p };
+          });
+          // Build a set of API slugs to remove duplicates from mock data
+          const apiSlugs = new Set(apiFeatures.map((f) => (f.properties as any)?.slug));
+          const dedupedMock = mockGeoJSON.features.filter((f) => !apiSlugs.has((f.properties as any)?.slug));
+          src.setData({
+            type: "FeatureCollection",
+            features: [...dedupedMock, ...apiFeatures],
+          });
+        })
+        .catch(() => { /* API unavailable — keep mock data */ });
 
       // Featured wineries — gold, large and prominent (hero markers)
       map.current.addLayer({
