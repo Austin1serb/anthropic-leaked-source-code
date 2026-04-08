@@ -5,6 +5,7 @@ import { ChevronLeft, Heart, Wine, MapPin, Grape, Calendar, DollarSign, Droplets
 import { useState, useTransition, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { toggleFavorite } from "@/lib/actions";
+import { EngagementTracker } from "@/components/shared/EngagementTracker";
 
 type WineData = {
   id: string;
@@ -96,6 +97,7 @@ export function WineDetailClient({ wine }: { wine: WineData }) {
   }, [wine.id]);
 
   return (
+    <EngagementTracker wineId={wine.id} path={`/wines/${wine.id}`}>
     <div className="min-h-screen pb-28 safe-top bg-background">
       {/* Hero */}
       <div className={`relative bg-gradient-to-b ${typeGradient(wine.type)}`}>
@@ -203,6 +205,7 @@ export function WineDetailClient({ wine }: { wine: WineData }) {
         )}
       </div>
     </div>
+    </EngagementTracker>
   );
 }
 

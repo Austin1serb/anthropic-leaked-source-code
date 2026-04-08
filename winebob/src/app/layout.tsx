@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AuthProvider } from "@/lib/AuthProvider";
 import { UniversePortal } from "@/components/shared/UniversePortal";
 import "./globals.css";
@@ -35,6 +37,8 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <UniversePortal />
+          <Analytics />
+          <SpeedInsights />
         </AuthProvider>
       </body>
     </html>

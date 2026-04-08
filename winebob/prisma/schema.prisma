@@ -33,6 +33,7 @@ model User {
   checkIns          WineCheckIn[]
   consent           UserConsent?
   wineEvents        WineEvent[]
+  segment           UserSegment?
 }
 
 model Account {
@@ -777,4 +778,106 @@ model ProducerInsight {
 
   @@unique([producerName, month])
   @@index([month])
+}
+
+// ============ USER SEGMENTS (computed from behavior) ============
+
+model UserSegment {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  userType        String   @default("casual") // casual, enthusiast, sommelier, producer, power_user
+  ageGroup        String?  // "18-24", "25-34", "35-44", "45-54", "55-64", "65+"
+  country         String?
+  city            String?
+  engagementTier  String   @default("low") // low, medium, high, power
+  priceAffinity   String?  // budget, mid, premium, luxury
+  typeAffinity    String?  // red, white, rosé, sparkling, etc.
+  regionAffinity  String?  // most-explored region
+  lastActiveAt    DateTime?
+  computedAt      DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userType])
+  @@index([engagementTier])
+  @@index([priceAffinity])
+  @@index([country])
+}
+
+// ============ AGGREGATION: DEMOGRAPHIC WINE TRENDS (weekly) ============
+
+model DemographicWineTrend {
+  id             String   @id @default(cuid())
+  weekStart      DateTime
+  ageGroup       String   // "18-24", "25-34", etc.
+  country        String?
+  wineType       String   // red, white, etc.
+  priceRange     String?  // budget, mid, premium, luxury
+  viewCount      Int      @default(0)
+  favoriteCount  Int      @default(0)
+  tastingCount   Int      @default(0)
+  avgRating      Float?
+
+  @@unique([weekStart, ageGroup, wineType, priceRange])
+  @@index([weekStart])
+  @@index([ageGroup])
+  @@index([priceRange])
+}
+
+// ============ AGGREGATION: PRICE INSIGHTS (weekly) ============
+
+model PriceInsight {
+  id            String   @id @default(cuid())
+  weekStart     DateTime
+  priceRange    String   // budget, mid, premium, luxury
+  region        String?
+  wineType      String?  // red, white, etc.
+  searchVolume  Int      @default(0)
+  viewVolume    Int      @default(0)
+  favoriteRate  Float?   // favorites / views ratio
+  wishlistRate  Float?   // wishlists / views ratio
+  avgRating     Float?
+
+  @@unique([weekStart, priceRange, region, wineType])
+  @@index([weekStart])
+  @@index([priceRange])
+}
+
+// ============ AGGREGATION: FUNNEL METRICS (weekly) ============
+
+model FunnelMetric {
+  id              String   @id @default(cuid())
+  weekStart       DateTime
+  segment         String?  // null = all users, or userType value
+  searchCount     Int      @default(0)
+  viewCount       Int      @default(0)
+  favoriteCount   Int      @default(0)
+  tastingCount    Int      @default(0)
+  checkinCount    Int      @default(0)
+  wishlistCount   Int      @default(0)
+  searchToView    Float?   // conversion rate
+  viewToFavorite  Float?
+  favoriteToTaste Float?
+  tasteToCheckin  Float?
+
+  @@unique([weekStart, segment])
+  @@index([weekStart])
+}
+
+// ============ API KEYS (producer data access) ============
+
+model ApiKey {
+  id            String    @id @default(cuid())
+  key           String    @unique // hashed, prefixed with "wb_"
+  name          String    // e.g. "Chateau Margaux Dashboard"
+  producerName  String    // which producer's data they can access
+  tier          String    @default("free") // free, basic, premium
+  permissions   String[]  // ["read:own_insights", "read:region_trends", "read:demographics", "export:csv"]
+  rateLimit     Int       @default(100) // requests per hour
+  lastUsedAt    DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([key])
+  @@index([producerName])
 }
