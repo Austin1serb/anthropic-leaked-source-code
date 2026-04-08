@@ -451,6 +451,102 @@ async function scrapeWine(query: string): Promise<ScrapedWine | null> {
   return wine;
 }
 
+// ── Winery Scraper — discover all wines from a producer ──
+
+async function scrapeWineryPage(wineryQuery: string): Promise<{ wineryName: string; wineryUrl: string; wineLinks: string[] }> {
+  console.log(`\n🏠 Searching winery: ${wineryQuery}`);
+
+  // First, search for a wine to find the merchant/winery link
+  const searchUrl = `${WINE_SEARCHER_BASE}/find/${encodeURIComponent(wineryQuery.replace(/ /g, "+"))}`;
+  const html = await fetchPage(searchUrl);
+  if (!html) {
+    console.log(`  ✗ Failed to fetch search page`);
+    return { wineryName: wineryQuery, wineryUrl: "", wineLinks: [] };
+  }
+
+  const $ = cheerio.load(html);
+
+  // Find the merchant/winery page link
+  let wineryUrl = "";
+  let wineryName = wineryQuery;
+  const merchantMatch = html.match(/href="(\/merchant\/\d+-[^"]+)"/);
+  if (merchantMatch) {
+    wineryUrl = `${WINE_SEARCHER_BASE}${merchantMatch[1]}`;
+  }
+
+  // Also try the producer name from the page
+  const prodMatch = html.match(/merchant\/\d+-([^"]+)"[^>]*>([^<]+)<\/a>/);
+  if (prodMatch) wineryName = prodMatch[2].trim();
+
+  if (!wineryUrl) {
+    // Try direct merchant search
+    wineryUrl = `${WINE_SEARCHER_BASE}/find/${encodeURIComponent(wineryQuery.replace(/ /g, "+"))}`;
+    console.log(`  ⚠ No winery page found, using search URL`);
+  }
+
+  console.log(`  🔗 Winery: ${wineryName}`);
+  console.log(`  🔗 URL: ${wineryUrl}`);
+
+  await delay(DELAY_MS);
+
+  // Fetch the winery page to find all their wines
+  const wineryHtml = await fetchPage(wineryUrl);
+  if (!wineryHtml) {
+    console.log(`  ✗ Failed to fetch winery page`);
+    return { wineryName, wineryUrl, wineLinks: [] };
+  }
+
+  // Find all wine links on the winery page
+  const $w = cheerio.load(wineryHtml);
+  const wineLinks: string[] = [];
+  const seenNames = new Set<string>();
+
+  // Look for wine links — typically /find/wine+name+vintage patterns
+  $w('a[href*="/find/"]').each((_, el) => {
+    const href = $w(el).attr("href") || "";
+    const text = $w(el).text().trim();
+    // Filter for actual wine links (not generic search links)
+    if (href.includes("/find/") && text.length > 5 && text.length < 100
+      && !text.includes("Search") && !text.includes("Home") && !text.includes("Region")
+      && !text.includes("Grape") && !text.includes("Store")
+      && !seenNames.has(text)) {
+      seenNames.add(text);
+      wineLinks.push(text);
+    }
+  });
+
+  // Also look for wine names in table rows or list items
+  $w('td a, li a, [class*="wine"] a').each((_, el) => {
+    const text = $w(el).text().trim();
+    const href = $w(el).attr("href") || "";
+    if (text.length > 5 && text.length < 100 && href.includes("/find/")
+      && !text.includes("Search") && !text.includes("All")
+      && !seenNames.has(text)) {
+      seenNames.add(text);
+      wineLinks.push(text);
+    }
+  });
+
+  // Fallback: look for wine names using regex patterns (vintage + name)
+  if (wineLinks.length === 0) {
+    const wineMatches = wineryHtml.matchAll(/>(\d{4}\s+[A-Z][^<]{10,80})</g);
+    for (const m of wineMatches) {
+      const name = m[1].trim();
+      if (!seenNames.has(name) && name.length < 80) {
+        seenNames.add(name);
+        wineLinks.push(name);
+      }
+    }
+  }
+
+  console.log(`  📦 Found ${wineLinks.length} wines from ${wineryName}`);
+  if (wineLinks.length > 0) {
+    console.log(`     First few: ${wineLinks.slice(0, 5).join(", ")}${wineLinks.length > 5 ? "..." : ""}`);
+  }
+
+  return { wineryName, wineryUrl, wineLinks };
+}
+
 // ── CLI Entry Point ──
 
 async function main() {
@@ -458,13 +554,18 @@ async function main() {
 
   // Parse arguments
   let wineNames: string[] = [];
+  let wineryNames: string[] = [];
   let shouldImport = false;
+  let maxWinesPerWinery = 20;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--names") {
-      // Collect all following args until next flag
       while (i + 1 < args.length && !args[i + 1].startsWith("--")) {
         wineNames.push(args[++i]);
+      }
+    } else if (args[i] === "--winery") {
+      while (i + 1 < args.length && !args[i + 1].startsWith("--")) {
+        wineryNames.push(args[++i]);
       }
     } else if (args[i] === "--file") {
       const filePath = args[++i];
@@ -476,6 +577,28 @@ async function main() {
       wineNames.push(...content.split("\n").map((l) => l.trim()).filter(Boolean));
     } else if (args[i] === "--import") {
       shouldImport = true;
+    } else if (args[i] === "--max") {
+      maxWinesPerWinery = parseInt(args[++i]) || 20;
+    }
+  }
+
+  // Winery mode: discover wines first, then scrape each one
+  if (wineryNames.length > 0) {
+    console.log(`\n=== Winery Discovery Mode ===`);
+    console.log(`Wineries to scan: ${wineryNames.length}`);
+    console.log(`Max wines per winery: ${maxWinesPerWinery}\n`);
+
+    for (const winery of wineryNames) {
+      const { wineryName, wineLinks } = await scrapeWineryPage(winery);
+      const toScrape = wineLinks.slice(0, maxWinesPerWinery);
+      console.log(`\n  → Will scrape ${toScrape.length} wines from ${wineryName}`);
+      wineNames.push(...toScrape);
+      await delay(DELAY_MS);
+    }
+
+    if (wineNames.length === 0) {
+      console.log(`\n✗ No wines found from any winery. Try --names instead.`);
+      process.exit(0);
     }
   }
 
@@ -485,13 +608,16 @@ Wine-Searcher + Vivino Scraper
 
 Usage:
   npx tsx scripts/scrape-wines.ts --names "Petrus 2015" "Opus One 2019"
+  npx tsx scripts/scrape-wines.ts --winery "Domaine Leflaive" "Gaja"
+  npx tsx scripts/scrape-wines.ts --winery "Château Margaux" --max 10
   npx tsx scripts/scrape-wines.ts --file wines.txt
-  npx tsx scripts/scrape-wines.ts --file wines.txt --import
 
 Options:
-  --names <wine1> <wine2>   Wine names to scrape
-  --file <path>             File with one wine name per line
-  --import                  Also import results to database
+  --names <wine1> <wine2>       Wine names to scrape
+  --winery <name1> <name2>      Scrape all wines from a winery
+  --max <number>                Max wines per winery (default: 20)
+  --file <path>                 File with one wine name per line
+  --import                      Also import results to database
 
 Output: scripts/output/scrape-{timestamp}.json
 `);
