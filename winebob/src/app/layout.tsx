@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/lib/AuthProvider";
 import { UniversePortal } from "@/components/shared/UniversePortal";
+import { SearchProvider } from "@/components/shared/SearchContext";
+import { SmartSearchOverlay } from "@/components/shared/SmartSearchOverlay";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,7 +35,10 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          {children}
+          <SearchProvider>
+            {children}
+            <SmartSearchOverlay />
+          </SearchProvider>
           <UniversePortal />
         </AuthProvider>
       </body>
