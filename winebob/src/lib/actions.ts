@@ -664,6 +664,74 @@ export async function addWine(data: {
   return wine;
 }
 
+/**
+ * Find or create a wine — deduplicates by name + producer + vintage.
+ * Used in arena create flow so users can add custom wines without duplicating.
+ * Returns the existing wine if found, or creates a new one.
+ */
+export async function findOrCreateWine(data: {
+  name: string;
+  producer: string;
+  vintage?: number | null;
+  grapes?: string[];
+  region: string;
+  country: string;
+  type: string;
+}) {
+  const session = await requireAuth();
+
+  // Try to find existing wine by name + producer + vintage
+  const where: Record<string, unknown> = {
+    name: { equals: data.name, mode: "insensitive" },
+    producer: { equals: data.producer, mode: "insensitive" },
+  };
+  if (data.vintage) {
+    where.vintage = data.vintage;
+  } else {
+    where.vintage = null;
+  }
+
+  const existing = await prisma.wine.findFirst({ where });
+
+  if (existing) {
+    // Track that this wine was used again
+    trackEvent({
+      eventType: "wine_reuse",
+      userId: session.user.id,
+      wineId: existing.id,
+      metadata: { context: "arena_create" },
+    }).catch(() => {});
+
+    return { wine: existing, created: false };
+  }
+
+  // Create new wine
+  const wine = await prisma.wine.create({
+    data: {
+      name: data.name,
+      producer: data.producer,
+      vintage: data.vintage ?? null,
+      grapes: data.grapes ?? [],
+      region: data.region,
+      country: data.country,
+      type: data.type,
+      source: "user",
+      confidence: 0.8,
+      isPublic: true,
+      addedById: session.user.id,
+    },
+  });
+
+  trackEvent({
+    eventType: "wine_add",
+    userId: session.user.id,
+    wineId: wine.id,
+    metadata: { producer: data.producer, region: data.region, country: data.country, context: "arena_create" },
+  }).catch(() => {});
+
+  return { wine, created: true };
+}
+
 export async function toggleFavorite(wineId: string) {
   const session = await requireAuth();
 

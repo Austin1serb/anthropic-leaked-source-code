@@ -20,7 +20,7 @@ import {
   Sparkles,
   GlassWater,
 } from "lucide-react";
-import { createEvent, getTemplates, searchWines, getBrowseWines } from "@/lib/actions";
+import { createEvent, getTemplates, searchWines, getBrowseWines, findOrCreateWine } from "@/lib/actions";
 import { decodeHtmlEntities } from "@/lib/importers/normalize";
 
 // Display-safe wine name (strips HTML entities from imported data)
@@ -118,6 +118,13 @@ function CreateEventInner() {
   const [browseWines, setBrowseWines] = useState<WineResult[]>([]);
   const [browseLoaded, setBrowseLoaded] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  // Custom wine form state
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [customWine, setCustomWine] = useState({
+    name: "", producer: "", vintage: "", region: "", country: "", type: "red", grapes: "",
+  });
+  const [customSaving, setCustomSaving] = useState(false);
+  const [customMessage, setCustomMessage] = useState<string | null>(null);
 
   // Error state
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -196,6 +203,48 @@ function CreateEventInner() {
 
   function removeWine(wineId: string) {
     setSelectedWines((prev) => prev.filter((w) => w.id !== wineId));
+  }
+
+  async function handleAddCustomWine() {
+    if (!customWine.name.trim() || !customWine.producer.trim() || !customWine.country.trim()) {
+      setCustomMessage("Name, producer, and country are required.");
+      return;
+    }
+    setCustomSaving(true);
+    setCustomMessage(null);
+    try {
+      const { wine, created } = await findOrCreateWine({
+        name: customWine.name.trim(),
+        producer: customWine.producer.trim(),
+        vintage: customWine.vintage ? parseInt(customWine.vintage) : null,
+        grapes: customWine.grapes ? customWine.grapes.split(",").map((g: string) => g.trim()).filter(Boolean) : [],
+        region: customWine.region.trim() || customWine.country.trim(),
+        country: customWine.country.trim(),
+        type: customWine.type,
+      });
+      // Add to selected wines
+      const wineResult: WineResult = {
+        id: wine.id,
+        name: wine.name,
+        producer: wine.producer,
+        vintage: wine.vintage,
+        grapes: wine.grapes,
+        region: wine.region,
+        country: wine.country,
+        type: wine.type,
+      };
+      if (!selectedWines.some((w) => w.id === wine.id)) {
+        setSelectedWines((prev) => [...prev, wineResult]);
+      }
+      setCustomMessage(created ? `✓ "${wine.name}" created and added!` : `✓ "${wine.name}" already exists — added!`);
+      setCustomWine({ name: "", producer: "", vintage: "", region: "", country: "", type: "red", grapes: "" });
+      // Auto-close after a moment
+      setTimeout(() => setCustomMessage(null), 3000);
+    } catch (err) {
+      setCustomMessage(`Failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setCustomSaving(false);
+    }
   }
 
   // ============ GUESS FIELD TOGGLE ============
@@ -619,6 +668,126 @@ function CreateEventInner() {
           {searching && (
             <div className="absolute right-4 top-1/2 -translate-y-1/2">
               <div className="h-4 w-4 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
+            </div>
+          )}
+        </div>
+
+        {/* Add your own wine */}
+        <div className="mb-4">
+          <button
+            onClick={() => setShowCustomForm(!showCustomForm)}
+            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[13px] font-semibold transition-all ${
+              showCustomForm
+                ? "bg-cherry/10 text-cherry border border-cherry/20"
+                : "bg-card-bg border border-card-border text-foreground/70 active:scale-[0.98]"
+            }`}
+          >
+            <Plus className="h-4 w-4" />
+            {showCustomForm ? "Close" : "Can\u2019t find your wine? Add it"}
+          </button>
+
+          {showCustomForm && (
+            <div className="mt-3 p-4 rounded-[14px] bg-card-bg border border-card-border space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Wine name *</label>
+                  <input
+                    type="text"
+                    value={customWine.name}
+                    onChange={(e) => setCustomWine({ ...customWine, name: e.target.value })}
+                    placeholder="e.g. Gaja Barbaresco"
+                    className="input-field mt-1 w-full text-[13px]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Producer *</label>
+                  <input
+                    type="text"
+                    value={customWine.producer}
+                    onChange={(e) => setCustomWine({ ...customWine, producer: e.target.value })}
+                    placeholder="e.g. Gaja"
+                    className="input-field mt-1 w-full text-[13px]"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Vintage</label>
+                  <input
+                    type="number"
+                    value={customWine.vintage}
+                    onChange={(e) => setCustomWine({ ...customWine, vintage: e.target.value })}
+                    placeholder="2020"
+                    min="1900"
+                    max="2030"
+                    className="input-field mt-1 w-full text-[13px]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Country *</label>
+                  <input
+                    type="text"
+                    value={customWine.country}
+                    onChange={(e) => setCustomWine({ ...customWine, country: e.target.value })}
+                    placeholder="France"
+                    className="input-field mt-1 w-full text-[13px]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Region</label>
+                  <input
+                    type="text"
+                    value={customWine.region}
+                    onChange={(e) => setCustomWine({ ...customWine, region: e.target.value })}
+                    placeholder="Bordeaux"
+                    className="input-field mt-1 w-full text-[13px]"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Type</label>
+                  <select
+                    value={customWine.type}
+                    onChange={(e) => setCustomWine({ ...customWine, type: e.target.value })}
+                    className="input-field mt-1 w-full text-[13px]"
+                  >
+                    <option value="red">Red</option>
+                    <option value="white">White</option>
+                    <option value="rosé">Rosé</option>
+                    <option value="sparkling">Sparkling</option>
+                    <option value="dessert">Dessert</option>
+                    <option value="fortified">Fortified</option>
+                    <option value="orange">Orange</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Grapes</label>
+                  <input
+                    type="text"
+                    value={customWine.grapes}
+                    onChange={(e) => setCustomWine({ ...customWine, grapes: e.target.value })}
+                    placeholder="Nebbiolo, Merlot"
+                    className="input-field mt-1 w-full text-[13px]"
+                  />
+                </div>
+              </div>
+              {customMessage && (
+                <p className={`text-[12px] font-medium ${customMessage.startsWith("✓") ? "text-green-700" : "text-red-600"}`}>
+                  {customMessage}
+                </p>
+              )}
+              <button
+                onClick={handleAddCustomWine}
+                disabled={customSaving}
+                className="w-full flex items-center justify-center gap-2 h-10 rounded-[10px] bg-cherry text-white text-[13px] font-bold hover:bg-cherry/90 disabled:opacity-50 transition-colors"
+              >
+                {customSaving ? (
+                  <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                ) : (
+                  <><Plus className="h-4 w-4" /> Add to tasting</>
+                )}
+              </button>
             </div>
           )}
         </div>
