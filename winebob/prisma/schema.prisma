@@ -36,6 +36,7 @@ model User {
   segment           UserSegment?
   claimedWineries   Winery[]           @relation("ClaimedWineries")
   reviewedApplications WineryApplication[] @relation("ReviewedApplications")
+  experienceBookings ExperienceBooking[]
 }
 
 model Account {
@@ -184,8 +185,9 @@ model Winery {
   certifications String[] // e.g. ["organic", "biodynamic", "sustainable"]
 
   // Relations
-  wines       Wine[]
+  wines        Wine[]
   applications WineryApplication[]
+  experiences  WineExperience[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
@@ -927,6 +929,78 @@ model FunnelMetric {
 
   @@unique([weekStart, segment])
   @@index([weekStart])
+}
+
+// ============ WINE EXPERIENCES (Airbnb-style bookable activities) ============
+
+model WineExperience {
+  id          String   @id @default(cuid())
+  wineryId    String
+  title       String   // e.g. "Sunset Tasting & Vineyard Walk"
+  slug        String   @unique
+  description String
+  type        String   // tasting, tour, harvest, dinner, workshop, stay
+  duration    Int      // minutes
+  maxGuests   Int      @default(10)
+  pricePerPerson Int   // cents (e.g. 5000 = €50)
+  currency    String   @default("EUR")
+
+  // Schedule
+  recurring   Boolean  @default(false)  // true = available weekly
+  daysOfWeek  Int[]    // 0=Sun..6=Sat (for recurring)
+  startTime   String?  // e.g. "14:00" (for recurring)
+  nextDate    DateTime? // next available date (for one-off or computed)
+  seasonStart Int?     // month 1-12 (null = year-round)
+  seasonEnd   Int?     // month 1-12
+
+  // Media
+  image       String?  // hero image URL
+  images      String[] // additional gallery images
+
+  // Details
+  includes    String[] // e.g. ["Wine tasting", "Cheese pairing", "Vineyard tour"]
+  languages   String[] @default(["English"])
+  highlights  String?  // short marketing text
+  meetingPoint String? // where to meet
+
+  // Status
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
+
+  // Relations
+  winery      Winery   @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  bookings    ExperienceBooking[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([wineryId])
+  @@index([type])
+  @@index([active, featured])
+  @@index([pricePerPerson])
+}
+
+model ExperienceBooking {
+  id            String   @id @default(cuid())
+  experienceId  String
+  userId        String?  // null = guest booking
+  guestName     String
+  guestEmail    String
+  guestCount    Int      @default(1)
+  date          DateTime // the booked date
+  status        String   @default("confirmed") // confirmed, cancelled, completed
+  totalPrice    Int      // cents
+  notes         String?  // special requests
+
+  experience    WineExperience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime @default(now())
+
+  @@index([experienceId])
+  @@index([userId])
+  @@index([date])
+  @@index([status])
 }
 
 // ============ API KEYS (producer data access) ============
