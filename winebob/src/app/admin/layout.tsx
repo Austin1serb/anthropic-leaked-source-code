@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Wine, Users, FileText, Compass } from "lucide-react";
+import { Wine, Users, FileText, Compass, Upload } from "lucide-react";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -24,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <SideLink href="/admin/producers" icon={<Users className="h-3.5 w-3.5" />} label="Producers" />
           <SideLink href="/admin/wines" icon={<Wine className="h-3.5 w-3.5" />} label="Wines" />
           <SideLink href="/admin/experiences" icon={<Compass className="h-3.5 w-3.5" />} label="Experiences" />
+          <SideLink href="/admin/import" icon={<Upload className="h-3.5 w-3.5" />} label="Import" />
           <SideLink href="/admin/applications" icon={<FileText className="h-3.5 w-3.5" />} label="Applications" />
         </nav>
 
