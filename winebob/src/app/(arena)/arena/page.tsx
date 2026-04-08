@@ -7,8 +7,10 @@ export const dynamic = "force-dynamic";
 export default async function ArenaPage() {
   const session = await requireAuth();
 
-  let events: Awaited<ReturnType<typeof prisma.blindTastingEvent.findMany>> = [];
-  let templates: Awaited<ReturnType<typeof prisma.eventTemplate.findMany>> = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let events: any[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let templates: any[] = [];
 
   try {
     [events, templates] = await Promise.all([
