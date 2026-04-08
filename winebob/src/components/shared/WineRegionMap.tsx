@@ -670,7 +670,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         },
       });
 
-      // Winery click — rich producer card (popup stays open until user clicks elsewhere)
+      // Winery click — compact wine-label card
       for (const layerId of ["wineries-featured", "wineries-regular"]) {
         map.current.on("mouseenter", layerId, () => { if (map.current) map.current.getCanvas().style.cursor = "pointer"; });
         map.current.on("mouseleave", layerId, () => { if (map.current) map.current.getCanvas().style.cursor = ""; });
@@ -679,7 +679,6 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
           const p = e.features[0].properties as Record<string, any>;
           const isFeatured = p.featured === true || p.featured === "true";
 
-          // Parse JSON-encoded arrays
           let grapes: string[] = [];
           let styles: string[] = [];
           try { grapes = JSON.parse(p.grapeVarieties || "[]"); } catch {}
@@ -690,37 +689,44 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
             sparkling: "#B8A840", orange: "#C87840", fortified: "#8B4513",
           };
 
-          const grapePills = grapes.map((g: string) =>
-            `<span style="display:inline-block;padding:2px 8px;border-radius:6px;background:#F5F0E8;color:#5A4A30;font-size:10px;font-weight:600">${g}</span>`
-          ).join(" ");
-
+          // Style dots inline
           const styleDots = styles.map((s: string) =>
-            `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#6B5A40"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${styleColorMap[s] || '#8C7E6E'}"></span>${s}</span>`
-          ).join(" ");
+            `<span style="width:8px;height:8px;border-radius:50%;background:${styleColorMap[s] || '#8C7E6E'};display:inline-block" title="${s}"></span>`
+          ).join("");
 
-          const bottles = p.annualBottles ? `${(p.annualBottles / 1000).toFixed(0)}k bottles/yr` : "";
+          // Grape pills inline (max 3)
+          const grapePills = grapes.slice(0, 3).map((g: string) =>
+            `<span style="padding:1px 6px;border-radius:4px;background:#F5F0E8;color:#5A4A30;font-size:9px;font-weight:600;white-space:nowrap">${g}</span>`
+          ).join("");
+
+          const bottles = p.annualBottles ? `${(p.annualBottles / 1000).toFixed(0)}k btl/yr` : "";
           const vineyard = p.vineyardSize && p.vineyardSize !== "N/A" && p.vineyardSize !== "Multiple" ? p.vineyardSize : "";
-          const statsLine = [vineyard, bottles].filter(Boolean).join(" · ");
+          const meta = [p.founded ? `Est. ${p.founded}` : "", vineyard, bottles].filter(Boolean).join(" · ");
+
+          // Truncate description to ~80 chars
+          const desc = p.description ? (p.description.length > 90 ? p.description.slice(0, 87) + "..." : p.description) : "";
 
           const searchName = encodeURIComponent(p.name);
+          const accentColor = isFeatured ? "#C8A255" : "#74070E";
 
           popup.current
             ?.setLngLat(e.lngLat)
             .setHTML(`
-              <div style="font-family:system-ui,sans-serif;max-width:300px;min-width:240px">
-                <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">
-                  <span style="font-size:18px;flex-shrink:0;margin-top:2px">🏰</span>
-                  <div style="flex:1;min-width:0">
-                    <p style="font-size:16px;font-weight:800;color:#1A1412;margin:0;font-family:Georgia,serif;line-height:1.2">${p.name}</p>
-                    <p style="font-size:11px;color:#8C7E6E;margin:3px 0 0">${p.region}, ${p.country}${p.founded ? ` · Est. ${p.founded}` : ""}${p.owner ? ` · ${p.owner}` : ""}</p>
+              <div style="font-family:system-ui,-apple-system,sans-serif;width:260px;display:flex;gap:0;overflow:hidden">
+                <div style="width:4px;flex-shrink:0;background:${accentColor};border-radius:2px 0 0 2px"></div>
+                <div style="flex:1;padding:2px 0 0 12px;min-width:0">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                    <p style="font-size:15px;font-weight:800;color:#1A1412;margin:0;font-family:Georgia,serif;line-height:1.2;flex:1;min-width:0">${p.name}</p>
+                    ${isFeatured ? `<span style="font-size:12px;flex-shrink:0" title="Featured">★</span>` : ""}
+                    <div style="display:flex;gap:3px;flex-shrink:0">${styleDots}</div>
+                  </div>
+                  <p style="font-size:10px;color:#8C7E6E;margin:0 0 6px;line-height:1.3">${meta}</p>
+                  ${desc ? `<p style="font-size:11px;color:#5A4A30;margin:0 0 8px;line-height:1.4">${desc}</p>` : ""}
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+                    <div style="display:flex;gap:3px;flex-wrap:wrap;flex:1;min-width:0">${grapePills}</div>
+                    <a href="/wines?search=${searchName}" style="flex-shrink:0;font-size:10px;font-weight:700;color:${accentColor};text-decoration:none;padding:4px 10px;border-radius:6px;background:${accentColor}12;white-space:nowrap">View wines →</a>
                   </div>
                 </div>
-                ${p.description ? `<p style="font-size:12px;color:#5A4A30;margin:0 0 8px;line-height:1.5">${p.description}</p>` : ""}
-                ${isFeatured ? `<p style="font-size:10px;font-weight:700;color:#C8A255;margin:0 0 8px;letter-spacing:0.03em">★ Featured Winery</p>` : ""}
-                ${grapes.length > 0 ? `<div style="margin-bottom:8px"><p style="font-size:9px;font-weight:700;color:#8C7E6E;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px">Grape Varieties</p><div style="display:flex;flex-wrap:wrap;gap:4px">${grapePills}</div></div>` : ""}
-                ${styles.length > 0 ? `<div style="margin-bottom:8px"><p style="font-size:9px;font-weight:700;color:#8C7E6E;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px">Wine Styles</p><div style="display:flex;flex-wrap:wrap;gap:8px">${styleDots}</div></div>` : ""}
-                ${statsLine ? `<p style="font-size:10px;color:#8C7E6E;margin:0 0 8px;padding-top:6px;border-top:1px solid #F0E8D8">${statsLine}</p>` : ""}
-                <a href="/wines?search=${searchName}" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#74070E;text-decoration:none;padding:6px 12px;border-radius:8px;background:rgba(116,7,14,0.08);margin-top:2px">View wines →</a>
               </div>
             `)
             .addTo(map.current!);
