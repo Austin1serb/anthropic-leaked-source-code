@@ -547,15 +547,30 @@ export function FlavorGenomeLayer({ active, mapRef }: Props) {
       return 50;
     }
 
+    // Use a container div overlaid on the map for manual positioning
+    // (Mapbox Markers with the "standard" style have positioning bugs)
+    const container = document.createElement("div");
+    container.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;";
+    map.getContainer().appendChild(container);
+
     let currentSize = sizeForZoom(map.getZoom());
+    const markerEls: { el: HTMLElement; coords: [number, number] }[] = [];
 
-    // Build all markers for visible regions
-    function rebuildMarkers() {
-      for (const m of markersRef.current) m.remove();
-      markersRef.current = [];
-
+    // Position all marker elements using map.project()
+    function updatePositions() {
       if (!map) return;
-      const bounds = map.getBounds();
+      for (const { el, coords } of markerEls) {
+        const point = map.project(coords as mapboxgl.LngLatLike);
+        el.style.transform = `translate(${point.x}px, ${point.y}px) translate(-50%, -50%)`;
+      }
+    }
+
+    function rebuildMarkers() {
+      if (!map) return;
+      // Clear existing
+      markerEls.length = 0;
+      container.innerHTML = "";
+
       const size = sizeForZoom(map.getZoom());
       currentSize = size;
 
@@ -563,46 +578,43 @@ export function FlavorGenomeLayer({ active, mapRef }: Props) {
         const coords = REGION_CITIES[profile.region];
         if (!coords) continue;
 
-        // Only create markers for regions within or near the visible viewport
-        // (with generous padding so they don't pop in/out at edges)
-        const lng = coords[0];
-        const lat = coords[1];
-        const pad = 30; // degrees padding
-        if (bounds && (
-          lng < bounds.getWest() - pad || lng > bounds.getEast() + pad ||
-          lat < bounds.getSouth() - pad || lat > bounds.getNorth() + pad
-        )) continue;
-
         const el = buildMarkerEl(profile, size);
+        el.style.position = "absolute";
+        el.style.top = "0";
+        el.style.left = "0";
+        el.style.pointerEvents = "auto";
+
         el.addEventListener("click", (e) => {
           e.stopPropagation();
           handleMarkerClick(profile);
-          map.flyTo({ center: coords, zoom: 6, duration: 1200 });
+          map!.flyTo({ center: coords, zoom: 6, duration: 1200 });
         });
 
-        const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-          .setLngLat(coords)
-          .addTo(map);
-        markersRef.current.push(marker);
+        container.appendChild(el);
+        markerEls.push({ el, coords });
       }
+
+      updatePositions();
     }
 
     rebuildMarkers();
 
-    // Rebuild on zoom (size changes) and moveend (viewport changes)
-    let rebuildTimeout: ReturnType<typeof setTimeout>;
-    const onViewChange = () => {
-      clearTimeout(rebuildTimeout);
-      rebuildTimeout = setTimeout(rebuildMarkers, 150);
+    // Reposition on every render frame (pan, zoom, rotate)
+    const onRender = () => updatePositions();
+    map.on("render", onRender);
+
+    // Rebuild on zoom change (marker size changes)
+    const onZoom = () => {
+      const newSize = sizeForZoom(map!.getZoom());
+      if (newSize !== currentSize) rebuildMarkers();
     };
-    map.on("zoom", onViewChange);
-    map.on("moveend", onViewChange);
+    map.on("zoomend", onZoom);
 
     return () => {
-      clearTimeout(rebuildTimeout);
-      map.off("zoom", onViewChange);
-      map.off("moveend", onViewChange);
-      clearMarkers();
+      map!.off("render", onRender);
+      map!.off("zoomend", onZoom);
+      container.remove();
+      markerEls.length = 0;
     };
   }, [active, mapReady, mapRef, clearMarkers, handleMarkerClick]);
 
