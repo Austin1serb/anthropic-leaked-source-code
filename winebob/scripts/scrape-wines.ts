@@ -305,12 +305,13 @@ async function scrapeWineSearcher(page: Page, query: string): Promise<Partial<Sc
 async function scrapeWineryWines(page: Page, wineryQuery: string, maxWines: number): Promise<string[]> {
   console.log(`\n🏠 Discovering wines for: ${wineryQuery}`);
 
-  // Search Wine-Searcher for the producer
+  // Strategy 1: Search Wine-Searcher for the producer name
+  // This usually lands on the producer's main wine, which has vintage tabs
   const searchUrl = `${WINE_SEARCHER_BASE}/find/${encodeURIComponent(wineryQuery.replace(/ /g, "+"))}`;
 
   try {
     await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
-    await delay(2000);
+    await delay(3000); // extra wait for JS rendering
   } catch {
     console.log(`  ✗ Failed to load search page`);
     return [];
@@ -319,63 +320,91 @@ async function scrapeWineryWines(page: Page, wineryQuery: string, maxWines: numb
   // Accept cookies
   try {
     const cookieBtn = page.locator('button:has-text("Accept"), button:has-text("Continue")').first();
-    if (await cookieBtn.isVisible({ timeout: 1000 })) await cookieBtn.click();
+    if (await cookieBtn.isVisible({ timeout: 2000 })) {
+      await cookieBtn.click();
+      await delay(1000);
+    }
   } catch { /* ok */ }
 
-  // Look for the winery/merchant page link
-  const merchantLink = await page.locator('a[href*="/merchant/"]').first().getAttribute("href").catch(() => null);
-  const wineryName = await page.locator('a[href*="/merchant/"]').first().textContent().catch(() => wineryQuery);
-
-  if (merchantLink) {
-    console.log(`  🔗 Found winery page: ${wineryName?.trim()}`);
-    const wineryUrl = merchantLink.startsWith("http") ? merchantLink : `${WINE_SEARCHER_BASE}${merchantLink}`;
-
-    try {
-      await page.goto(wineryUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
-      await delay(2000);
-    } catch {
-      console.log(`  ✗ Failed to load winery page`);
-      return [];
-    }
-  }
-
-  // Collect wine names from the page
-  const wineLinks: string[] = [];
-  const links = await page.locator('a[href*="/find/"]').allTextContents().catch(() => [] as string[]);
-
+  const wineNames: string[] = [];
   const seen = new Set<string>();
-  for (const text of links) {
-    const cleaned = text.trim();
-    // Filter for actual wine names: has vintage year or is a known wine format
-    if (cleaned.length > 8 && cleaned.length < 100
-      && (cleaned.match(/\b(19|20)\d{2}\b/) || cleaned.match(/\b(?:DOCG|DOC|AOC|AVA|Grand Cru|Premier Cru)\b/i))
-      && !cleaned.includes("Search") && !cleaned.includes("Home")
-      && !cleaned.includes("Region") && !cleaned.includes("Grape")
-      && !seen.has(cleaned)) {
-      seen.add(cleaned);
-      wineLinks.push(cleaned);
-    }
-  }
 
-  // Also try vintage tabs — each vintage is a separate wine we can scrape
-  if (wineLinks.length === 0) {
-    const vintages = await page.locator('a:has-text("20"), a:has-text("19")').allTextContents().catch(() => [] as string[]);
-    const baseWineName = await page.locator("h1").first().textContent().catch(() => "") || "";
-    for (const v of vintages) {
-      const year = v.trim();
-      if (year.match(/^(19|20)\d{2}$/) && !seen.has(year)) {
-        seen.add(year);
-        // Combine base wine name with vintage
-        const withVintage = baseWineName.replace(/^\d{4}\s*/, "").trim() + " " + year;
-        wineLinks.push(withVintage);
+  // Get the base wine name from h1 (e.g., "Gaja Barbaresco DOCG")
+  const h1 = await page.locator("h1").first().textContent().catch(() => null);
+  const baseWineName = h1?.replace(/^\d{4}\s*/, "").trim() || "";
+  console.log(`  🔗 Main wine: ${h1?.trim() || "–"}`);
+
+  // Strategy 2: Collect vintage tabs — each year is a wine we can scrape
+  // Wine-Searcher shows: All, 2023, 2022, 2021, ... 2009
+  const allLinks = await page.locator("a").allTextContents().catch(() => [] as string[]);
+  for (const text of allLinks) {
+    const year = text.trim();
+    if (year.match(/^(19|20)\d{2}$/) && !seen.has(year)) {
+      seen.add(year);
+      if (baseWineName) {
+        wineNames.push(`${baseWineName} ${year}`);
       }
     }
   }
+  if (wineNames.length > 0) {
+    console.log(`  📅 Found ${wineNames.length} vintages for "${baseWineName}"`);
+  }
 
-  const limited = wineLinks.slice(0, maxWines);
-  console.log(`  📦 Found ${wineLinks.length} wines, will scrape ${limited.length}`);
+  // Strategy 3: Look for "other wines" or related wines from the same producer
+  // Check for links that contain the producer name
+  const producerLower = wineryQuery.toLowerCase();
+  const findLinks = await page.locator('a[href*="/find/"]').all();
+  for (const link of findLinks) {
+    const text = (await link.textContent().catch(() => ""))?.trim() || "";
+    const href = (await link.getAttribute("href").catch(() => "")) || "";
+
+    // Must look like a wine name (not navigation)
+    if (text.length > 5 && text.length < 100
+      && (text.toLowerCase().includes(producerLower) || href.toLowerCase().includes(producerLower.replace(/ /g, "+")))
+      && !text.includes("Search") && !text.includes("Home")
+      && !text.includes("Region") && !text.includes("Grape")
+      && !text.includes("See all") && !text.includes("Find")
+      && !seen.has(text)) {
+      seen.add(text);
+      wineNames.push(text);
+    }
+  }
+
+  // Strategy 4: Try the merchant/winery page for a wine list
+  const merchantLink = await page.locator('a[href*="/merchant/"]').first().getAttribute("href").catch(() => null);
+  if (merchantLink) {
+    const wineryUrl = merchantLink.startsWith("http") ? merchantLink : `${WINE_SEARCHER_BASE}${merchantLink}`;
+    console.log(`  🏭 Checking winery page: ${wineryUrl}`);
+
+    try {
+      await page.goto(wineryUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await delay(3000);
+
+      // Look for wine links on the winery page
+      const wineryLinks = await page.locator('a[href*="/find/"]').all();
+      for (const link of wineryLinks) {
+        const text = (await link.textContent().catch(() => ""))?.trim() || "";
+        if (text.length > 8 && text.length < 100
+          && !text.includes("Search") && !text.includes("Home")
+          && !text.includes("Region") && !text.includes("Grape")
+          && !seen.has(text)) {
+          seen.add(text);
+          wineNames.push(text);
+        }
+      }
+    } catch {
+      console.log(`  ⚠ Could not load winery page`);
+    }
+  }
+
+  // Deduplicate and limit
+  const unique = [...new Set(wineNames)];
+  const limited = unique.slice(0, maxWines);
+
+  console.log(`  📦 Total: ${unique.length} wines found, will scrape ${limited.length}`);
   if (limited.length > 0) {
-    console.log(`     ${limited.slice(0, 5).join("\n     ")}${limited.length > 5 ? "\n     ..." : ""}`);
+    for (const w of limited.slice(0, 8)) console.log(`     • ${w}`);
+    if (limited.length > 8) console.log(`     ... and ${limited.length - 8} more`);
   }
 
   return limited;
