@@ -264,7 +264,7 @@ async function main() {
 
   // Link wines to wineries by matching producer name → winery name
   console.log("Linking wines to wineries...");
-  const linkResult = await sql`
+  await sql`
     UPDATE "Wine" w
     SET "wineryId" = wy.id
     FROM "Winery" wy
@@ -272,7 +272,10 @@ async function main() {
       AND w.country = wy.country
       AND w."wineryId" IS NULL
   `;
-  console.log(`  Done: linked ${linkResult?.length ?? "?"} wines to wineries.\n`);
+  const linked = await sql`
+    SELECT COUNT(*) as count FROM "Wine" WHERE "wineryId" IS NOT NULL
+  `;
+  console.log(`  Done: ${linked[0]?.count ?? 0} wines now linked to wineries.\n`);
 
   // Update producer wine counts
   console.log("Updating producer wine counts...");
