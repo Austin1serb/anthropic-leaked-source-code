@@ -214,7 +214,7 @@ export default async function ProfilePage() {
                       {fav.wine.name}
                     </p>
                     <p className="text-[11px] text-muted mt-0.5 truncate">
-                      {fav.wine.producer} · {fav.wine.region}
+                      {[fav.wine.producer, fav.wine.region].filter(Boolean).join(" · ")}
                     </p>
                     {fav.rating != null && (
                       <div className="flex items-center gap-1 mt-1.5">
@@ -373,7 +373,7 @@ export default async function ProfilePage() {
                       {item.wine.name}
                     </p>
                     <p className="text-[11px] text-muted mt-0.5 truncate">
-                      {item.wine.producer} · {item.wine.region}
+                      {[item.wine.producer, item.wine.region].filter(Boolean).join(" · ")}
                     </p>
                   </div>
                 </div>

@@ -175,3 +175,75 @@ export async function trackProducerFollow(
     metadata: { producerName },
   }).catch(() => {});
 }
+
+// ============ ENHANCED TRACKING WRAPPERS ============
+
+export async function trackPageView(
+  userId: string | null,
+  path: string,
+  referrer?: string,
+  sessionId?: string
+): Promise<void> {
+  trackEvent({
+    eventType: "page_view",
+    userId,
+    metadata: { path, ...(referrer && { referrer }) },
+    sessionId,
+  }).catch(() => {});
+}
+
+export async function trackEngagement(
+  userId: string | null,
+  wineId: string | null,
+  action: string,
+  durationMs: number,
+  sessionId?: string
+): Promise<void> {
+  trackEvent({
+    eventType: "engagement",
+    userId,
+    wineId,
+    metadata: { action, durationMs },
+    sessionId,
+  }).catch(() => {});
+}
+
+export async function trackWineShare(
+  userId: string | null,
+  wineId: string,
+  platform: string
+): Promise<void> {
+  trackEvent({
+    eventType: "wine_share",
+    userId,
+    wineId,
+    metadata: { platform },
+  }).catch(() => {});
+}
+
+export async function trackPriceInteraction(
+  userId: string | null,
+  priceRange: string,
+  resultCount: number
+): Promise<void> {
+  trackEvent({
+    eventType: "price_filter",
+    userId,
+    metadata: { priceRange, resultCount },
+  }).catch(() => {});
+}
+
+export async function trackFunnelStep(
+  userId: string | null,
+  wineId: string | null,
+  step: string,
+  sessionId?: string
+): Promise<void> {
+  trackEvent({
+    eventType: "funnel_step",
+    userId,
+    wineId,
+    metadata: { step },
+    sessionId,
+  }).catch(() => {});
+}

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, Wine, Users, Globe, ArrowRight, Lock, Play, Square, Satellite, Map, CloudRain, Target, Radio, PenTool } from "lucide-react";
+import { Sparkles, Wine, Users, Globe, ArrowRight, Lock, Play, Square, Satellite, Map, CloudRain, Target, Radio, PenTool, Grape, Search } from "lucide-react";
+import { useSearch } from "@/components/shared/SearchContext";
 import { WineRegionMap, getRegionCities } from "@/components/shared/WineRegionMap";
 import type { TourStop } from "@/components/shared/WineRegionMap";
 import { TourInfoCard } from "@/components/shared/TourInfoCard";
@@ -23,8 +24,27 @@ const LAYER_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function ExplorePage() {
-  const { layers, toggle, isActive } = useMapLayers();
+  const { openSearch } = useSearch();
+  const { layers, toggle: rawToggle, isActive } = useMapLayers();
   const fullLayers: MapLayer[] = layers.map((l) => ({ ...l, icon: LAYER_ICONS[l.id] ?? null }));
+
+  function toggle(layerId: string) {
+    const wasActive = isActive(layerId);
+    rawToggle(layerId);
+    // Track layer toggle
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        events: [{
+          eventType: "layer_toggle",
+          metadata: { layerName: layerId, enabled: !wasActive },
+          sessionId: typeof window !== "undefined" ? sessionStorage.getItem("wb_session_id") : undefined,
+        }],
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  }
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
@@ -44,6 +64,19 @@ export default function ExplorePage() {
     setActiveCity(null);
     setFlyToCoords(null);
     setTourRegion(null);
+    // Track region exploration
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        events: [{
+          eventType: "region_explore",
+          metadata: { region, country: "" },
+          sessionId: typeof window !== "undefined" ? sessionStorage.getItem("wb_session_id") : undefined,
+        }],
+      }),
+      keepalive: true,
+    }).catch(() => {});
   }
 
   function handleWorldView() {
@@ -105,26 +138,27 @@ export default function ExplorePage() {
         mapRef={mapRef}
       />
 
-      {/* Top — branding + back */}
+      {/* Top — branding + search + back */}
       <div className="absolute top-0 left-0 right-0 z-20 safe-top">
-        <div className="px-4 pt-3 flex items-center justify-between">
+        <div className="px-4 pt-3 flex items-center justify-between gap-2">
           <Link
             href="/"
-            className="h-10 px-3 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 text-[12px] font-semibold active:scale-95 transition-transform"
+            className="h-10 px-3 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 text-[12px] font-semibold active:scale-95 transition-transform flex-shrink-0"
           >
             ← Back
           </Link>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-[10px] bg-cherry flex items-center justify-center">
-              <Wine className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-[15px] font-bold text-[#1A1412]" style={{ fontFamily: "var(--font-serif, Georgia, serif)" }}>
-              Winebob
-            </span>
-          </div>
+          {/* Search bar trigger */}
+          <button
+            onClick={openSearch}
+            className="flex-1 max-w-xs flex items-center h-10 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] px-3 gap-2 active:scale-[0.98] transition-transform"
+          >
+            <Grape className="h-3.5 w-3.5 text-[#E8A08A] flex-shrink-0" />
+            <span className="text-[12px] text-white/30 truncate">Search wines, regions...</span>
+            <Search className="h-3 w-3 text-white/20 flex-shrink-0 ml-auto" />
+          </button>
           <button
             onClick={() => setSatellite((s) => !s)}
-            className="h-10 px-3 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 text-[12px] font-semibold active:scale-95 transition-transform"
+            className="h-10 px-3 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.08] flex items-center gap-1.5 text-white/70 text-[12px] font-semibold active:scale-95 transition-transform flex-shrink-0"
           >
             {satellite ? <Map className="h-4 w-4" /> : <Satellite className="h-4 w-4" />}
             {satellite ? "Map" : "Satellite"}

@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AuthProvider } from "@/lib/AuthProvider";
 import { UniversePortal } from "@/components/shared/UniversePortal";
+import { SearchProvider } from "@/components/shared/SearchContext";
+import { SmartSearchOverlay } from "@/components/shared/SmartSearchOverlay";
+import { BottomTabBar } from "@/components/shared/BottomTabBar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,8 +38,14 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          {children}
+          <SearchProvider>
+            {children}
+            <SmartSearchOverlay />
+            <BottomTabBar />
+          </SearchProvider>
           <UniversePortal />
+          <Analytics />
+          <SpeedInsights />
         </AuthProvider>
       </body>
     </html>
