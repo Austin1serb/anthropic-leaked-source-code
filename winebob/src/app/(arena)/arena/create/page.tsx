@@ -362,6 +362,13 @@ function CreateEventInner() {
 
   // ============ STEP 1: CHOOSE STARTING POINT ============
 
+  const DIFFICULTY_BADGE: Record<string, { label: string; bg: string; text: string }> = {
+    beginner: { label: "Beginner", bg: "bg-emerald-50", text: "text-emerald-700" },
+    intermediate: { label: "Intermediate", bg: "bg-amber-50", text: "text-amber-700" },
+    advanced: { label: "Advanced", bg: "bg-red-50", text: "text-red-700" },
+    master: { label: "Master", bg: "bg-purple-50", text: "text-purple-700" },
+  };
+
   function renderStep1() {
     return (
       <div className="animate-fade-in-up">
@@ -372,47 +379,54 @@ function CreateEventInner() {
           Start from scratch or pick a template.
         </p>
 
-        {/* From scratch */}
+        {/* ── From scratch — hero card with cherry accent ── */}
         <button
           onClick={() => {
             setSelectedTemplateId(null);
             setStep(2);
           }}
-          className="touch-target w-full flex items-center gap-4 p-5 mb-6 active:scale-[0.98] transition-transform bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)]"
+          className="touch-target group w-full flex items-center gap-5 p-6 mb-8 active:scale-[0.98] transition-all bg-white border-2 border-cherry/15 rounded-[14px] hover:border-cherry/30 hover:shadow-[0_4px_16px_rgba(116,7,14,0.08)]"
         >
-          <div className="h-14 w-14 rounded-[16px] bg-cherry/10 flex items-center justify-center flex-shrink-0">
-            <Plus className="h-6 w-6 text-cherry" />
+          <div className="h-14 w-14 rounded-[12px] bg-cherry flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Plus className="h-6 w-6 text-white" />
           </div>
           <div className="text-left flex-1">
-            <p className="font-bold text-[16px] text-foreground">
+            <p className="font-bold text-[17px] text-foreground tracking-tight">
               Start from scratch
             </p>
-            <p className="text-[13px] text-muted mt-0.5">
-              Full control over every detail
+            <p className="text-[13px] text-muted mt-1 leading-relaxed">
+              Full control — choose wines, set rules, and host your way.
             </p>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted/40" />
+          <ChevronRight className="h-5 w-5 text-cherry/40 group-hover:text-cherry transition-colors flex-shrink-0" />
         </button>
 
+        {/* ── Templates section ── */}
         {templatesLoading ? (
           <div className="flex justify-center py-16">
-            <div className="h-8 w-8 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
+            <div className="h-7 w-7 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
           </div>
         ) : templates.length > 0 ? (
           <>
-            <h2 className="text-[11px] font-bold text-muted uppercase tracking-wide mb-4">
-              Templates
-            </h2>
-            <div className="space-y-3 stagger-children">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-card-border/60" />
+              <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest px-1">
+                Or use a template
+              </h2>
+              <div className="h-px flex-1 bg-card-border/60" />
+            </div>
+
+            <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden divide-y divide-card-border/40">
               {templates.map((tmpl, i) => {
-                const color = [
-                  "bg-widget-wine", "bg-widget-gold", "bg-widget-sage",
-                  "bg-widget-sky", "bg-widget-lavender", "bg-widget-peach",
+                const iconBg = [
+                  "bg-cherry/8", "bg-amber-500/8", "bg-emerald-600/8",
+                  "bg-blue-500/8", "bg-purple-500/8", "bg-orange-500/8",
                 ][i % 6];
                 const iconColor = [
-                  "text-cherry", "text-amber-700", "text-emerald-700",
+                  "text-cherry", "text-amber-600", "text-emerald-600",
                   "text-blue-600", "text-purple-600", "text-orange-600",
                 ][i % 6];
+                const diff = DIFFICULTY_BADGE[tmpl.difficulty] || DIFFICULTY_BADGE.intermediate;
 
                 return (
                   <button
@@ -421,37 +435,30 @@ function CreateEventInner() {
                       applyTemplate(tmpl);
                       setStep(2);
                     }}
-                    className="touch-target w-full text-left p-4 active:scale-[0.98] transition-transform bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)]"
+                    className="touch-target group w-full text-left px-5 py-4 flex items-center gap-4 hover:bg-butter/60 active:bg-butter transition-colors"
                   >
-                    <div className="flex items-center gap-3.5">
-                      <div className={`h-12 w-12 rounded-[16px] ${color} flex items-center justify-center flex-shrink-0`}>
-                        <Wine className={`h-5 w-5 ${iconColor}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-[15px] text-foreground leading-tight line-clamp-1">
-                          {tmpl.name}
-                        </h3>
-                        {tmpl.description && (
-                          <p className="mt-1 text-[12px] text-muted line-clamp-1 leading-relaxed">
-                            {tmpl.description}
-                          </p>
-                        )}
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[11px] font-semibold text-muted nums">
-                            {tmpl.wineCount} wines
-                          </span>
-                          <span className="text-muted/30">&middot;</span>
-                          <span className={`text-[11px] font-semibold capitalize ${
-                            tmpl.difficulty === "beginner" ? "text-emerald-600" :
-                            tmpl.difficulty === "intermediate" ? "text-amber-600" :
-                            tmpl.difficulty === "advanced" ? "text-red-600" : "text-purple-600"
-                          }`}>
-                            {tmpl.difficulty}
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted/30 flex-shrink-0" />
+                    <div className={`h-11 w-11 rounded-[10px] ${iconBg} flex items-center justify-center flex-shrink-0`}>
+                      <Wine className={`h-5 w-5 ${iconColor}`} />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-[15px] text-foreground leading-tight line-clamp-1">
+                        {tmpl.name}
+                      </h3>
+                      {tmpl.description && (
+                        <p className="mt-0.5 text-[12px] text-muted line-clamp-1 leading-relaxed">
+                          {tmpl.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-[11px] font-semibold text-muted/70 nums">
+                        {tmpl.wineCount} wines
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diff.bg} ${diff.text}`}>
+                        {diff.label}
+                      </span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted/30 group-hover:text-muted/60 transition-colors flex-shrink-0" />
                   </button>
                 );
               })}
