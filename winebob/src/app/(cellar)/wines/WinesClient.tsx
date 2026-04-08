@@ -324,7 +324,7 @@ export function WinesClient({
       </div>
 
       {/* Bottom bar: filter pills OR city hopping pills */}
-      <div className="hidden lg:block absolute bottom-4 left-4 z-20" style={{ right: "calc(400px + 1rem)" }}>
+      <div className="hidden lg:block absolute bottom-4 left-4 right-4 z-20">
         {exploreRegion ? (
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
             <button
@@ -366,40 +366,22 @@ export function WinesClient({
       </div>
 
       {/* Floating add button (desktop) */}
-      <div className="hidden lg:flex absolute z-20 flex-col gap-2" style={{ right: "calc(400px + 1rem)", top: "50%", transform: "translateY(-50%)" }}>
+      <div className="hidden lg:flex absolute z-20 flex-col gap-2" style={{ right: "1rem", top: "50%", transform: "translateY(-50%)" }}>
         <Link href="/wines/add" className="h-10 w-10 rounded-[12px] bg-[#1A1412]/70 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center text-white/50 shadow-[0_2px_12px_rgba(0,0,0,0.15)] active:scale-90 transition-transform" title="Add wine">
           <Plus className="h-4 w-4" />
         </Link>
       </div>
 
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex absolute top-0 right-0 bottom-0 w-[400px] xl:w-[440px] flex-col bg-background border-l border-card-border/40 z-20">
-        <div className="px-5 pt-5 pb-3 border-b border-card-border/40">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[17px] font-bold text-foreground tracking-tight" style={{ fontFamily: "var(--font-serif, Georgia, serif)" }}>
-              {activeSearch || "All Wines"}
-            </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold text-muted bg-muted/[0.08] px-2 py-0.5 rounded-[5px]">{total}</span>
-              {hasFilters && <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <select value={activeCountry ?? ""} onChange={(e) => nav({ country: e.target.value || undefined })} className="input-field flex-1 text-[11px] py-2">
-              <option value="">All countries</option>
-              {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <select value={activePriceRange ?? ""} onChange={(e) => nav({ priceRange: e.target.value || undefined })} className="input-field flex-1 text-[11px] py-2">
-              <option value="">Any price</option>
-              <option value="budget">Budget</option><option value="mid">Mid-range</option>
-              <option value="premium">Premium</option><option value="luxury">Luxury</option>
-            </select>
+      {/* Wine count badge — shown when exploring a region */}
+      {exploreRegion && (
+        <div className="hidden lg:flex absolute top-4 right-4 z-20">
+          <div className="flex items-center gap-2 h-10 px-4 rounded-[12px] bg-[#1A1412]/75 backdrop-blur-xl border border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+            <Wine className="h-4 w-4 text-cherry" />
+            <span className="text-[13px] font-bold text-white">{regionCounts?.[exploreRegion] ?? 0} wines</span>
+            <span className="text-[11px] text-white/40">in {exploreRegion}</span>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          <WineList />
-        </div>
-      </div>
+      )}
 
       {/* ═══ MOBILE (<lg) overlays ═══ */}
       {/* Top: search + add */}
@@ -460,53 +442,16 @@ export function WinesClient({
         </div>
       </div>
 
-      {/* Mobile bottom sheet */}
-      <div
-        ref={sheetRef}
-        className="lg:hidden absolute left-0 right-0 bottom-0 z-30 will-change-transform"
-        style={{
-          height: SHEET_HEIGHT,
-          transform: `translateY(${SHEET_TRANSLATE[sheet]})`,
-          transition: "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
-        }}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
-        <div className="h-full flex flex-col bg-background rounded-t-[16px] shadow-[0_-4px_20px_rgba(0,0,0,0.1)] border-t border-card-border/30">
-          {/* Drag handle */}
-          <div className="flex items-center justify-center py-2.5 touch-target" onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "half")}>
-            <div className="w-9 h-[3px] rounded-full bg-muted/20" />
+      {/* Mobile wine count badge — shown when exploring a region */}
+      {exploreRegion && (
+        <div className="lg:hidden absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
+          <div className="flex items-center gap-2 h-9 px-4 rounded-[10px] bg-[#1A1412]/75 backdrop-blur-xl border border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+            <Wine className="h-3.5 w-3.5 text-cherry" />
+            <span className="text-[12px] font-bold text-white">{regionCounts?.[exploreRegion] ?? 0} wines</span>
+            <span className="text-[10px] text-white/40">in {exploreRegion}</span>
           </div>
-
-          {sheet !== "peek" && (
-            /* ── Half / Full: wine list ── */
-            <>
-              <div className="px-4 flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[16px] font-bold text-foreground tracking-tight">
-                    {exploreRegion || activeSearch || "All Wines"}
-                  </h2>
-                  <span className="text-[10px] font-bold text-muted bg-muted/[0.08] px-1.5 py-0.5 rounded-[4px]">{total}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {exploreRegion && (
-                    <button onClick={confirmExplore} className="text-[11px] font-semibold text-white bg-cherry px-3 py-1 rounded-[8px]">
-                      View wines →
-                    </button>
-                  )}
-                  {hasFilters && !exploreRegion && (
-                    <button onClick={() => router.push("/wines")} className="text-[11px] font-semibold text-cherry">Clear</button>
-                  )}
-                  <button onClick={() => setSheet("peek")}><ChevronDown className="h-4 w-4 text-muted/30" /></button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto pb-24">
-                <WineList />
-              </div>
-            </>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

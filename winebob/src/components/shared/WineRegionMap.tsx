@@ -350,6 +350,45 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       } as mapboxgl.LayerSpecification);
     }
 
+    // Wine sub-city labels — our own city names from REGION_SUB_CITIES
+    if (!m.getSource("wine-subcities")) {
+      const subcityFeatures: GeoJSON.Feature[] = [];
+      for (const [, cities] of Object.entries(REGION_SUB_CITIES)) {
+        for (const city of cities) {
+          subcityFeatures.push({
+            type: "Feature",
+            properties: { name: city.name },
+            geometry: { type: "Point", coordinates: city.coords },
+          });
+        }
+      }
+      m.addSource("wine-subcities", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: subcityFeatures },
+      });
+    }
+
+    if (!m.getLayer("wine-subcity-label")) {
+      m.addLayer({
+        id: "wine-subcity-label", type: "symbol", slot: "top", source: "wine-subcities",
+        minzoom: 9,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 9, 10, 12, 13, 14, 15],
+          "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+          "text-allow-overlap": false,
+          "text-padding": 8,
+        },
+        paint: {
+          "text-color": "#3A3025",
+          "text-opacity": ["interpolate", ["linear"], ["zoom"], 9, 0.5, 11, 0.8, 13, 1],
+          "text-halo-color": "#FFFFFF",
+          "text-halo-width": 2,
+          "text-emissive-strength": 1.0,
+        },
+      } as mapboxgl.LayerSpecification);
+    }
+
     // Add our own streets vector source — Standard's "composite" doesn't reliably
     // expose poi_label for custom layers. We add mapbox-streets-v8 explicitly.
     if (!m.getSource("wb-streets")) {
@@ -361,13 +400,13 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
 
     // POI layers (top slot — must be above Standard's buildings/roads to be visible)
     const poiDefs: { id: string; cls: string; color: string; rank: number }[] = [
-      { id: "poi-food", cls: "food_and_drink", color: "#74070E", rank: 3 },
-      { id: "poi-hotel", cls: "lodging", color: "#8B6914", rank: 3 },
-      { id: "poi-shops", cls: "food_and_drink_stores", color: "#6B3A2A", rank: 3 },
+      { id: "poi-food", cls: "food_and_drink", color: "#A08060", rank: 3 },
+      { id: "poi-hotel", cls: "lodging", color: "#7A7A50", rank: 3 },
+      { id: "poi-shops", cls: "food_and_drink_stores", color: "#8C7E6E", rank: 3 },
     ];
     const labelDefs: { id: string; cls: string; color: string; rank: number }[] = [
-      { id: "poi-food-label", cls: "food_and_drink", color: "#5A0408", rank: 2 },
-      { id: "poi-hotel-label", cls: "lodging", color: "#6B5010", rank: 2 },
+      { id: "poi-food-label", cls: "food_and_drink", color: "#8A7060", rank: 2 },
+      { id: "poi-hotel-label", cls: "lodging", color: "#6A6A45", rank: 2 },
     ];
 
     for (const d of poiDefs) {
@@ -375,15 +414,15 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       m.addLayer({
         id: d.id, type: "circle", slot: "top", source: "wb-streets", "source-layer": "poi_label",
         filter: ["all", ["==", ["get", "class"], d.cls], ["<=", ["get", "filterrank"], d.rank]],
-        minzoom: 8,
+        minzoom: 10,
         paint: {
           "circle-color": d.color,
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 4, 10, 7, 12, 9, 14, 12],
-          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.7, 10, 0.9, 12, 1],
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2, 12, 4, 14, 6, 16, 8],
+          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0.3, 12, 0.45, 14, 0.6],
           "circle-stroke-color": "#FFFFFF",
-          "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 8, 1.5, 10, 2, 12, 2.5],
-          "circle-stroke-opacity": 1,
-          "circle-emissive-strength": 1.0,
+          "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 12, 1, 14, 1.5],
+          "circle-stroke-opacity": 0.6,
+          "circle-emissive-strength": 0.5,
         },
       } as mapboxgl.LayerSpecification);
     }
@@ -393,17 +432,17 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       m.addLayer({
         id: d.id, type: "symbol", slot: "top", source: "wb-streets", "source-layer": "poi_label",
         filter: ["all", ["==", ["get", "class"], d.cls], ["<=", ["get", "filterrank"], d.rank]],
-        minzoom: 10,
+        minzoom: 13,
         layout: {
           "text-field": ["get", "name"],
-          "text-size": ["interpolate", ["linear"], ["zoom"], 10, 11, 14, 14],
-          "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
-          "text-offset": [0, 1.4], "text-anchor": "top", "text-allow-overlap": false,
+          "text-size": ["interpolate", ["linear"], ["zoom"], 13, 9, 15, 12],
+          "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+          "text-offset": [0, 1.2], "text-anchor": "top", "text-allow-overlap": false,
         },
         paint: {
           "text-color": d.color,
-          "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0.8, 12, 1],
-          "text-halo-color": "#FFFFFF", "text-halo-width": 2, "text-emissive-strength": 1.0,
+          "text-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 15, 0.7],
+          "text-halo-color": "#FFFFFF", "text-halo-width": 1.5, "text-emissive-strength": 0.5,
         },
       } as mapboxgl.LayerSpecification);
     }
@@ -429,7 +468,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
           lightPreset: "dawn",
           showPointOfInterestLabels: false,  // We render our own wine-relevant POIs
           showRoadLabels: false,             // Remove road number clutter
-          showPlaceLabels: true,             // Keep country/city names for orientation
+          showPlaceLabels: false,            // Hide default city labels — we add our own wine-region cities
           showTransitLabels: false,
         },
       } as Record<string, Record<string, unknown>>,
@@ -535,70 +574,77 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         features: mockWineries.map((w, i) => ({
           type: "Feature" as const,
           id: i,
-          properties: { name: w.name, slug: w.slug, description: w.description, region: w.region, country: w.country, featured: w.featured, founded: w.founded },
+          properties: {
+            name: w.name, slug: w.slug, description: w.description,
+            region: w.region, country: w.country, featured: w.featured, founded: w.founded,
+            owner: w.owner, grapeVarieties: JSON.stringify(w.grapeVarieties),
+            wineStyles: JSON.stringify(w.wineStyles), vineyardSize: w.vineyardSize,
+            annualBottles: w.annualBottles,
+          },
           geometry: { type: "Point" as const, coordinates: [w.lng, w.lat] },
         })),
       };
 
       map.current.addSource("wineries", { type: "geojson", data: wineryGeoJSON });
 
-      // Featured wineries — gold, larger
+      // Featured wineries — gold, large and prominent (hero markers)
       map.current.addLayer({
         id: "wineries-featured",
         type: "circle",
         source: "wineries",
         filter: ["==", ["get", "featured"], true],
-        minzoom: 5,
+        minzoom: 4,
         paint: {
           "circle-color": "#C8A255",
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 4, 8, 7, 12, 10],
-          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0.6, 8, 0.9],
-          "circle-stroke-color": "#FFFFFF",
-          "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 12, 2],
-          "circle-stroke-opacity": 0.8,
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 7, 10, 10, 15, 13, 20],
+          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0.7, 7, 0.9, 10, 1],
+          "circle-stroke-color": "#74070E",
+          "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 4, 1.5, 10, 2.5, 13, 3],
+          "circle-stroke-opacity": 0.9,
         },
       });
 
-      // Regular wineries — cherry, smaller
+      // Regular wineries — cherry, medium sized
       map.current.addLayer({
         id: "wineries-regular",
         type: "circle",
         source: "wineries",
         filter: ["==", ["get", "featured"], false],
-        minzoom: 7,
+        minzoom: 6,
         paint: {
           "circle-color": "#74070E",
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 3, 12, 6],
-          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.4, 10, 0.7],
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 4, 9, 8, 12, 14],
+          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0.6, 9, 0.85, 12, 1],
           "circle-stroke-color": "#FFFFFF",
-          "circle-stroke-width": 1,
-          "circle-stroke-opacity": 0.5,
+          "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 6, 1, 10, 2, 13, 2.5],
+          "circle-stroke-opacity": 0.9,
         },
       });
 
-      // Winery labels
+      // Winery labels — more prominent, visible earlier
       map.current.addLayer({
         id: "wineries-label",
         type: "symbol",
         source: "wineries",
-        minzoom: 8,
+        minzoom: 7,
         layout: {
           "text-field": ["get", "name"],
-          "text-size": ["interpolate", ["linear"], ["zoom"], 8, 9, 12, 12],
-          "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 7, 10, 10, 13, 13, 15],
+          "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
           "text-offset": [0, 1.5],
           "text-anchor": "top",
           "text-allow-overlap": false,
         },
         paint: {
-          "text-color": ["case", ["==", ["get", "featured"], true], "#8B6A20", "#5A3020"],
-          "text-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 10, 0.8],
-          "text-halo-color": "#F0E4CC",
-          "text-halo-width": 1.5,
+          "text-color": ["case", ["==", ["get", "featured"], true], "#6B5010", "#4A1A08"],
+          "text-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.6, 9, 0.85, 11, 1],
+          "text-halo-color": "#FFFFFF",
+          "text-halo-width": 2,
+          "text-emissive-strength": 1.0,
         },
       });
 
-      // Winery click
+      // Winery click — rich producer card
       for (const layerId of ["wineries-featured", "wineries-regular"]) {
         map.current.on("mouseenter", layerId, () => { if (map.current) map.current.getCanvas().style.cursor = "pointer"; });
         map.current.on("mouseleave", layerId, () => { if (map.current) map.current.getCanvas().style.cursor = ""; popup.current?.remove(); });
@@ -606,17 +652,49 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
           if (!map.current || !e.features?.length) return;
           const p = e.features[0].properties as Record<string, any>;
           const isFeatured = p.featured === true || p.featured === "true";
+
+          // Parse JSON-encoded arrays
+          let grapes: string[] = [];
+          let styles: string[] = [];
+          try { grapes = JSON.parse(p.grapeVarieties || "[]"); } catch {}
+          try { styles = JSON.parse(p.wineStyles || "[]"); } catch {}
+
+          const styleColorMap: Record<string, string> = {
+            red: "#74070E", white: "#C8A255", rosé: "#C47080",
+            sparkling: "#B8A840", orange: "#C87840", fortified: "#8B4513",
+          };
+
+          const grapePills = grapes.map((g: string) =>
+            `<span style="display:inline-block;padding:2px 8px;border-radius:6px;background:#F5F0E8;color:#5A4A30;font-size:10px;font-weight:600">${g}</span>`
+          ).join(" ");
+
+          const styleDots = styles.map((s: string) =>
+            `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#6B5A40"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${styleColorMap[s] || '#8C7E6E'}"></span>${s}</span>`
+          ).join(" ");
+
+          const bottles = p.annualBottles ? `${(p.annualBottles / 1000).toFixed(0)}k bottles/yr` : "";
+          const vineyard = p.vineyardSize && p.vineyardSize !== "N/A" && p.vineyardSize !== "Multiple" ? p.vineyardSize : "";
+          const statsLine = [vineyard, bottles].filter(Boolean).join(" · ");
+
+          const searchName = encodeURIComponent(p.name);
+
           popup.current
             ?.setLngLat(e.lngLat)
             .setHTML(`
-              <div style="font-family:system-ui,sans-serif;max-width:220px">
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-                  <span style="font-size:14px">🏰</span>
-                  <p style="font-size:14px;font-weight:700;color:#1A1412;margin:0">${p.name}</p>
+              <div style="font-family:system-ui,sans-serif;max-width:300px;min-width:240px">
+                <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">
+                  <span style="font-size:18px;flex-shrink:0;margin-top:2px">🏰</span>
+                  <div style="flex:1;min-width:0">
+                    <p style="font-size:16px;font-weight:800;color:#1A1412;margin:0;font-family:Georgia,serif;line-height:1.2">${p.name}</p>
+                    <p style="font-size:11px;color:#8C7E6E;margin:3px 0 0">${p.region}, ${p.country}${p.founded ? ` · Est. ${p.founded}` : ""}${p.owner ? ` · ${p.owner}` : ""}</p>
+                  </div>
                 </div>
-                <p style="font-size:10px;color:#8C7E6E;margin:0 0 4px">${p.region}, ${p.country}${p.founded ? ` · Est. ${p.founded}` : ""}</p>
-                ${p.description ? `<p style="font-size:11px;color:#6B5A40;margin:0;line-height:1.4">${p.description}</p>` : ""}
-                ${isFeatured ? `<p style="font-size:10px;font-weight:600;color:#C8A255;margin:4px 0 0">★ Featured Winery</p>` : ""}
+                ${p.description ? `<p style="font-size:12px;color:#5A4A30;margin:0 0 8px;line-height:1.5">${p.description}</p>` : ""}
+                ${isFeatured ? `<p style="font-size:10px;font-weight:700;color:#C8A255;margin:0 0 8px;letter-spacing:0.03em">★ Featured Winery</p>` : ""}
+                ${grapes.length > 0 ? `<div style="margin-bottom:8px"><p style="font-size:9px;font-weight:700;color:#8C7E6E;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px">Grape Varieties</p><div style="display:flex;flex-wrap:wrap;gap:4px">${grapePills}</div></div>` : ""}
+                ${styles.length > 0 ? `<div style="margin-bottom:8px"><p style="font-size:9px;font-weight:700;color:#8C7E6E;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px">Wine Styles</p><div style="display:flex;flex-wrap:wrap;gap:8px">${styleDots}</div></div>` : ""}
+                ${statsLine ? `<p style="font-size:10px;color:#8C7E6E;margin:0 0 8px;padding-top:6px;border-top:1px solid #F0E8D8">${statsLine}</p>` : ""}
+                <a href="/wines?search=${searchName}" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#74070E;text-decoration:none;padding:6px 12px;border-radius:8px;background:rgba(116,7,14,0.08);margin-top:2px">View wines →</a>
               </div>
             `)
             .addTo(map.current!);
