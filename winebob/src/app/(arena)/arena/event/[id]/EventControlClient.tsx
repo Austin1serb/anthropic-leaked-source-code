@@ -23,12 +23,14 @@ import {
   Download,
   Share2,
   Link as LinkIcon,
+  MessageCircle,
 } from "lucide-react";
 import {
   updateEventStatus,
   advanceWine,
   revealWine,
   scoreEvent,
+  sendResultsToAllGuests,
 } from "@/lib/actions";
 import { decodeHtmlEntities } from "@/lib/importers/normalize";
 
@@ -518,15 +520,18 @@ export function EventControlClient({ event }: EventControlClientProps) {
           )}
 
           {event.status === "completed" && (
-            <div className="flex gap-3">
-              <Link href="/arena" className="btn-secondary flex-1 rounded-[12px] touch-target">
-                <ChevronLeft className="h-4 w-4" />
-                Dashboard
-              </Link>
-              <Link href="/arena/create" className="btn-primary flex-1 rounded-[12px] touch-target">
-                <Plus className="h-4 w-4" />
-                New Tasting
-              </Link>
+            <div className="space-y-3">
+              <WhatsAppBroadcastButton eventId={event.id} />
+              <div className="flex gap-3">
+                <Link href="/arena" className="btn-secondary flex-1 rounded-[12px] touch-target">
+                  <ChevronLeft className="h-4 w-4" />
+                  Dashboard
+                </Link>
+                <Link href="/arena/create" className="btn-primary flex-1 rounded-[12px] touch-target">
+                  <Plus className="h-4 w-4" />
+                  New Tasting
+                </Link>
+              </div>
             </div>
           )}
         </div>
@@ -599,5 +604,56 @@ export function EventControlClient({ event }: EventControlClientProps) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── WhatsApp broadcast button for host ──
+
+function WhatsAppBroadcastButton({ eventId }: { eventId: string }) {
+  const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
+  const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
+
+  const handleSend = async () => {
+    setStatus("sending");
+    try {
+      const res = await sendResultsToAllGuests(eventId);
+      setResult(res);
+      setStatus("done");
+    } catch {
+      setResult({ sent: 0, failed: 0, total: 0 });
+      setStatus("done");
+    }
+  };
+
+  if (status === "done" && result) {
+    if (result.total === 0) {
+      return (
+        <p className="text-sm text-muted text-center py-2">
+          No guests opted in for WhatsApp results
+        </p>
+      );
+    }
+    return (
+      <div className="text-sm text-center py-2 flex items-center justify-center gap-2">
+        <Check className="h-4 w-4 text-green-600" />
+        <span className="text-green-700 font-medium">
+          Sent to {result.sent} of {result.total} guest{result.total !== 1 ? "s" : ""}
+        </span>
+        {result.failed > 0 && (
+          <span className="text-red-600">({result.failed} failed)</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleSend}
+      disabled={status === "sending"}
+      className="btn-secondary w-full rounded-[12px] touch-target gap-2 border-2 border-green-600 text-green-700 font-semibold disabled:opacity-50"
+    >
+      <MessageCircle className="h-5 w-5" />
+      {status === "sending" ? "Sending..." : "Send Results via WhatsApp"}
+    </button>
   );
 }

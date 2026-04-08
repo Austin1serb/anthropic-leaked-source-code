@@ -17,6 +17,8 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?   // null = OAuth user, set = email/password user
+  phone         String?   // E.164 format for WhatsApp delivery
+  whatsappConsent Boolean @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -357,6 +359,11 @@ model GuestParticipant {
 
   // Optional: link to a real account if they sign up after
   userId        String?
+
+  // WhatsApp delivery
+  phone             String?   // E.164 format, e.g. "+33612345678"
+  whatsappConsent   Boolean   @default(false)
+  whatsappSentAt    DateTime? // last time results were sent via WhatsApp
 
   event         BlindTastingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
   guesses       BlindGuess[]

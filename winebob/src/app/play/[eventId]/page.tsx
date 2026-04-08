@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useEffect, useCallback, useRef } from "react";
-import { getEventById, submitGuess } from "@/lib/actions";
+import { getEventById, submitGuess, sendResultsViaWhatsApp } from "@/lib/actions";
 import { decodeHtmlEntities } from "@/lib/importers/normalize";
 import {
   Wine,
@@ -22,6 +22,7 @@ import {
   Tag,
   DollarSign,
   Search,
+  MessageCircle,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -1137,6 +1138,24 @@ function CompletedView({
   guestId: string;
   onShare: () => void;
 }) {
+  const [whatsappStatus, setWhatsappStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
+  const [whatsappError, setWhatsappError] = useState("");
+
+  const handleWhatsApp = async () => {
+    setWhatsappStatus("sending");
+    setWhatsappError("");
+    try {
+      await sendResultsViaWhatsApp(event.id, guestId);
+      setWhatsappStatus("sent");
+    } catch (err) {
+      setWhatsappError(
+        err instanceof Error ? err.message : "Failed to send"
+      );
+      setWhatsappStatus("error");
+    }
+  };
   const scoresByGuest = new Map<string, number>();
   for (const guess of event.guesses) {
     scoresByGuest.set(
@@ -1246,6 +1265,29 @@ function CompletedView({
             <Share2 className="h-5 w-5" />
             Share Results
           </button>
+
+          {/* WhatsApp button — only if guest opted in */}
+          {whatsappStatus === "sent" ? (
+            <div className="w-full text-center py-3 text-green-700 font-medium text-sm flex items-center justify-center gap-2">
+              <Check className="h-4 w-4" />
+              Results sent to your WhatsApp!
+            </div>
+          ) : (
+            <button
+              onClick={handleWhatsApp}
+              disabled={whatsappStatus === "sending"}
+              className="btn-secondary w-full touch-target gap-2 border-2 border-green-600 text-green-700 font-semibold disabled:opacity-50"
+            >
+              <MessageCircle className="h-5 w-5" />
+              {whatsappStatus === "sending"
+                ? "Sending..."
+                : "Send to WhatsApp"}
+            </button>
+          )}
+          {whatsappError && (
+            <p className="text-red-600 text-sm text-center">{whatsappError}</p>
+          )}
+
           <a
             href="/login"
             className="btn-primary block text-center touch-target"

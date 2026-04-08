@@ -10,6 +10,12 @@ import {
   trackWineFavorite,
   trackEvent,
 } from "@/lib/analytics";
+import {
+  sendTastingResults,
+  buildResultsUrl,
+  ordinal,
+  isValidE164,
+} from "@/lib/whatsapp";
 
 // ============ JOIN CODE GENERATION ============
 
@@ -188,6 +194,8 @@ export async function joinEvent(data: {
   locationLat?: number;
   locationLng?: number;
   consentGiven: boolean;
+  phone?: string;
+  whatsappConsent?: boolean;
 }) {
   const event = await prisma.blindTastingEvent.findUnique({
     where: { joinCode: data.joinCode.toUpperCase() },
@@ -201,6 +209,11 @@ export async function joinEvent(data: {
     throw new Error("This event has already ended.");
   }
 
+  // Validate phone if provided
+  if (data.phone && !isValidE164(data.phone)) {
+    throw new Error("Invalid phone number format. Use international format (e.g. +33612345678).");
+  }
+
   const guest = await prisma.guestParticipant.create({
     data: {
       eventId: event.id,
@@ -212,6 +225,8 @@ export async function joinEvent(data: {
       locationLng: data.locationLng,
       consentGiven: data.consentGiven,
       consentAt: data.consentGiven ? new Date() : null,
+      phone: data.phone || null,
+      whatsappConsent: data.whatsappConsent ?? false,
     },
   });
 
@@ -747,4 +762,101 @@ export async function getHostEvents() {
       guests: { select: { id: true } },
     },
   });
+}
+
+// ============ WHATSAPP: SEND RESULTS ============
+
+export async function sendResultsViaWhatsApp(eventId: string, guestId: string) {
+  // Fetch guest with their consent status
+  const guest = await prisma.guestParticipant.findFirst({
+    where: { id: guestId, eventId },
+  });
+
+  if (!guest) throw new Error("Guest not found");
+  if (!guest.phone) throw new Error("No phone number on file");
+  if (!guest.whatsappConsent) throw new Error("WhatsApp consent not given");
+
+  // Fetch event
+  const event = await prisma.blindTastingEvent.findUnique({
+    where: { id: eventId },
+  });
+  if (!event || event.status !== "completed") {
+    throw new Error("Event not found or not yet completed");
+  }
+
+  // Calculate scores and rank
+  const guesses = await prisma.blindGuess.findMany({ where: { eventId } });
+  const guests = await prisma.guestParticipant.findMany({ where: { eventId } });
+
+  const scoresByGuest = new Map<string, number>();
+  for (const guess of guesses) {
+    scoresByGuest.set(
+      guess.guestId,
+      (scoresByGuest.get(guess.guestId) ?? 0) + (guess.score ?? 0)
+    );
+  }
+
+  const ranked = guests
+    .map((g) => ({ id: g.id, score: scoresByGuest.get(g.id) ?? 0 }))
+    .sort((a, b) => b.score - a.score);
+
+  const myRankIndex = ranked.findIndex((g) => g.id === guestId);
+  const myScore = ranked[myRankIndex]?.score ?? 0;
+  const rankText = `${ordinal(myRankIndex + 1)} of ${ranked.length}`;
+
+  const resultsUrl = buildResultsUrl(eventId, guestId);
+
+  const result = await sendTastingResults({
+    to: guest.phone,
+    guestName: guest.displayName,
+    eventTitle: event.title,
+    totalScore: myScore,
+    rank: rankText,
+    resultsUrl,
+  });
+
+  if (!result.success) {
+    throw new Error(`WhatsApp send failed: ${result.error}`);
+  }
+
+  // Mark as sent
+  await prisma.guestParticipant.update({
+    where: { id: guestId },
+    data: { whatsappSentAt: new Date() },
+  });
+
+  return { messageId: result.messageId };
+}
+
+// Host action: send results to ALL guests who opted in
+
+export async function sendResultsToAllGuests(eventId: string) {
+  const session = await requireAuth();
+
+  const event = await prisma.blindTastingEvent.findUnique({
+    where: { id: eventId },
+  });
+  if (!event || event.hostId !== session.user.id) {
+    throw new Error("Not authorized");
+  }
+  if (event.status !== "completed") {
+    throw new Error("Event must be completed before sending results");
+  }
+
+  const guests = await prisma.guestParticipant.findMany({
+    where: {
+      eventId,
+      whatsappConsent: true,
+      phone: { not: null },
+    },
+  });
+
+  const results = await Promise.allSettled(
+    guests.map((g) => sendResultsViaWhatsApp(eventId, g.id))
+  );
+
+  const sent = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.filter((r) => r.status === "rejected").length;
+
+  return { sent, failed, total: guests.length };
 }

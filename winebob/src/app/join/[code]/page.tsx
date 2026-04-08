@@ -41,6 +41,8 @@ export default function JoinPage({
   const [locationLng, setLocationLng] = useState<number | undefined>();
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
 
   // Submission state
   const [isPending, startTransition] = useTransition();
@@ -122,6 +124,8 @@ export default function JoinPage({
           locationLat,
           locationLng,
           consentGiven: consent,
+          phone: phone.trim() || undefined,
+          whatsappConsent,
         });
 
         localStorage.setItem("guestId", result.guestId);
@@ -322,6 +326,44 @@ export default function JoinPage({
                   ))}
                 </select>
               </div>
+            )}
+          </div>
+
+          {/* WhatsApp Results (optional) */}
+          <div className="mb-5">
+            <label
+              htmlFor="phone"
+              className="block text-sm font-semibold text-foreground mb-1.5"
+            >
+              Get results on WhatsApp{" "}
+              <span className="text-muted font-normal">(optional)</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+33 6 12 34 56 78"
+                autoComplete="tel"
+                className="input-field flex-1 touch-target"
+              />
+            </div>
+            <p className="text-[12px] text-muted mt-1.5">
+              International format with country code
+            </p>
+            {phone.trim() && (
+              <label className="flex items-start gap-3 cursor-pointer mt-3">
+                <input
+                  type="checkbox"
+                  checked={whatsappConsent}
+                  onChange={(e) => setWhatsappConsent(e.target.checked)}
+                  className="mt-0.5 h-5 w-5 rounded border-black/10 accent-green-600 shrink-0"
+                />
+                <span className="text-sm text-muted leading-relaxed">
+                  Send my scores via WhatsApp when the tasting ends
+                </span>
+              </label>
             )}
           </div>
 
