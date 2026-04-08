@@ -45,7 +45,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/mapbox-gl": "^3.4.1",
-    "@types/node": "^20",
+    "@types/node": "^20.19.39",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
