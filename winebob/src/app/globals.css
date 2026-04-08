@@ -786,3 +786,16 @@ body {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
+
+/* ============ LIVE TASTING REACTIONS ============ */
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 0.8; transform: translateY(-60px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-120px) scale(0.8); }
+}
+
+/* Ping animation for live indicators */
+@keyframes livePing {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}

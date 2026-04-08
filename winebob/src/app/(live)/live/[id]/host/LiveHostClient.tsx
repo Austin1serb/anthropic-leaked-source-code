@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronLeft, Play, Eye, Flag, Radio, Users, Wine,
-  Check, Sparkles, Crown, Trophy,
+  Check, Sparkles, Crown, Trophy, Copy, CheckCircle2,
+  BarChart3,
 } from "lucide-react";
 import {
   getLiveEventById, startLiveEvent, releaseHint,
@@ -18,8 +19,8 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
   const router = useRouter();
   const [event, setEvent] = useState(initialEvent);
   const [isPending, startTransition] = useTransition();
+  const [copiedCode, setCopiedCode] = useState(false);
 
-  // Auto-refresh
   useEffect(() => {
     if (event.status === "completed") return;
     const id = setInterval(async () => {
@@ -62,15 +63,23 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
     });
   }
 
-  // Current wine = first unrevealed
+  function copyJoinCode() {
+    if (event.joinCode) {
+      navigator.clipboard.writeText(event.joinCode).catch(() => {});
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
+  }
+
   const currentWineIdx = event.wines.findIndex((w) => !w.revealed);
   const currentWine = currentWineIdx >= 0 ? event.wines[currentWineIdx] : null;
   const allRevealed = event.wines.every((w) => w.revealed);
 
-  // Guess count for current wine
   const currentGuessCount = currentWine
     ? event.guesses.filter((g) => g.winePosition === currentWine.position).length
     : 0;
+
+  const totalGuesses = event.guesses.length;
 
   return (
     <div className="min-h-dvh safe-top safe-bottom bg-background">
@@ -96,7 +105,45 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
         <h1 className="text-[22px] font-bold text-foreground tracking-tight mb-1">{event.title}</h1>
         <p className="text-[13px] text-muted mb-6">Host Control Panel</p>
 
-        {/* Status: Scheduled */}
+        {/* Join Code */}
+        {event.joinCode && (
+          <button
+            onClick={copyJoinCode}
+            className="wine-card flex items-center gap-3 w-full px-4 py-3 mb-5 active:scale-[0.98] transition-transform"
+          >
+            <div className="flex-1 text-left">
+              <p className="label">Join Code</p>
+              <p className="text-[18px] font-bold font-mono tracking-widest text-foreground mt-1">{event.joinCode}</p>
+            </div>
+            {copiedCode ? (
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            ) : (
+              <Copy className="h-5 w-5 text-muted" />
+            )}
+          </button>
+        )}
+
+        {/* Live Stats */}
+        {event.status === "live" && (
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            <div className="wine-card p-3 text-center">
+              <p className="text-[20px] font-bold tabular-nums text-foreground">{event.participants.length}</p>
+              <p className="label mt-1">Viewers</p>
+            </div>
+            <div className="wine-card p-3 text-center">
+              <p className="text-[20px] font-bold tabular-nums text-foreground">{currentGuessCount}</p>
+              <p className="label mt-1">Guesses</p>
+            </div>
+            <div className="wine-card p-3 text-center">
+              <p className="text-[20px] font-bold tabular-nums text-foreground">
+                {currentWine?.position ?? event.wines.length}/{event.wines.length}
+              </p>
+              <p className="label mt-1">Wine</p>
+            </div>
+          </div>
+        )}
+
+        {/* Scheduled */}
         {event.status === "scheduled" && (
           <div className="wine-card p-6 text-center mb-6">
             <p className="text-[14px] text-muted mb-4">{event.participants.length} participants waiting</p>
@@ -106,14 +153,34 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
           </div>
         )}
 
-        {/* Wine flight with hints */}
+        {/* Wine flight */}
         {event.status === "live" && (
           <div className="space-y-4">
+            {/* Flight progress */}
+            <div className="flex items-center gap-1.5 mb-2">
+              {event.wines.map((w) => (
+                <div
+                  key={w.id}
+                  className="flex-1 h-1.5 rounded-full transition-all duration-500"
+                  style={{
+                    background: w.revealed
+                      ? "var(--cherry)"
+                      : w.id === currentWine?.id
+                        ? "var(--cherry-light)"
+                        : "var(--card-border)",
+                    boxShadow: w.id === currentWine?.id ? "0 0 6px rgba(116, 7, 14, 0.3)" : "none",
+                    opacity: w.revealed ? 1 : w.id === currentWine?.id ? 0.7 : 0.3,
+                  }}
+                />
+              ))}
+            </div>
+
             {event.wines.map((lw) => {
               const isCurrent = lw.id === currentWine?.id;
               const unreveledHints = lw.hints.filter((h) => !h.revealed);
               const revealedHints = lw.hints.filter((h) => h.revealed);
               const nextHint = unreveledHints[0];
+              const guessCount = event.guesses.filter((g) => g.winePosition === lw.position).length;
 
               return (
                 <div
@@ -131,7 +198,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
                       </div>
                       <div>
                         <span className="text-[14px] font-bold text-foreground">{lw.wine?.name ?? "Wine"}</span>
-                        <p className="text-[11px] text-muted">{lw.wine?.producer}{lw.wine?.vintage ? ` · ${lw.wine.vintage}` : ""}</p>
+                        <p className="text-[11px] text-muted">{lw.wine?.producer}{lw.wine?.vintage ? ` \u00b7 ${lw.wine.vintage}` : ""}</p>
                       </div>
                     </div>
                     {isCurrent && (
@@ -144,10 +211,8 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
                     )}
                   </div>
 
-                  {/* Hints */}
                   {isCurrent && (
                     <div className="space-y-2 mt-3">
-                      {/* Released hints */}
                       {revealedHints.map((h) => (
                         <div key={h.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-widget-sage/50">
                           <Check className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
@@ -156,7 +221,6 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
                         </div>
                       ))}
 
-                      {/* Next hint to release */}
                       {nextHint && (
                         <button
                           onClick={() => handleReleaseHint(nextHint.id)}
@@ -164,22 +228,26 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
                           className="w-full flex items-center gap-2 px-3 py-3 rounded-xl border-2 border-dashed border-cherry/30 text-cherry font-semibold text-[13px] active:bg-widget-wine/30 transition-colors touch-target"
                         >
                           <Sparkles className="h-4 w-4" />
-                          {isPending ? "Releasing..." : `Drop Hint #${nextHint.position}: "${nextHint.content}"`}
+                          <span className="flex-1 text-left">
+                            {isPending ? "Releasing..." : `Drop Hint #${nextHint.position}`}
+                          </span>
+                          <span className="text-[11px] text-muted max-w-[120px] truncate">
+                            &ldquo;{nextHint.content}&rdquo;
+                          </span>
                         </button>
                       )}
 
-                      {/* Unrevealed hints remaining */}
                       {unreveledHints.length > 1 && (
                         <p className="text-[11px] text-muted text-center">
                           {unreveledHints.length - 1} more hint{unreveledHints.length > 2 ? "s" : ""} remaining
                         </p>
                       )}
 
-                      {/* Reveal wine button */}
                       <div className="pt-2 flex items-center justify-between">
-                        <span className="text-[12px] text-muted">
-                          {currentGuessCount} guesses submitted
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="h-3.5 w-3.5 text-muted" />
+                          <span className="text-[12px] text-muted font-semibold tabular-nums">{guessCount} guesses</span>
+                        </div>
                         <button
                           onClick={() => handleRevealWine(lw.position)}
                           disabled={isPending}
@@ -190,11 +258,19 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
                       </div>
                     </div>
                   )}
+
+                  {lw.revealed && (
+                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-card-border/30">
+                      <span className="text-[11px] font-semibold text-muted">
+                        {event.guesses.filter((g) => g.winePosition === lw.position).length} guesses
+                      </span>
+                      <span className="text-[11px] font-semibold text-muted">{lw.hints.length} hints</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
 
-            {/* Finish button */}
             {allRevealed && (
               <button onClick={handleComplete} disabled={isPending} className="btn-primary w-full touch-target mt-4">
                 <Flag className="h-5 w-5" /> {isPending ? "Finishing..." : "End Tasting"}
@@ -210,7 +286,22 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
               <Trophy className="h-8 w-8 text-amber-600" />
             </div>
             <h2 className="text-[18px] font-bold text-foreground">Tasting Complete</h2>
-            <p className="text-[13px] text-muted mt-1">{event.participants.length} participants · {event.wines.length} wines</p>
+            <div className="flex items-center justify-center gap-4 mt-3 mb-6">
+              <div className="text-center">
+                <p className="text-[18px] font-bold tabular-nums text-foreground">{event.participants.length}</p>
+                <p className="label mt-0.5">Participants</p>
+              </div>
+              <div className="h-6 w-px bg-card-border" />
+              <div className="text-center">
+                <p className="text-[18px] font-bold tabular-nums text-foreground">{event.wines.length}</p>
+                <p className="label mt-0.5">Wines</p>
+              </div>
+              <div className="h-6 w-px bg-card-border" />
+              <div className="text-center">
+                <p className="text-[18px] font-bold tabular-nums text-foreground">{totalGuesses}</p>
+                <p className="label mt-0.5">Guesses</p>
+              </div>
+            </div>
             <Link href="/live" className="btn-primary mt-6 inline-flex touch-target px-8">
               Back to Live Events
             </Link>

@@ -1,6 +1,6 @@
 import { getAllSommeliers } from "@/lib/liveActions";
 import Link from "next/link";
-import { BadgeCheck, Star, Wine, Users, ChevronRight } from "lucide-react";
+import { BadgeCheck, Star, Wine, Users, Sparkles, Radio } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +11,9 @@ const EXPERTISE_COLORS: Record<string, { bg: string; text: string }> = {
   natural: { bg: "widget-sage", text: "text-emerald-700" },
   sparkling: { bg: "widget-gold", text: "text-amber-700" },
   biodynamic: { bg: "widget-lavender", text: "text-purple-600" },
+  champagne: { bg: "widget-gold", text: "text-amber-700" },
+  burgundy: { bg: "widget-wine", text: "text-cherry" },
+  bordeaux: { bg: "widget-wine", text: "text-cherry" },
   default: { bg: "widget-wine", text: "text-cherry" },
 };
 
@@ -23,15 +26,19 @@ export default async function SommeliersPage() {
 
   return (
     <div className="min-h-screen pb-28 safe-top bg-background">
-      <div className="container-app pt-8 pb-2">
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="heading-xl text-foreground">Winebob Soms</h1>
-            <p className="body-sm mt-0.5">Our community of wine experts</p>
+      {/* Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none bg-hero-gradient" />
+        <div className="container-app pt-8 pb-2 relative">
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="heading-xl text-foreground">Sommeliers</h1>
+              <p className="body-sm mt-0.5">Our community of wine experts</p>
+            </div>
+            <Link href="/sommeliers/become" className="btn-primary px-4 py-2.5 text-[13px] w-auto">
+              <Sparkles className="h-3.5 w-3.5" /> Become a Som
+            </Link>
           </div>
-          <Link href="/sommeliers/become" className="btn-primary px-4 py-2.5 text-[13px] w-auto">
-            Become a Som
-          </Link>
         </div>
       </div>
 
@@ -46,14 +53,14 @@ export default async function SommeliersPage() {
             <p className="mt-2 text-[14px] text-muted max-w-[240px]">
               Be the first to create a sommelier profile and host live tastings.
             </p>
+            <Link href="/sommeliers/become" className="btn-primary mt-5 px-8 w-auto touch-target">
+              Get Started
+            </Link>
           </div>
         ) : (
           <div className="space-y-3 stagger-children">
             {sommeliers.map((som) => (
-              <div
-                key={som.id}
-                className="wine-card p-4"
-              >
+              <div key={som.id} className="wine-card p-4">
                 <div className="flex items-start gap-3.5">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
@@ -101,13 +108,18 @@ export default async function SommeliersPage() {
                             </span>
                           );
                         })}
+                        {som.expertise.length > 4 && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-card-border/30 text-muted">
+                            +{som.expertise.length - 4}
+                          </span>
+                        )}
                       </div>
                     )}
 
                     {/* Stats */}
                     <div className="flex items-center gap-4 mt-2.5">
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted">
-                        <Wine className="h-3 w-3" /> {som.totalEvents} events
+                        <Radio className="h-3 w-3" /> {som.totalEvents} events
                       </span>
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted">
                         <Users className="h-3 w-3" /> {som.totalViewers} viewers
@@ -122,14 +134,19 @@ export default async function SommeliersPage() {
                     {/* Certifications */}
                     {som.certifications.length > 0 && (
                       <div className="flex gap-1.5 mt-2 flex-wrap">
-                        {som.certifications.map((cert) => (
+                        {som.certifications.slice(0, 3).map((cert) => (
                           <span
                             key={cert}
-                            className="text-[9px] font-semibold text-muted border border-card-border px-1.5 py-0.5 rounded-md"
+                            className="text-[9px] font-semibold text-muted border border-card-border px-1.5 py-0.5 rounded-md flex items-center gap-1"
                           >
-                            {cert}
+                            <BadgeCheck className="h-2.5 w-2.5" /> {cert}
                           </span>
                         ))}
+                        {som.certifications.length > 3 && (
+                          <span className="text-[9px] font-semibold text-muted px-1.5 py-0.5">
+                            +{som.certifications.length - 3} more
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
