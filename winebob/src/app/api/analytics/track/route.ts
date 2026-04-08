@@ -1,4 +1,5 @@
 import { trackEvent } from "@/lib/analytics";
+import type { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
           return trackEvent({
             eventType: evt.eventType,
             wineId: evt.wineId ?? null,
-            metadata: evt.metadata,
+            metadata: evt.metadata as Record<string, Prisma.InputJsonValue | undefined> | undefined,
             sessionId: evt.sessionId,
           });
         }
