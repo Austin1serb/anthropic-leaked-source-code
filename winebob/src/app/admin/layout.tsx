@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <span className="text-[10px] font-bold text-white bg-cherry/80 px-2 py-0.5 rounded-[4px] uppercase tracking-wider">Admin</span>
         <div className="flex items-center gap-4 ml-4">
           <Link href="/admin/producers" className="text-[13px] font-semibold text-foreground/70 hover:text-foreground transition-colors">Producers</Link>
-          <Link href="/admin/wines" className="text-[13px] font-semibold text-foreground/70 hover:text-foreground transition-colors">Wines</Link>
+          <Link href="/admin/experiences" className="text-[13px] font-semibold text-foreground/70 hover:text-foreground transition-colors">Experiences</Link>
         </div>
         <div className="ml-auto text-[11px] text-muted">{session.user.email}</div>
       </nav>
