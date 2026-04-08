@@ -103,9 +103,9 @@ type EventControlClientProps = {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   draft: { label: "Draft", color: "text-muted", bg: "bg-card-border/30" },
-  lobby: { label: "Lobby Open", color: "text-amber-700", bg: "widget-gold" },
-  live: { label: "Live", color: "text-green-700", bg: "widget-sage" },
-  revealing: { label: "Revealing", color: "text-purple-700", bg: "widget-lavender" },
+  lobby: { label: "Lobby Open", color: "text-amber-700", bg: "bg-amber-50" },
+  live: { label: "Live", color: "text-green-700", bg: "bg-emerald-50" },
+  revealing: { label: "Revealing", color: "text-purple-700", bg: "bg-purple-50" },
   completed: { label: "Completed", color: "text-muted", bg: "bg-card-border/30" },
 };
 

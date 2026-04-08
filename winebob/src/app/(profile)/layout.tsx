@@ -2,33 +2,17 @@
 
 import { User } from "lucide-react";
 
-export default function ProfileLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-[#FAF8F5] dark:bg-[#121110]">
-      {/* Header — calm and minimal */}
-      <header className="safe-top">
-        <div className="container-app flex items-center justify-between" style={{ height: 60 }}>
-          <h1
-            style={{
-              fontFamily: "var(--font-serif, Georgia, serif)",
-              fontSize: 20,
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-            }}
-            className="text-foreground"
-          >
+    <div className="min-h-dvh bg-background">
+      <header className="safe-top sticky top-0 z-40 bg-white/92 backdrop-blur-xl border-b border-card-border/40">
+        <div className="px-5 flex items-center justify-between" style={{ height: 52 }}>
+          <h1 className="text-[17px] font-bold text-foreground tracking-tight font-serif">
             Profile
           </h1>
-          <div className="h-9 w-9 rounded-full bg-stone-light/15 dark:bg-stone/15 flex items-center justify-center">
-            <User size={18} strokeWidth={1.8} className="text-stone" />
+          <div className="h-8 w-8 rounded-full bg-card-border/20 flex items-center justify-center">
+            <User size={16} strokeWidth={1.8} className="text-muted" />
           </div>
-        </div>
-        <div className="container-app">
-          <div className="h-px bg-card-border" />
         </div>
       </header>
 

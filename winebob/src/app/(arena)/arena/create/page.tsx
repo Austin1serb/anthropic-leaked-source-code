@@ -56,20 +56,20 @@ type WineResult = {
 // ============ CONSTANTS ============
 
 const DIFFICULTIES = [
-  { value: "beginner", label: "Beginner", emoji: "\u{1F331}", color: "bg-widget-sage", textColor: "text-emerald-700" },
-  { value: "intermediate", label: "Intermediate", emoji: "\u{1F377}", color: "bg-widget-gold", textColor: "text-amber-700" },
-  { value: "advanced", label: "Advanced", emoji: "\u{1F525}", color: "bg-widget-wine", textColor: "text-cherry" },
-  { value: "master", label: "Master", emoji: "\u{1F451}", color: "bg-widget-lavender", textColor: "text-purple-700" },
+  { value: "beginner", label: "Beginner", emoji: "\u{1F331}", color: "bg-emerald-50", textColor: "text-emerald-700" },
+  { value: "intermediate", label: "Intermediate", emoji: "\u{1F377}", color: "bg-amber-50", textColor: "text-amber-700" },
+  { value: "advanced", label: "Advanced", emoji: "\u{1F525}", color: "bg-cherry/8", textColor: "text-cherry" },
+  { value: "master", label: "Master", emoji: "\u{1F451}", color: "bg-purple-50", textColor: "text-purple-700" },
 ] as const;
 
 const ALL_GUESS_FIELDS = [
-  { key: "grape", label: "Grape", icon: Grape, color: "bg-widget-wine", iconColor: "text-cherry" },
-  { key: "region", label: "Region", icon: MapPin, color: "bg-widget-gold", iconColor: "text-amber-700" },
-  { key: "country", label: "Country", icon: Globe, color: "bg-widget-sky", iconColor: "text-blue-600" },
-  { key: "vintage", label: "Vintage", icon: Clock, color: "bg-widget-sage", iconColor: "text-emerald-700" },
-  { key: "producer", label: "Producer", icon: Tag, color: "bg-widget-lavender", iconColor: "text-purple-600" },
-  { key: "type", label: "Type", icon: Wine, color: "bg-widget-peach", iconColor: "text-orange-600" },
-  { key: "price", label: "Price", icon: DollarSign, color: "bg-widget-gold", iconColor: "text-amber-700" },
+  { key: "grape", label: "Grape", icon: Grape, color: "bg-cherry/8", iconColor: "text-cherry" },
+  { key: "region", label: "Region", icon: MapPin, color: "bg-amber-50", iconColor: "text-amber-700" },
+  { key: "country", label: "Country", icon: Globe, color: "bg-blue-50", iconColor: "text-blue-600" },
+  { key: "vintage", label: "Vintage", icon: Clock, color: "bg-emerald-50", iconColor: "text-emerald-700" },
+  { key: "producer", label: "Producer", icon: Tag, color: "bg-purple-50", iconColor: "text-purple-600" },
+  { key: "type", label: "Type", icon: Wine, color: "bg-orange-50", iconColor: "text-orange-600" },
+  { key: "price", label: "Price", icon: DollarSign, color: "bg-amber-50", iconColor: "text-amber-700" },
 ] as const;
 
 const DEFAULT_SCORING: Record<string, number> = {

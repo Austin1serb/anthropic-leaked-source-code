@@ -126,9 +126,9 @@ export function WineDetailClient({ wine }: { wine: WineData }) {
       </div>
 
       {/* Content */}
-      <div className="container-app -mt-6 relative z-10">
+      <div className="px-5 -mt-6 relative z-10">
         {/* Title card */}
-        <div className="wine-card p-5 md:p-6 mb-4 animate-fade-in-up">
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-5 md:p-6 mb-4 animate-fade-in-up">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="label mb-1 capitalize">{wine.type}</p>
@@ -157,7 +157,7 @@ export function WineDetailClient({ wine }: { wine: WineData }) {
 
         {/* Tasting notes */}
         {wine.tastingNotes && (
-          <div className="wine-card p-5 mb-3 animate-fade-in-up">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-5 mb-3 animate-fade-in-up">
             <div className="flex items-center gap-2 mb-3">
               <FileText className="h-4 w-4 text-stone" />
               <h3 className="label">Tasting Notes</h3>
@@ -168,7 +168,7 @@ export function WineDetailClient({ wine }: { wine: WineData }) {
 
         {/* Food pairing */}
         {wine.foodPairing && (
-          <div className="wine-card p-5 mb-3 animate-fade-in-up">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-5 mb-3 animate-fade-in-up">
             <div className="flex items-center gap-2 mb-3">
               <Utensils className="h-4 w-4 text-stone" />
               <h3 className="label">Food Pairing</h3>
@@ -217,7 +217,7 @@ function DetailCard({ icon, tint, label, value, sub }: {
   sub?: string;
 }) {
   return (
-    <div className={`widget-card bg-${tint} p-3.5`}>
+    <div className={`rounded-[10px] bg-${tint} p-3.5`}>
       <div className="h-8 w-8 rounded-lg bg-white/50 flex items-center justify-center mb-2.5">
         {icon}
       </div>

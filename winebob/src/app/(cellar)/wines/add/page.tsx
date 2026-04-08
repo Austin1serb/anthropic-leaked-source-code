@@ -259,7 +259,7 @@ export default function AddWinePage() {
           </Field>
 
           {error && (
-            <div className="wine-card p-3 bg-red-50">
+            <div className="bg-white rounded-[14px] border border-card-border/60 p-3 bg-red-50">
               <p className="text-red-600 text-[13px] font-medium">{error}</p>
             </div>
           )}

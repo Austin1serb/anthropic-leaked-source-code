@@ -1182,7 +1182,7 @@ function CompletedView({
               className={`flex items-center gap-3.5 px-4 ${
                 i < 3 ? "py-4" : "py-3.5"
               } ${
-                i === 0 ? "bg-widget-gold/30" : g.id === guestId ? "bg-cherry/5" : ""
+                i === 0 ? "bg-amber-50/50" : g.id === guestId ? "bg-cherry/5" : ""
               } ${
                 g.id === guestId ? "border-l-4 border-cherry" : ""
               } ${

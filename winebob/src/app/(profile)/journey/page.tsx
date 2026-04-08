@@ -37,7 +37,7 @@ export default async function JourneyPage() {
 
   if (!stats) {
     return (
-      <div className="container-app py-16 text-center">
+      <div className="px-5 py-16 text-center">
         <Compass className="h-12 w-12 text-cherry/30 mx-auto mb-4" />
         <h2 className="text-[20px] font-bold text-foreground" style={{ fontFamily: "Georgia, serif" }}>
           Your Wine Passport
@@ -62,8 +62,8 @@ export default async function JourneyPage() {
   return (
     <div className="pb-12">
       {/* Hero passport card */}
-      <section className="container-app mt-4">
-        <div className="wine-card p-5 bg-gradient-to-br from-cherry/[0.04] to-transparent">
+      <section className="px-5 mt-4">
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-5 bg-gradient-to-br from-cherry/[0.04] to-transparent">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-12 w-12 rounded-[14px] bg-cherry/10 flex items-center justify-center">
               <Compass className="h-6 w-6 text-cherry" />
@@ -94,7 +94,7 @@ export default async function JourneyPage() {
       </section>
 
       {/* Region progress */}
-      <section className="container-app mt-5">
+      <section className="px-5 mt-5">
         <div className="flex items-center justify-between mb-3 px-1">
           <h3 className="text-[15px] font-bold text-foreground" style={{ fontFamily: "Georgia, serif" }}>
             Regions Explored
@@ -103,7 +103,7 @@ export default async function JourneyPage() {
             Explore map <ArrowRight className="inline h-3 w-3" />
           </Link>
         </div>
-        <div className="wine-card p-4">
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[14px] font-semibold text-foreground">
               {passport.regionsExplored.length}/{passport.totalRegions}
@@ -138,11 +138,11 @@ export default async function JourneyPage() {
 
       {/* Countries visited */}
       {passport.countriesVisited.length > 0 && (
-        <section className="container-app mt-5">
+        <section className="px-5 mt-5">
           <h3 className="text-[15px] font-bold text-foreground mb-3 px-1" style={{ fontFamily: "Georgia, serif" }}>
             Countries
           </h3>
-          <div className="wine-card p-4">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-4">
             <div className="flex flex-wrap gap-2">
               {passport.countriesVisited.map((country) => (
                 <span
@@ -160,11 +160,11 @@ export default async function JourneyPage() {
 
       {/* Grape varieties */}
       {passport.topGrapes.length > 0 && (
-        <section className="container-app mt-5">
+        <section className="px-5 mt-5">
           <h3 className="text-[15px] font-bold text-foreground mb-3 px-1" style={{ fontFamily: "Georgia, serif" }}>
             Your Grapes
           </h3>
-          <div className="wine-card p-4">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-4">
             <div className="space-y-2">
               {passport.topGrapes.map((g, i) => {
                 const maxCount = passport.topGrapes[0].count;
@@ -191,11 +191,11 @@ export default async function JourneyPage() {
 
       {/* Wine type breakdown */}
       {passport.typeBreakdown.length > 0 && (
-        <section className="container-app mt-5">
+        <section className="px-5 mt-5">
           <h3 className="text-[15px] font-bold text-foreground mb-3 px-1" style={{ fontFamily: "Georgia, serif" }}>
             Wine Types
           </h3>
-          <div className="wine-card p-4">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-4">
             {/* Color bar */}
             <div className="flex rounded-full overflow-hidden h-3 bg-card-border/30">
               {passport.typeBreakdown.map((seg) => {
@@ -234,12 +234,12 @@ export default async function JourneyPage() {
       )}
 
       {/* Recent tastings */}
-      <section className="container-app mt-5">
+      <section className="px-5 mt-5">
         <h3 className="text-[15px] font-bold text-foreground mb-3 px-1" style={{ fontFamily: "Georgia, serif" }}>
           Recent Tastings
         </h3>
         {recentTastings.length === 0 ? (
-          <div className="wine-card px-4 py-8 text-center">
+          <div className="bg-white rounded-[14px] border border-card-border/60 px-4 py-8 text-center">
             <Wine className="h-8 w-8 text-muted/20 mx-auto mb-2" />
             <p className="text-[13px] text-muted">No tastings logged yet</p>
             <Link href="/wines" className="text-[12px] font-semibold text-cherry mt-2 inline-block">
@@ -247,7 +247,7 @@ export default async function JourneyPage() {
             </Link>
           </div>
         ) : (
-          <div className="wine-card divide-y divide-card-border/40">
+          <div className="bg-white rounded-[14px] border border-card-border/60 divide-y divide-card-border/40">
             {recentTastings.map((t) => (
               <Link
                 key={t.id}
@@ -283,11 +283,11 @@ export default async function JourneyPage() {
 
       {/* Recent check-ins */}
       {recentCheckIns.length > 0 && (
-        <section className="container-app mt-5">
+        <section className="px-5 mt-5">
           <h3 className="text-[15px] font-bold text-foreground mb-3 px-1" style={{ fontFamily: "Georgia, serif" }}>
             Recent Check-ins
           </h3>
-          <div className="wine-card divide-y divide-card-border/40">
+          <div className="bg-white rounded-[14px] border border-card-border/60 divide-y divide-card-border/40">
             {recentCheckIns.map((c) => (
               <div key={c.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="h-8 w-8 rounded-lg bg-cherry/10 flex items-center justify-center flex-shrink-0">
@@ -310,11 +310,11 @@ export default async function JourneyPage() {
 
       {/* Activity timeline */}
       {timeline.length > 0 && (
-        <section className="container-app mt-5">
+        <section className="px-5 mt-5">
           <h3 className="text-[15px] font-bold text-foreground mb-3 px-1" style={{ fontFamily: "Georgia, serif" }}>
             Activity Timeline
           </h3>
-          <div className="wine-card p-4">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-4">
             <div className="flex items-end gap-1 h-20">
               {timeline.map((m) => {
                 const total = m.tastings + m.checkIns + m.favorites;
@@ -339,8 +339,8 @@ export default async function JourneyPage() {
 
       {/* Wishlist reminder */}
       {counts.wishlist > 0 && (
-        <section className="container-app mt-5">
-          <div className="wine-card p-4 flex items-center gap-3">
+        <section className="px-5 mt-5">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
               <BookmarkCheck className="h-5 w-5 text-amber-600" />
             </div>
@@ -359,8 +359,8 @@ export default async function JourneyPage() {
 
       {/* Empty state call to action */}
       {totalInteractions === 0 && (
-        <section className="container-app mt-5">
-          <div className="wine-card p-6 text-center">
+        <section className="px-5 mt-5">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-6 text-center">
             <Wine className="h-10 w-10 text-cherry/20 mx-auto mb-3" />
             <h3 className="text-[16px] font-bold text-foreground" style={{ fontFamily: "Georgia, serif" }}>
               Start your wine journey
