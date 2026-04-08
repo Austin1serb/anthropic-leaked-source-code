@@ -499,6 +499,31 @@ export async function getWineRegionCounts(): Promise<Record<string, number>> {
   return counts;
 }
 
+export async function getMapWineries() {
+  return prisma.winery.findMany({
+    orderBy: [{ featured: "desc" }, { name: "asc" }],
+  });
+}
+
+export async function getRegionDetail(region: string) {
+  const [wines, producers, wineries] = await Promise.all([
+    prisma.wine.findMany({
+      where: { region, isPublic: true },
+      take: 20,
+      orderBy: { name: "asc" },
+    }),
+    prisma.producer.findMany({ where: { region } }),
+    prisma.winery.findMany({ where: { region } }),
+  ]);
+  return {
+    wines,
+    producers,
+    wineries,
+    wineCount: wines.length,
+    producerCount: producers.length,
+  };
+}
+
 export async function getBrowseWines() {
   try {
     const wines = await prisma.wine.findMany({

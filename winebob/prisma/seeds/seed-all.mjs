@@ -38,28 +38,28 @@ async function loadRegions() {
   // Dynamic imports of regional seed files
   try {
     const france = await import("./france.mjs");
-    regions.push({ label: "France", producers: france.producers, wines: france.wines });
+    regions.push({ label: "France", producers: france.producers, wines: france.wines, wineries: france.wineries || [] });
   } catch (e) {
     console.warn("Skipping France (file not found):", e.message);
   }
 
   try {
     const italy = await import("./italy.mjs");
-    regions.push({ label: "Italy", producers: italy.producers, wines: italy.wines });
+    regions.push({ label: "Italy", producers: italy.producers, wines: italy.wines, wineries: italy.wineries || [] });
   } catch (e) {
     console.warn("Skipping Italy (file not found):", e.message);
   }
 
   try {
     const europeOther = await import("./europe-other.mjs");
-    regions.push({ label: "Europe (Spain/Portugal/Germany/Austria)", producers: europeOther.producers, wines: europeOther.wines });
+    regions.push({ label: "Europe (Spain/Portugal/Germany/Austria)", producers: europeOther.producers, wines: europeOther.wines, wineries: europeOther.wineries || [] });
   } catch (e) {
     console.warn("Skipping Europe Other (file not found):", e.message);
   }
 
   try {
     const newWorld = await import("./new-world.mjs");
-    regions.push({ label: "New World", producers: newWorld.producers, wines: newWorld.wines });
+    regions.push({ label: "New World", producers: newWorld.producers, wines: newWorld.wines, wineries: newWorld.wineries || [] });
   } catch (e) {
     console.warn("Skipping New World (file not found):", e.message);
   }
@@ -89,6 +89,44 @@ async function insertProducers(producers) {
       created++;
     } catch (err) {
       console.error(`  Failed to insert producer "${p.name}": ${err.message}`);
+      skipped++;
+    }
+  }
+
+  return { created, skipped };
+}
+
+async function insertWineries(wineries) {
+  let created = 0;
+  let skipped = 0;
+
+  for (const w of wineries) {
+    try {
+      const grapeVarieties = toPgArray(w.grapeVarieties || []);
+      const wineStyles = toPgArray(w.wineStyles || []);
+      await sql`
+        INSERT INTO "Winery" (id, name, slug, description, founded, owner, website, region, country, lat, lng, "grapeVarieties", "wineStyles", featured, "vineyardSize", "annualBottles", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), ${w.name}, ${w.slug}, ${w.description || null}, ${w.founded || null}, ${w.owner || null}, ${w.website || null}, ${w.region}, ${w.country}, ${w.lat}, ${w.lng}, ${grapeVarieties}::text[], ${wineStyles}::text[], ${w.featured || false}, ${w.vineyardSize || null}, ${w.annualBottles || null}, NOW(), NOW())
+        ON CONFLICT (slug) DO UPDATE SET
+          name = EXCLUDED.name,
+          description = EXCLUDED.description,
+          founded = EXCLUDED.founded,
+          owner = EXCLUDED.owner,
+          website = EXCLUDED.website,
+          region = EXCLUDED.region,
+          country = EXCLUDED.country,
+          lat = EXCLUDED.lat,
+          lng = EXCLUDED.lng,
+          "grapeVarieties" = EXCLUDED."grapeVarieties",
+          "wineStyles" = EXCLUDED."wineStyles",
+          featured = EXCLUDED.featured,
+          "vineyardSize" = EXCLUDED."vineyardSize",
+          "annualBottles" = EXCLUDED."annualBottles",
+          "updatedAt" = NOW()
+      `;
+      created++;
+    } catch (err) {
+      console.error(`  Failed to insert winery "${w.name}": ${err.message}`);
       skipped++;
     }
   }
@@ -159,16 +197,19 @@ async function main() {
   // Validate all data first
   let allProducers = [];
   let allWines = [];
+  let allWineries = [];
 
   for (const region of regions) {
     const validated = validateDataset(region.producers, region.wines, region.label);
     allProducers.push(...validated.producers);
     allWines.push(...validated.wines);
+    allWineries.push(...(region.wineries || []));
   }
 
   console.log(`\n── Totals after validation ──`);
   console.log(`  Producers: ${allProducers.length}`);
-  console.log(`  Wines: ${allWines.length}\n`);
+  console.log(`  Wines: ${allWines.length}`);
+  console.log(`  Wineries: ${allWineries.length}\n`);
 
   // Check for duplicate IDs
   const producerIds = new Set();
@@ -211,6 +252,11 @@ async function main() {
   const pResult = await insertProducers(allProducers);
   console.log(`  Done: ${pResult.created} created, ${pResult.skipped} failed\n`);
 
+  // Insert wineries (map markers with lat/lng)
+  console.log("Inserting wineries...");
+  const winResult = await insertWineries(allWineries);
+  console.log(`  Done: ${winResult.created} created, ${winResult.skipped} failed\n`);
+
   // Insert wines
   console.log("Inserting wines...");
   const wResult = await insertWines(allWines);
@@ -226,6 +272,7 @@ async function main() {
 
   console.log("=== Seed Complete ===");
   console.log(`  Producers: ${pResult.created}`);
+  console.log(`  Wineries: ${winResult.created}`);
   console.log(`  Wines: ${wResult.created}`);
 }
 

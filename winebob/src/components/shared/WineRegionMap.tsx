@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { wineRegions } from "@/data/wineRegions";
-import { mockWineries } from "@/data/mockWineries";
+import { mockWineries, type MockWinery } from "@/data/mockWineries";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
@@ -194,6 +194,8 @@ type WineRegionMapProps = {
   onTourStop?: (stop: TourStop | null) => void;
   /** Expose the internal Mapbox map instance to parent */
   mapRef?: React.RefObject<mapboxgl.Map | null>;
+  /** Winery data for map markers — falls back to mockWineries if not provided */
+  wineries?: MockWinery[];
 };
 
 const STYLE_STANDARD = "mapbox://styles/mapbox/standard";
@@ -218,7 +220,7 @@ export const REGION_CITIES: Record<string, [number, number]> = {
   "Marlborough": [173.95, -41.51], "Stellenbosch": [18.86, -33.93],
 };
 
-export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", className = "", exploreRegion, flyToCoords, tourRegion, onTourEnd, satellite = false, onTourStop, mapRef }: WineRegionMapProps) {
+export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", className = "", exploreRegion, flyToCoords, tourRegion, onTourEnd, satellite = false, onTourStop, mapRef, wineries: wineriesProp }: WineRegionMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -569,11 +571,11 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         if (props) onRegionClickRef.current?.(props.name, props.country);
       });
 
-      // ── Winery markers (mock data + API data) ──
-      // Start with mock data immediately, then overlay DB wineries
-      const mockGeoJSON: GeoJSON.FeatureCollection = {
+      // ── Winery markers (from DB or mock fallback) ──
+      const wineryData = wineriesProp ?? mockWineries;
+      const wineryGeoJSON: GeoJSON.FeatureCollection = {
         type: "FeatureCollection",
-        features: mockWineries.map((w, i) => ({
+        features: wineryData.map((w, i) => ({
           type: "Feature" as const,
           id: i,
           properties: {
@@ -587,31 +589,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         })),
       };
 
-      map.current.addSource("wineries", { type: "geojson", data: mockGeoJSON });
-
-      // Fetch real wineries from the database and merge with mock data
-      fetch("/api/wineries")
-        .then((r) => r.json())
-        .then((apiData: GeoJSON.FeatureCollection) => {
-          if (!map.current || !apiData.features?.length) return;
-          const src = map.current.getSource("wineries") as mapboxgl.GeoJSONSource | undefined;
-          if (!src) return;
-          // API features already have grapeVarieties/wineStyles as arrays — stringify for consistency
-          const apiFeatures = apiData.features.map((f, i) => {
-            const p = (f.properties ?? {}) as Record<string, any>;
-            if (Array.isArray(p.grapeVarieties)) p.grapeVarieties = JSON.stringify(p.grapeVarieties);
-            if (Array.isArray(p.wineStyles)) p.wineStyles = JSON.stringify(p.wineStyles);
-            return { ...f, id: 10000 + i, properties: p };
-          });
-          // Build a set of API slugs to remove duplicates from mock data
-          const apiSlugs = new Set(apiFeatures.map((f) => (f.properties as any)?.slug));
-          const dedupedMock = mockGeoJSON.features.filter((f) => !apiSlugs.has((f.properties as any)?.slug));
-          src.setData({
-            type: "FeatureCollection",
-            features: [...dedupedMock, ...apiFeatures],
-          });
-        })
-        .catch(() => { /* API unavailable — keep mock data */ });
+      map.current.addSource("wineries", { type: "geojson", data: wineryGeoJSON });
 
       // Featured wineries — gold, large and prominent (hero markers)
       map.current.addLayer({
