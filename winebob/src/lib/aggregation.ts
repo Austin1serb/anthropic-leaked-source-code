@@ -634,7 +634,8 @@ export async function aggregateDemographicTrends(
   for (const [key, data] of bucketMap) {
     const [ageGroup, wineType, priceRange] = key.split("|");
     const avgRating = data.ratingCount > 0 ? data.ratingSum / data.ratingCount : null;
-    const pr = priceRange === "unknown" ? null : priceRange;
+    // Use empty string for unknown price range since the unique constraint requires non-null
+    const pr = priceRange === "unknown" ? "" : priceRange;
 
     await prisma.demographicWineTrend.upsert({
       where: {
@@ -826,10 +827,10 @@ export async function aggregateFunnelMetrics(
 
   // Upsert overall funnel (segment = null)
   await prisma.funnelMetric.upsert({
-    where: { weekStart_segment: { weekStart: start, segment: null } },
+    where: { weekStart_segment: { weekStart: start, segment: "" } },
     create: {
       weekStart: start,
-      segment: null,
+      segment: "",
       searchCount: counts["wine_search"],
       viewCount: counts["wine_view"],
       favoriteCount: counts["wine_favorite"],

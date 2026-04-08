@@ -812,7 +812,7 @@ model DemographicWineTrend {
   ageGroup       String   // "18-24", "25-34", etc.
   country        String?
   wineType       String   // red, white, etc.
-  priceRange     String?  // budget, mid, premium, luxury
+  priceRange     String   @default("") // budget, mid, premium, luxury, or "" for unknown
   viewCount      Int      @default(0)
   favoriteCount  Int      @default(0)
   tastingCount   Int      @default(0)
@@ -830,8 +830,8 @@ model PriceInsight {
   id            String   @id @default(cuid())
   weekStart     DateTime
   priceRange    String   // budget, mid, premium, luxury
-  region        String?
-  wineType      String?  // red, white, etc.
+  region        String   @default("") // wine region, or "" for all
+  wineType      String   @default("") // red, white, etc., or "" for all
   searchVolume  Int      @default(0)
   viewVolume    Int      @default(0)
   favoriteRate  Float?   // favorites / views ratio
@@ -848,7 +848,7 @@ model PriceInsight {
 model FunnelMetric {
   id              String   @id @default(cuid())
   weekStart       DateTime
-  segment         String?  // null = all users, or userType value
+  segment         String   @default("") // "" = all users, or userType value
   searchCount     Int      @default(0)
   viewCount       Int      @default(0)
   favoriteCount   Int      @default(0)
