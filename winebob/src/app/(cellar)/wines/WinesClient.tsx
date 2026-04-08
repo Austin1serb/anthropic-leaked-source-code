@@ -106,6 +106,21 @@ export function WinesClient({
 
   function nav(overrides: Record<string, string | undefined>) {
     const p = { type: activeType, country: activeCountry, priceRange: activePriceRange, search: activeSearch, page: undefined, ...overrides };
+    // Track price filter interactions
+    if (overrides.priceRange && overrides.priceRange !== activePriceRange) {
+      fetch("/api/analytics/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          events: [{
+            eventType: "price_filter",
+            metadata: { priceRange: overrides.priceRange, resultCount: total },
+            sessionId: typeof window !== "undefined" ? sessionStorage.getItem("wb_session_id") : undefined,
+          }],
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    }
     router.push(`/wines${buildQ(p)}`);
   }
 

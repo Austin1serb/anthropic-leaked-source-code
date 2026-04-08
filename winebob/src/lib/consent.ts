@@ -53,6 +53,15 @@ export type UserDataExport = {
     wines: unknown;
     createdAt: Date;
   }>;
+  segment: {
+    userType: string;
+    ageGroup: string | null;
+    engagementTier: string;
+    priceAffinity: string | null;
+    typeAffinity: string | null;
+    regionAffinity: string | null;
+    computedAt: Date;
+  } | null;
   exportedAt: Date;
 };
 
@@ -163,7 +172,7 @@ export async function exportUserData(): Promise<UserDataExport> {
   const session = await requireAuth();
   const userId = session.user.id;
 
-  const [user, events, favorites, tastings, checkIns, wishlist, producerFollows, tastingFlights] = await Promise.all([
+  const [user, events, favorites, tastings, checkIns, wishlist, producerFollows, tastingFlights, segment] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: { id: true, email: true, createdAt: true },
@@ -208,6 +217,18 @@ export async function exportUserData(): Promise<UserDataExport> {
       select: { name: true, path: true, wines: true, createdAt: true },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.userSegment.findUnique({
+      where: { userId },
+      select: {
+        userType: true,
+        ageGroup: true,
+        engagementTier: true,
+        priceAffinity: true,
+        typeAffinity: true,
+        regionAffinity: true,
+        computedAt: true,
+      },
+    }),
   ]);
 
   return {
@@ -232,6 +253,7 @@ export async function exportUserData(): Promise<UserDataExport> {
     wishlist,
     producerFollows,
     tastingFlights,
+    segment: segment ?? null,
     exportedAt: new Date(),
   };
 }
@@ -249,12 +271,13 @@ export async function deleteUserData(): Promise<{
   checkIns: number;
   producerFollows: number;
   tastingFlights: number;
+  segment: number;
   consent: number;
 }> {
   const session = await requireAuth();
   const userId = session.user.id;
 
-  const [events, favorites, tastings, wishlist, checkIns, producerFollows, tastingFlights, consent] =
+  const [events, favorites, tastings, wishlist, checkIns, producerFollows, tastingFlights, segment, consent] =
     await Promise.all([
       prisma.wineEvent.deleteMany({ where: { userId } }),
       prisma.wineFavorite.deleteMany({ where: { userId } }),
@@ -263,6 +286,7 @@ export async function deleteUserData(): Promise<{
       prisma.wineCheckIn.deleteMany({ where: { userId } }),
       prisma.producerFollow.deleteMany({ where: { userId } }),
       prisma.tastingFlight.deleteMany({ where: { userId } }),
+      prisma.userSegment.deleteMany({ where: { userId } }),
       prisma.userConsent.deleteMany({ where: { userId } }),
     ]);
 
@@ -274,6 +298,7 @@ export async function deleteUserData(): Promise<{
     checkIns: checkIns.count,
     producerFollows: producerFollows.count,
     tastingFlights: tastingFlights.count,
+    segment: segment.count,
     consent: consent.count,
   };
 }

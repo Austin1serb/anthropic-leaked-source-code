@@ -24,9 +24,26 @@ const LAYER_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function ExplorePage() {
-  const { openSearch } = useSearch();
-  const { layers, toggle, isActive } = useMapLayers();
+  const { layers, toggle: rawToggle, isActive } = useMapLayers();
   const fullLayers: MapLayer[] = layers.map((l) => ({ ...l, icon: LAYER_ICONS[l.id] ?? null }));
+
+  function toggle(layerId: string) {
+    const wasActive = isActive(layerId);
+    rawToggle(layerId);
+    // Track layer toggle
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        events: [{
+          eventType: "layer_toggle",
+          metadata: { layerName: layerId, enabled: !wasActive },
+          sessionId: typeof window !== "undefined" ? sessionStorage.getItem("wb_session_id") : undefined,
+        }],
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  }
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
@@ -46,6 +63,19 @@ export default function ExplorePage() {
     setActiveCity(null);
     setFlyToCoords(null);
     setTourRegion(null);
+    // Track region exploration
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        events: [{
+          eventType: "region_explore",
+          metadata: { region, country: "" },
+          sessionId: typeof window !== "undefined" ? sessionStorage.getItem("wb_session_id") : undefined,
+        }],
+      }),
+      keepalive: true,
+    }).catch(() => {});
   }
 
   function handleWorldView() {

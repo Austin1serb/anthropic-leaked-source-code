@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "regions": ["arn1"],
+  "crons": [
+    {
+      "path": "/api/analytics/aggregate",
+      "schedule": "0 3 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/manifest.json",
