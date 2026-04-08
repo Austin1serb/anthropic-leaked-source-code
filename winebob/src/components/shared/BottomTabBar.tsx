@@ -13,8 +13,8 @@ const tabs = [
   { href: "/profile", label: "Profile", icon: User },
 ] as const;
 
-/** Routes where the tab bar should be hidden (focused flows) */
-const HIDDEN_ROUTES = ["/arena/create", "/arena/event/", "/play/", "/join/", "/live/"];
+/** Routes where the tab bar should be hidden (focused flows or fullscreen map pages) */
+const HIDDEN_ROUTES = ["/arena/create", "/arena/event/", "/play/", "/join/", "/live/", "/wines", "/explore"];
 
 export function BottomTabBar() {
   const pathname = usePathname();
@@ -40,14 +40,15 @@ export function BottomTabBar() {
 
           if (isSearch) {
             return (
-              <button
+              <a
                 key="search"
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={openSearch}
-                className={`flex flex-col items-center justify-center gap-1 transition-all relative bg-transparent border-none outline-none cursor-pointer p-0 ${
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openSearch(); }}
+                className={`flex flex-col items-center justify-center touch-target gap-1 transition-all relative cursor-pointer ${
                   isActive ? "text-cherry" : "text-muted"
                 }`}
-                style={{ minHeight: 44, minWidth: 44 }}
               >
                 <div className={`relative transition-transform ${isActive ? "scale-105" : ""}`}>
                   {isActive && (
@@ -58,7 +59,7 @@ export function BottomTabBar() {
                 <span className={`text-[10px] ${isActive ? "font-bold" : "font-medium"}`}>
                   {tab.label}
                 </span>
-              </button>
+              </a>
             );
           }
 
