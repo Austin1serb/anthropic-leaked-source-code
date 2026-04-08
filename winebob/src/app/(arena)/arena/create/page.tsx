@@ -569,6 +569,7 @@ function CreateEventInner() {
     { value: "ros\u00E9", label: "Ros\u00E9", emoji: "\u{1FA77}" },
     { value: "sparkling", label: "Sparkling", emoji: "\u2728" },
     { value: "orange", label: "Orange", emoji: "\u{1F7E0}" },
+    { value: "dessert", label: "Dessert", emoji: "\u{1F36F}" },
   ];
 
   // Wine list to display: search results take priority, then browse wines
@@ -652,7 +653,8 @@ function CreateEventInner() {
                 wine.type.toLowerCase() === "white" ? "bg-amber-200" :
                 wine.type.toLowerCase() === "ros\u00E9" ? "bg-pink-300" :
                 wine.type.toLowerCase() === "sparkling" ? "bg-yellow-300" :
-                wine.type.toLowerCase() === "orange" ? "bg-orange-300" : "bg-gray-300";
+                wine.type.toLowerCase() === "orange" ? "bg-orange-300" :
+                wine.type.toLowerCase() === "dessert" ? "bg-amber-300" : "bg-gray-300";
 
               return (
                 <button

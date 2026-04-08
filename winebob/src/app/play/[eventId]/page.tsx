@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useCallback, useRef } from "react";
 import { getEventById, submitGuess } from "@/lib/actions";
+import { decodeHtmlEntities } from "@/lib/importers/normalize";
 import {
   Wine,
   Clock,
@@ -418,21 +419,21 @@ export default function PlayPage({
           {/* Wine name card */}
           <div className="rounded-[16px] bg-card-bg border border-card-border shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-6 mb-4 animate-scale-in">
             <h2 className="text-2xl font-bold font-serif text-foreground tracking-tight mb-1">
-              {actual.name}
+              {decodeHtmlEntities(actual.name)}
             </h2>
             <p className="text-[14px] text-muted">
-              {actual.producer}{actual.vintage ? ` · ${actual.vintage}` : " · NV"}
+              {decodeHtmlEntities(actual.producer)}{actual.vintage ? ` · ${actual.vintage}` : " · NV"}
             </p>
           </div>
 
           {/* Comparison cards — staggered entrance */}
           <div className="space-y-2.5">
-            <RevealCard label="Grape" icon={<Grape className="h-4 w-4" />} actual={actual.grapes.join(", ")} guessed={currentGuess?.guessedGrape} delay={0} />
-            <RevealCard label="Region" icon={<MapPin className="h-4 w-4" />} actual={actual.region} guessed={currentGuess?.guessedRegion} delay={80} />
+            <RevealCard label="Grape" icon={<Grape className="h-4 w-4" />} actual={decodeHtmlEntities(actual.grapes.join(", "))} guessed={currentGuess?.guessedGrape} delay={0} />
+            <RevealCard label="Region" icon={<MapPin className="h-4 w-4" />} actual={decodeHtmlEntities(actual.region)} guessed={currentGuess?.guessedRegion} delay={80} />
             <RevealCard label="Country" icon={<Globe className="h-4 w-4" />} actual={actual.country} guessed={currentGuess?.guessedCountry} delay={160} />
             <RevealCard label="Vintage" icon={<Clock className="h-4 w-4" />} actual={actual.vintage?.toString() ?? "NV"} guessed={currentGuess?.guessedVintage?.toString()} delay={240} />
             <RevealCard label="Type" icon={<Wine className="h-4 w-4" />} actual={actual.type} guessed={currentGuess?.guessedType} delay={320} />
-            <RevealCard label="Producer" icon={<Tag className="h-4 w-4" />} actual={actual.producer} guessed={currentGuess?.guessedProducer} delay={400} />
+            <RevealCard label="Producer" icon={<Tag className="h-4 w-4" />} actual={decodeHtmlEntities(actual.producer)} guessed={currentGuess?.guessedProducer} delay={400} />
           </div>
 
           {/* Score — animated count-up */}
