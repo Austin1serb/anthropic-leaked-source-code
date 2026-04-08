@@ -3,8 +3,6 @@ import { WinesClient } from "./WinesClient";
 
 export const dynamic = "force-dynamic";
 
-const EMPTY_DATA = { wines: [], total: 0, pages: 0, page: 1 };
-
 export default async function WinesPage({
   searchParams,
 }: {
@@ -17,7 +15,7 @@ export default async function WinesPage({
   const search = typeof params.search === "string" ? params.search : undefined;
   const page = typeof params.page === "string" ? parseInt(params.page, 10) : 1;
 
-  let data = EMPTY_DATA;
+  let data: Awaited<ReturnType<typeof getWineLibrary>> = { wines: [], total: 0, pages: 0, page: 1 };
   let countries: string[] = [];
   let regionCounts: Record<string, number> = {};
 
