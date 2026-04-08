@@ -1,0 +1,743 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============ AUTH (hosts only) ============
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  displayName   String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // null = OAuth user, set = email/password user
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  hostedEvents      BlindTastingEvent[]
+  favorites         WineFavorite[]
+  addedWines        Wine[]             @relation("AddedWines")
+  sommelierProfile  SommelierProfile?
+  tastings          WineTasting[]
+  wishlist          WineWishlist[]
+  producerFollows   ProducerFollow[]
+  tastingFlights    TastingFlight[]
+  checkIns          WineCheckIn[]
+  consent           UserConsent?
+  wineEvents        WineEvent[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============ WINES ============
+
+model Wine {
+  id          String   @id @default(cuid())
+  name        String
+  producer    String   // denormalized producer name (for display/search)
+  producerId  String?  // FK to Producer record (null for legacy/user-added wines)
+  vintage     Int?     // null = NV
+  grapes      String[]
+  region      String
+  country     String
+  appellation String?
+  type        String   // red, white, rosé, sparkling, dessert, fortified, orange
+  description String?
+  labelImage  String?
+  priceRange  String?  // budget, mid, premium, luxury
+  abv         Float?   // alcohol by volume percentage
+  tastingNotes String? // professional tasting notes
+  foodPairing String?  // suggested food pairings
+  isPublic    Boolean  @default(true)
+  addedById   String?  // null = system-curated, userId = host-contributed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  // ── Data intelligence fields ──
+  barcode         String?
+  lwin            String?
+  externalIds     Json?
+  source          String    @default("user")
+  confidence      Float     @default(1.0)
+  canonicalWineId String?
+  lastVerifiedAt  DateTime?
+  importBatchId   String?
+
+  blindWines      BlindWine[]
+  liveWines       LiveWine[]
+  favorites       WineFavorite[]
+  tastings        WineTasting[]
+  wishlistEntries WineWishlist[]
+  checkIns        WineCheckIn[]
+  addedBy         User?          @relation("AddedWines", fields: [addedById], references: [id])
+  producerRef     Producer?      @relation(fields: [producerId], references: [id], onDelete: SetNull)
+  canonicalWine   Wine?          @relation("WineDuplicates", fields: [canonicalWineId], references: [id], onDelete: SetNull)
+  duplicates      Wine[]         @relation("WineDuplicates")
+  importBatch     ImportBatch?   @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  mergesAsSource  WineMerge[]    @relation("MergeSource")
+  mergesAsTarget  WineMerge[]    @relation("MergeTarget")
+  popularity      WinePopularity[]
+  wineEvents      WineEvent[]
+
+  @@index([name, producer])
+  @@index([region, country])
+  @@index([type])
+  @@index([isPublic])
+  @@index([barcode])
+  @@index([lwin])
+  @@index([source])
+  @@index([canonicalWineId])
+  @@index([importBatchId])
+  @@index([producerId])
+}
+
+// ============ WINE FAVORITES (personal cellar) ============
+
+model WineFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  wineId    String
+  notes     String?  // personal notes about this wine
+  rating    Int?     // 1-5 personal rating
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wine      Wine     @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, wineId])
+  @@index([userId])
+}
+
+// ============ EVENT TEMPLATES ============
+
+model EventTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  theme       String?  // e.g. "Bordeaux vs Burgundy", "Italian Reds", "New World vs Old World"
+  difficulty  String   @default("intermediate") // beginner, intermediate, advanced, master
+  wineCount   Int      @default(6)
+
+  // Flexible config: which fields guests guess on
+  guessFields String[] // e.g. ["grape", "region", "country", "vintage", "producer", "price"]
+
+  // Suggested wines (host can swap any)
+  suggestedWines Json? // array of { name, producer, vintage, region, country, type, grapes }
+
+  // Scoring weights per field (flexible per template)
+  scoringConfig Json?  // e.g. { "grape": 30, "region": 25, "vintage": 20, "country": 15, "producer": 10 }
+
+  // Metadata
+  category    String?  // region_vs_region, grape_deep_dive, price_guesser, freestyle, etc.
+  isPublic    Boolean  @default(true)
+  featured    Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdBy   String?  // null = system-curated, userId = host-created
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  events      BlindTastingEvent[]
+
+  @@index([category])
+  @@index([featured])
+}
+
+// ============ BLIND TASTING EVENTS ============
+
+model BlindTastingEvent {
+  id          String   @id @default(cuid())
+  hostId      String
+  templateId  String?
+
+  // Event basics
+  title       String
+  description String?
+  joinCode    String   @unique // 6-char code: e.g. "WINE42"
+  qrCodeUrl   String?
+
+  // Flexible config (copied from template, then customizable)
+  guessFields String[] // which fields guests guess on for THIS event
+  scoringConfig Json?  // scoring weights for THIS event
+  difficulty  String   @default("intermediate")
+  timePerWine Int?     // seconds, null = no timer (host controls pace)
+
+  // State
+  status      String   @default("draft") // draft, lobby, live, revealing, completed
+  currentWine Int      @default(0) // which wine is currently being tasted (0 = not started)
+  startsAt    DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  host        User             @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  template    EventTemplate?   @relation(fields: [templateId], references: [id])
+  wines       BlindWine[]
+  guests      GuestParticipant[]
+  guesses     BlindGuess[]
+
+  @@index([joinCode])
+  @@index([status])
+  @@index([hostId])
+}
+
+model BlindWine {
+  id       String @id @default(cuid())
+  eventId  String
+  wineId   String
+  position Int    // flight order (1, 2, 3...)
+  hints    String[] // optional progressive hints host can reveal
+  revealed Boolean @default(false) // has the host revealed this wine?
+
+  event    BlindTastingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  wine     Wine              @relation(fields: [wineId], references: [id])
+
+  @@unique([eventId, position])
+  @@index([eventId])
+}
+
+// ============ GUEST PARTICIPANTS (no account needed) ============
+
+model GuestParticipant {
+  id            String   @id @default(cuid())
+  eventId       String
+  displayName   String
+  birthYear     Int      // exact birth year for demographics
+  locationLat   Float?
+  locationLng   Float?
+  city          String?
+  country       String?
+  consentGiven  Boolean  @default(false)
+  consentAt     DateTime?
+  joinedAt      DateTime @default(now())
+
+  // Optional: link to a real account if they sign up after
+  userId        String?
+
+  event         BlindTastingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guesses       BlindGuess[]
+
+  @@index([eventId])
+  @@index([birthYear])
+  @@index([country])
+}
+
+// ============ GUESSES ============
+
+model BlindGuess {
+  id              String   @id @default(cuid())
+  eventId         String
+  guestId         String   // GuestParticipant id
+  winePosition    Int      // which wine in the flight
+
+  // All guess fields are optional — only the ones configured for the event are used
+  guessedGrape    String?
+  guessedRegion   String?
+  guessedCountry  String?
+  guessedVintage  Int?
+  guessedProducer String?
+  guessedType     String?  // red, white, rosé, etc.
+  guessedPrice    Float?   // price bracket guess
+
+  // Free-form tasting notes (always available)
+  notes           String?
+
+  // Scoring
+  score           Int      @default(0)
+  timeElapsed     Int?     // seconds taken to submit
+
+  submittedAt     DateTime @default(now())
+
+  event           BlindTastingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest           GuestParticipant  @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, guestId, winePosition])
+  @@index([eventId])
+  @@index([guestId])
+}
+
+// ============ SOMMELIER PROFILES ============
+
+model SommelierProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  displayName   String
+  bio           String?
+  avatar        String?  // profile image URL
+  expertise     String[] // e.g. ["italian", "french", "natural", "sparkling"]
+  certifications String[] // e.g. ["WSET Level 3", "Court of Master Sommeliers"]
+  totalEvents   Int      @default(0)
+  totalViewers  Int      @default(0)
+  rating        Float    @default(0) // avg rating from viewers (1-5)
+  ratingCount   Int      @default(0)
+  verified      Boolean  @default(false) // Winebob-verified sommelier
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  liveEvents    LiveEvent[]
+
+  @@index([verified])
+  @@index([rating])
+}
+
+// ============ LIVE / GLOBAL EVENTS ============
+
+model LiveEvent {
+  id              String   @id @default(cuid())
+  sommelierId     String
+  title           String
+  description     String?
+  coverImage      String?
+
+  // Access control
+  isPublic        Boolean  @default(true)  // true = anyone can join, false = need code
+  joinCode        String?  @unique         // only for private events
+  maxParticipants Int?                     // null = unlimited
+
+  // Scheduling
+  scheduledAt     DateTime                 // when event is planned to start
+  status          String   @default("scheduled") // scheduled, live, completed, cancelled
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  // Config
+  guessFields     String[]  // which fields viewers guess on
+  scoringConfig   Json?     // scoring weights
+  difficulty      String    @default("intermediate")
+  showCrowdStats  Boolean   @default(true) // show aggregated crowd guesses
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  sommelier       SommelierProfile   @relation(fields: [sommelierId], references: [id], onDelete: Cascade)
+  wines           LiveWine[]
+  participants    LiveParticipant[]
+  guesses         LiveGuess[]
+
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([isPublic, status])
+  @@index([sommelierId])
+}
+
+model LiveWine {
+  id          String   @id @default(cuid())
+  eventId     String
+  wineId      String
+  position    Int      // flight order (1, 2, 3...)
+  revealed    Boolean  @default(false)
+  revealedAt  DateTime?
+
+  event       LiveEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  wine        Wine      @relation(fields: [wineId], references: [id])
+  hints       LiveHint[]
+
+  @@unique([eventId, position])
+  @@index([eventId])
+}
+
+model LiveHint {
+  id          String   @id @default(cuid())
+  wineId      String   // LiveWine id
+  position    Int      // hint order (1, 2, 3...)
+  content     String   // "Mørk rubinrød farve..."
+  hintType    String   // color, aroma, taste, texture, origin, other
+  revealed    Boolean  @default(false)
+  revealedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  wine        LiveWine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@unique([wineId, position])
+  @@index([wineId])
+}
+
+model LiveParticipant {
+  id            String   @id @default(cuid())
+  eventId       String
+  displayName   String
+  userId        String?  // null for anonymous public participants
+  sessionToken  String   @unique @default(cuid()) // cookie-based identity
+  joinedAt      DateTime @default(now())
+
+  event         LiveEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guesses       LiveGuess[]
+
+  @@index([eventId])
+  @@index([userId])
+}
+
+model LiveGuess {
+  id              String   @id @default(cuid())
+  eventId         String
+  participantId   String
+  winePosition    Int
+
+  guessedGrape    String?
+  guessedRegion   String?
+  guessedCountry  String?
+  guessedVintage  Int?
+  guessedProducer String?
+  guessedType     String?
+  guessedPrice    Float?
+  notes           String?
+
+  score           Int      @default(0)
+  submittedAt     DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  event           LiveEvent       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  participant     LiveParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, participantId, winePosition])
+  @@index([eventId])
+  @@index([participantId])
+}
+
+// ============ WINE TASTING LOG ============
+
+model WineTasting {
+  id        String   @id @default(cuid())
+  userId    String
+  wineId    String
+  eventId   String?  // null = manually logged
+  rating    Int?     // 1-100 personal score
+  notes     String?
+  tastedAt  DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wine  Wine  @relation(fields: [wineId], references: [id])
+
+  @@index([userId])
+  @@index([tastedAt])
+}
+
+// ============ WINE WISHLIST ============
+
+model WineWishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  wineId    String
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wine Wine @relation(fields: [wineId], references: [id])
+
+  @@unique([userId, wineId])
+  @@index([userId])
+}
+
+// ============ PRODUCER FOLLOWS ============
+
+model ProducerFollow {
+  id           String   @id @default(cuid())
+  userId       String
+  producerName String
+  region       String?
+  country      String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, producerName])
+  @@index([userId])
+}
+
+// ============ TASTING FLIGHTS ============
+
+model TastingFlight {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String?
+  path      Json     // GeoJSON LineString
+  wines     Json     // ordered array of wine selections
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============ WINE CHECK-INS (Live Heatmap) ============
+
+model WineCheckIn {
+  id        String   @id @default(cuid())
+  userId    String
+  wineId    String
+  lat       Float
+  lng       Float
+  city      String?
+  country   String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wine Wine @relation(fields: [wineId], references: [id])
+
+  @@index([expiresAt])
+  @@index([createdAt])
+}
+
+// ============ FLAVOR PROFILES ============
+
+model RegionFlavorProfile {
+  id       String @id @default(cuid())
+  region   String @unique
+  country  String
+  acidity  Float  // 0.0 - 1.0
+  tannin   Float
+  body     Float
+  fruit    Float
+  earth    Float
+  floral   Float
+
+  @@index([region])
+}
+
+// ============ GRAPE VARIETIES (canonical reference) ============
+
+model GrapeVariety {
+  id            String   @id @default(cuid())
+  name          String   @unique // canonical name (e.g. "Cabernet Sauvignon")
+  aliases       String[] // alternative names (e.g. ["Cab Sav", "Cabernet"])
+  color         String   // "red", "white", "rosé"
+  originCountry String?
+  vivcId        String?  // VIVC catalogue ID
+  description   String?
+  acreageHa     Float?   // global planted hectares
+  createdAt     DateTime @default(now())
+
+  @@index([vivcId])
+  @@index([color])
+}
+
+// ============ APPELLATIONS ============
+
+model Appellation {
+  id                  String        @id @default(cuid())
+  name                String
+  country             String
+  region              String?
+  level               String        // "AOC", "DOC", "DOCG", "AVA", "DO", "GI", "IGT"
+  parentAppellationId String?
+  boundaryGeoJson     Json?         // geographic boundary polygon
+  grapeVarieties      String[]      // permitted grape varieties
+  established         Int?          // year established
+  description         String?
+  createdAt           DateTime      @default(now())
+
+  parentAppellation   Appellation?  @relation("AppellationHierarchy", fields: [parentAppellationId], references: [id], onDelete: SetNull)
+  childAppellations   Appellation[] @relation("AppellationHierarchy")
+
+  @@unique([name, country])
+  @@index([level])
+  @@index([parentAppellationId])
+}
+
+// ============ PRODUCERS ============
+
+model Producer {
+  id          String   @id @default(cuid())
+  name        String
+  country     String
+  region      String?
+  website     String?
+  foundedYear Int?
+  description String?
+  wineCount   Int      @default(0)
+  verified    Boolean  @default(false)
+  externalIds Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  wines       Wine[]
+
+  @@unique([name, country])
+  @@index([region])
+  @@index([verified])
+}
+
+// ============ IMPORT BATCHES ============
+
+model ImportBatch {
+  id              String    @id @default(cuid())
+  source          String    // "wikidata", "openfoodfacts", "ttb", "systembolaget"
+  status          String    @default("running") // "running", "completed", "failed"
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  recordsFetched  Int       @default(0)
+  recordsCreated  Int       @default(0)
+  recordsUpdated  Int       @default(0)
+  recordsSkipped  Int       @default(0)
+  recordsFailed   Int       @default(0)
+  errorLog        String?
+  metadata        Json?     // source-specific config
+  createdBy       String?   // userId or "system"
+
+  wines           Wine[]
+
+  @@index([source])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// ============ WINE MERGES (deduplication log) ============
+
+model WineMerge {
+  id           String   @id @default(cuid())
+  sourceWineId String   // the duplicate
+  targetWineId String   // the canonical master
+  confidence   Float    // how certain the merge is (0.0-1.0)
+  mergedBy     String   // "auto" or userId
+  reason       String?  // why merged
+  createdAt    DateTime @default(now())
+
+  sourceWine   Wine     @relation("MergeSource", fields: [sourceWineId], references: [id], onDelete: Cascade)
+  targetWine   Wine     @relation("MergeTarget", fields: [targetWineId], references: [id], onDelete: Cascade)
+
+  @@index([sourceWineId])
+  @@index([targetWineId])
+}
+
+// ============ WINE EVENTS (analytics tracking) ============
+
+model WineEvent {
+  id        String   @id @default(cuid())
+  eventType String   // "wine_view", "wine_search", "wine_favorite", "wine_taste", "wine_checkin", "wine_wishlist", "wine_share", "region_explore", "layer_toggle", "producer_follow"
+  userId    String?  // null for anonymous
+  wineId    String?  // null for non-wine events
+  metadata  Json?    // flexible: { query, region, layerName, source, ... }
+  sessionId String?  // for grouping anonymous events
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  wine      Wine?    @relation(fields: [wineId], references: [id], onDelete: SetNull)
+
+  @@index([eventType])
+  @@index([userId])
+  @@index([wineId])
+  @@index([createdAt])
+  @@index([eventType, createdAt])
+}
+
+// ============ USER CONSENT ============
+
+model UserConsent {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  analyticsConsent  Boolean  @default(true)   // anonymous aggregated analytics
+  enhancedConsent   Boolean  @default(false)  // contribute to taste profiles
+  researchConsent   Boolean  @default(false)  // anonymized industry reports
+  consentUpdatedAt  DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============ AGGREGATION: WINE POPULARITY (daily) ============
+
+model WinePopularity {
+  id           String   @id @default(cuid())
+  wineId       String
+  date         DateTime // truncated to day
+  views        Int      @default(0)
+  favorites    Int      @default(0)
+  tastings     Int      @default(0)
+  checkIns     Int      @default(0)
+  wishlistAdds Int      @default(0)
+  avgRating    Float?
+
+  wine         Wine     @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@unique([wineId, date])
+  @@index([date])
+}
+
+// ============ AGGREGATION: REGION TRENDS (weekly) ============
+
+model RegionTrend {
+  id           String   @id @default(cuid())
+  region       String
+  country      String
+  weekStart    DateTime
+  searches     Int      @default(0)
+  explorations Int      @default(0)
+  checkIns     Int      @default(0)
+  newWines     Int      @default(0)
+  avgRating    Float?
+
+  @@unique([region, weekStart])
+  @@index([weekStart])
+}
+
+// ============ AGGREGATION: GRAPE TRENDS (weekly) ============
+
+model GrapeTrend {
+  id        String   @id @default(cuid())
+  grape     String
+  weekStart DateTime
+  searches  Int      @default(0)
+  tastings  Int      @default(0)
+  favorites Int      @default(0)
+  avgRating Float?
+
+  @@unique([grape, weekStart])
+  @@index([weekStart])
+}
+
+// ============ AGGREGATION: PRODUCER INSIGHTS (monthly) ============
+
+model ProducerInsight {
+  id             String   @id @default(cuid())
+  producerName   String
+  month          DateTime // first of month
+  followerCount  Int      @default(0)
+  wineRatings    Int      @default(0)
+  avgRating      Float?
+  checkInVolume  Int      @default(0)
+  wishlistAdds   Int      @default(0)
+
+  @@unique([producerName, month])
+  @@index([month])
+}
