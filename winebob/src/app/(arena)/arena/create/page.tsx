@@ -21,6 +21,12 @@ import {
   GlassWater,
 } from "lucide-react";
 import { createEvent, getTemplates, searchWines, getBrowseWines } from "@/lib/actions";
+import { decodeHtmlEntities } from "@/lib/importers/normalize";
+
+// Display-safe wine name (strips HTML entities from imported data)
+function wineName(name: string): string {
+  return decodeHtmlEntities(name);
+}
 
 // ============ TYPES ============
 
@@ -258,41 +264,39 @@ function CreateEventInner() {
 
   function renderProgress() {
     return (
-      <div className="flex items-center gap-3 mb-6 px-2">
-        {STEP_LABELS.map((label, i) => {
-          const stepNum = i + 1;
-          const isActive = step === stepNum;
-          const isDone = step > stepNum;
-          return (
-            <div key={label} className="flex-1 flex flex-col items-center gap-1.5">
-              {/* Step dot */}
+      <div className="mb-6 px-1">
+        {/* Segmented bar */}
+        <div className="flex gap-1.5 mb-2">
+          {STEP_LABELS.map((label, i) => {
+            const stepNum = i + 1;
+            const state = step > stepNum ? "done" : step === stepNum ? "current" : "future";
+            return (
               <div
-                className={`h-3 w-3 rounded-full transition-all duration-300 ${
-                  isDone
-                    ? "bg-cherry shadow-sm"
-                    : isActive
-                    ? "bg-cherry/50 ring-2 ring-cherry/20"
-                    : "bg-card-border"
-                }`}
+                key={label}
+                className="progress-segment flex-1"
+                data-state={state}
               />
-              {/* Progress bar */}
-              <div className="h-1 w-full rounded-full overflow-hidden bg-card-border/60">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ease-out ${
-                    isDone ? "bg-cherry w-full" : isActive ? "bg-cherry/50 w-1/2" : "w-0"
-                  }`}
-                />
-              </div>
+            );
+          })}
+        </div>
+        {/* Labels */}
+        <div className="flex">
+          {STEP_LABELS.map((label, i) => {
+            const stepNum = i + 1;
+            const isActive = step === stepNum;
+            const isDone = step > stepNum;
+            return (
               <span
-                className={`text-[10px] font-semibold tracking-wide ${
+                key={label}
+                className={`flex-1 text-center text-[10px] font-semibold tracking-wide ${
                   isActive ? "text-cherry" : isDone ? "text-foreground" : "text-muted/60"
                 }`}
               >
                 {label}
               </span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   }
@@ -302,7 +306,7 @@ function CreateEventInner() {
   function renderStep1() {
     return (
       <div className="animate-fade-in-up">
-        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-1">
+        <h1 className="text-[28px] font-bold font-serif text-foreground tracking-tight mb-1">
           New Blind Tasting
         </h1>
         <p className="text-muted text-[15px] mb-8">
@@ -317,7 +321,7 @@ function CreateEventInner() {
           }}
           className="touch-target w-full flex items-center gap-4 p-5 mb-6 active:scale-[0.98] transition-transform bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)]"
         >
-          <div className="h-14 w-14 rounded-[16px] bg-cherry/8 flex items-center justify-center flex-shrink-0">
+          <div className="h-14 w-14 rounded-[16px] bg-cherry/10 flex items-center justify-center flex-shrink-0">
             <Plus className="h-6 w-6 text-cherry" />
           </div>
           <div className="text-left flex-1">
@@ -337,7 +341,7 @@ function CreateEventInner() {
           </div>
         ) : templates.length > 0 ? (
           <>
-            <h2 className="text-[13px] font-bold text-muted uppercase tracking-wider mb-4">
+            <h2 className="text-[11px] font-bold text-muted uppercase tracking-wide mb-4">
               Templates
             </h2>
             <div className="space-y-3 stagger-children">
@@ -374,7 +378,7 @@ function CreateEventInner() {
                           </p>
                         )}
                         <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[11px] font-semibold text-muted">
+                          <span className="text-[11px] font-semibold text-muted nums">
                             {tmpl.wineCount} wines
                           </span>
                           <span className="text-muted/30">&middot;</span>
@@ -404,7 +408,7 @@ function CreateEventInner() {
   function renderStep2() {
     return (
       <div className="animate-fade-in-up">
-        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-1">
+        <h1 className="text-[28px] font-bold font-serif text-foreground tracking-tight mb-1">
           Configure
         </h1>
         <p className="text-muted text-[15px] mb-7">
@@ -413,7 +417,7 @@ function CreateEventInner() {
 
         {/* Title */}
         <label className="block mb-6">
-          <span className="text-[13px] font-bold text-foreground uppercase tracking-wide">
+          <span className="text-[11px] font-bold text-foreground uppercase tracking-wide">
             Event Title
           </span>
           <input
@@ -427,7 +431,7 @@ function CreateEventInner() {
 
         {/* Description */}
         <label className="block mb-6">
-          <span className="text-[13px] font-bold text-foreground uppercase tracking-wide">
+          <span className="text-[11px] font-bold text-foreground uppercase tracking-wide">
             Description{" "}
             <span className="font-normal normal-case text-muted tracking-normal">(optional)</span>
           </span>
@@ -521,7 +525,7 @@ function CreateEventInner() {
               <div>
                 <span className="text-[14px] font-bold text-foreground">Timer per wine</span>
                 {timerEnabled && (
-                  <p className="text-[12px] text-muted mt-0.5">
+                  <p className="text-[12px] text-muted mt-0.5 nums">
                     {Math.floor(timePerWine / 60)}:{String(timePerWine % 60).padStart(2, "0")} per wine
                   </p>
                 )}
@@ -577,11 +581,11 @@ function CreateEventInner() {
       <div className="animate-fade-in-up">
         {/* Selected wines count badge in header */}
         <div className="flex items-start justify-between mb-1">
-          <h1 className="text-[28px] font-bold text-foreground tracking-tight">
+          <h1 className="text-[28px] font-bold font-serif text-foreground tracking-tight">
             Add Wines
           </h1>
           {selectedWines.length > 0 && (
-            <span className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cherry text-white text-[12px] font-bold">
+            <span className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cherry text-white text-[12px] font-bold nums">
               <Wine className="h-3 w-3" />
               {selectedWines.length} selected
             </span>
@@ -615,10 +619,10 @@ function CreateEventInner() {
               <button
                 key={f.label}
                 onClick={() => setTypeFilter(f.value)}
-                className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[8px] text-[13px] font-medium transition-all ${
+                className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[12px] text-[13px] font-semibold transition-all ${
                   typeFilter === f.value
                     ? "bg-cherry text-white shadow-sm"
-                    : "bg-card-bg border border-card-border text-foreground"
+                    : "bg-card-bg border border-card-border text-foreground active:scale-[0.95]"
                 }`}
               >
                 <span className="text-[14px]">{f.emoji}</span>
@@ -662,12 +666,12 @@ function CreateEventInner() {
                   <div className={`h-3 w-3 rounded-full ${typeColor} flex-shrink-0`} />
 
                   <div className="flex-1 min-w-0">
-                    <p className={`font-semibold text-[14px] leading-tight line-clamp-1 ${alreadyAdded ? "text-cherry" : "text-foreground"}`}>
-                      {wine.name}
+                    <p className={`font-semibold font-serif text-[14px] leading-tight line-clamp-1 ${alreadyAdded ? "text-cherry" : "text-foreground"}`}>
+                      {wineName(wine.name)}
                     </p>
                     <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
-                      {wine.producer} &middot; {wine.region}
-                      {wine.vintage ? ` \u00B7 ${wine.vintage}` : ""}
+                      {wineName(wine.producer)}{wine.region ? ` \u00B7 ${wine.region}` : ""}
+                      {wine.vintage ? <span className="nums"> \u00B7 {wine.vintage}</span> : ""}
                     </p>
                   </div>
 
@@ -690,7 +694,7 @@ function CreateEventInner() {
         {selectedWines.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3 mt-2">
-              <h2 className="text-[13px] font-bold text-foreground uppercase tracking-wide">
+              <h2 className="text-[11px] font-bold text-foreground uppercase tracking-wide">
                 Flight Order
               </h2>
               <button
@@ -706,15 +710,15 @@ function CreateEventInner() {
                   key={wine.id}
                   className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] flex items-center gap-3 p-3.5 animate-scale-in"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-[12px] widget-wine text-[13px] font-bold text-cherry flex-shrink-0">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-[12px] widget-wine text-[13px] font-bold text-cherry flex-shrink-0 nums">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[14px] text-foreground line-clamp-1">
-                      {wine.name}
+                    <p className="font-semibold font-serif text-[14px] text-foreground line-clamp-1">
+                      {wineName(wine.name)}
                     </p>
                     <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
-                      {wine.producer} &middot; {wine.region}
+                      {wineName(wine.producer)}{wine.region ? ` \u00B7 ${wine.region}` : ""}
                     </p>
                   </div>
                   <button
@@ -740,7 +744,7 @@ function CreateEventInner() {
 
     return (
       <div className="animate-fade-in-up">
-        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-1">
+        <h1 className="text-[28px] font-bold font-serif text-foreground tracking-tight mb-1">
           Review & Create
         </h1>
         <p className="text-muted text-[15px] mb-7">
@@ -749,7 +753,7 @@ function CreateEventInner() {
 
         {/* Event summary card */}
         <div className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-5 mb-4">
-          <h2 className="text-xl font-bold text-foreground tracking-tight">
+          <h2 className="text-xl font-bold font-serif text-foreground tracking-tight">
             {title || "Blind Tasting"}
           </h2>
           {description && (
@@ -771,7 +775,7 @@ function CreateEventInner() {
             {/* Timer */}
             <div className="flex items-center justify-between">
               <span className="text-[13px] text-muted">Timer</span>
-              <span className="text-[13px] font-semibold text-foreground">
+              <span className="text-[13px] font-semibold text-foreground nums">
                 {timerEnabled
                   ? `${Math.floor(timePerWine / 60)}:${String(timePerWine % 60).padStart(2, "0")} per wine`
                   : "Off"}
@@ -806,19 +810,19 @@ function CreateEventInner() {
             <h3 className="text-[13px] font-bold text-foreground uppercase tracking-wide">
               Wines
             </h3>
-            <span className="text-[13px] font-bold text-cherry">{selectedWines.length}</span>
+            <span className="text-[13px] font-bold text-cherry nums">{selectedWines.length}</span>
           </div>
           <div className="space-y-3">
             {selectedWines.map((wine, idx) => (
               <div key={wine.id} className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-[12px] widget-wine text-[11px] font-bold text-cherry flex-shrink-0">
+                <span className="flex h-8 w-8 items-center justify-center rounded-[12px] widget-wine text-[11px] font-bold text-cherry flex-shrink-0 nums">
                   {idx + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-foreground line-clamp-1">
-                    {wine.name}
+                  <p className="text-[13px] font-semibold font-serif text-foreground line-clamp-1">
+                    {wineName(wine.name)}
                   </p>
-                  <p className="text-[11px] text-muted">{wine.producer}</p>
+                  <p className="text-[11px] text-muted">{wineName(wine.producer)}</p>
                 </div>
               </div>
             ))}
@@ -865,7 +869,7 @@ function CreateEventInner() {
             <ChevronLeft className="h-4 w-4" />
             Cancel
           </Link>
-          <span className="text-[12px] font-semibold text-muted">
+          <span className="text-[12px] font-semibold text-muted nums">
             Step {step} of 4
           </span>
         </div>

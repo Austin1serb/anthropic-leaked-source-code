@@ -117,12 +117,30 @@ function expandAbbreviations(str: string): string {
 }
 
 /**
+ * Decode common HTML entities found in scraped/imported wine data.
+ * "&amp;quot;Fruits And Wine&amp;quot; rosé" -> "\"Fruits And Wine\" rosé"
+ */
+export function decodeHtmlEntities(str: string): string {
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
+
+/**
  * Normalize a wine name: trim whitespace, proper capitalization, standardize accents.
  */
 export function normalizeWineName(name: string): string {
   if (!name) return "";
 
   let normalized = name.trim();
+
+  // Decode common HTML entities from scraped data
+  normalized = decodeHtmlEntities(normalized);
 
   // Remove multiple spaces
   normalized = normalized.replace(/\s+/g, " ");
