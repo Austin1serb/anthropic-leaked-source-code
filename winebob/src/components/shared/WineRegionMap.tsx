@@ -780,6 +780,95 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       }
     });
 
+      // ── Experience markers (Airbnb-style price tags) ──
+      fetch("/api/experiences")
+        .then((r) => r.json())
+        .then((data: GeoJSON.FeatureCollection) => {
+          if (!map.current || !data.features?.length) return;
+
+          map.current.addSource("experiences", { type: "geojson", data });
+
+          // Price tag badges — appear at zoom 8+
+          map.current.addLayer({
+            id: "experiences-badge",
+            type: "symbol",
+            source: "experiences",
+            minzoom: 8,
+            layout: {
+              "text-field": [
+                "concat",
+                ["case",
+                  ["==", ["get", "currency"], "EUR"], "€",
+                  ["==", ["get", "currency"], "USD"], "$",
+                  ["==", ["get", "currency"], "GBP"], "£",
+                  ["get", "currency"],
+                ],
+                ["to-string", ["/", ["get", "price"], 100]],
+              ],
+              "text-size": ["interpolate", ["linear"], ["zoom"], 8, 10, 12, 13],
+              "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
+              "text-offset": [1.8, -0.3],
+              "text-anchor": "left",
+              "text-allow-overlap": true,
+            },
+            paint: {
+              "text-color": "#FFFFFF",
+              "text-halo-color": "#74070E",
+              "text-halo-width": 5,
+              "text-halo-blur": 0,
+              "text-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.7, 10, 1],
+            },
+          });
+
+          // Experience click — card with booking link
+          map.current.on("mouseenter", "experiences-badge", () => {
+            if (map.current) map.current.getCanvas().style.cursor = "pointer";
+          });
+          map.current.on("mouseleave", "experiences-badge", () => {
+            if (map.current) map.current.getCanvas().style.cursor = "";
+          });
+          map.current.on("click", "experiences-badge", (e) => {
+            if (!map.current || !e.features?.length) return;
+            const p = e.features[0].properties as Record<string, any>;
+
+            const typeLabels: Record<string, string> = {
+              tasting: "🍷 Tasting", tour: "🚶 Tour", harvest: "🍇 Harvest",
+              dinner: "🍽 Dinner", workshop: "📚 Workshop", stay: "🏡 Stay",
+            };
+            const typeLabel = typeLabels[p.type] || p.type;
+            const dur = p.duration < 60 ? `${p.duration}min` : `${Math.floor(p.duration / 60)}h${p.duration % 60 > 0 ? ` ${p.duration % 60}m` : ""}`;
+            const currSymbol = p.currency === "EUR" ? "€" : p.currency === "USD" ? "$" : p.currency === "GBP" ? "£" : p.currency;
+            const price = `${currSymbol}${Math.round(p.price / 100)}`;
+
+            popup.current
+              ?.setLngLat(e.lngLat)
+              .setHTML(`
+                <div style="font-family:system-ui,-apple-system,sans-serif;width:260px;overflow:hidden">
+                  <div style="background:linear-gradient(135deg,#74070E,#5a0610);padding:10px 12px;border-radius:8px 8px 0 0">
+                    <p style="font-size:9px;font-weight:700;color:#ffffff90;text-transform:uppercase;letter-spacing:0.08em;margin:0">${typeLabel}</p>
+                    <p style="font-size:14px;font-weight:800;color:#fff;margin:4px 0 0;line-height:1.3">${p.title}</p>
+                  </div>
+                  <div style="padding:10px 12px">
+                    <p style="font-size:11px;color:#5A4A30;margin:0 0 8px">
+                      at <strong>${p.wineryName}</strong> · ${p.region}
+                    </p>
+                    ${p.highlights ? `<p style="font-size:11px;color:#8C7E6E;margin:0 0 8px;line-height:1.4;font-style:italic">${p.highlights.length > 100 ? p.highlights.slice(0, 97) + "..." : p.highlights}</p>` : ""}
+                    <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#8C7E6E;margin:0 0 10px">
+                      <span>⏱ ${dur}</span>
+                      <span>👥 Max ${p.maxGuests}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                      <span style="font-size:18px;font-weight:800;color:#74070E">${price}<span style="font-size:10px;font-weight:400;color:#8C7E6E"> /person</span></span>
+                      <a href="/experiences/${p.slug}" style="font-size:11px;font-weight:700;color:#fff;background:#74070E;padding:6px 14px;border-radius:6px;text-decoration:none;white-space:nowrap">Book →</a>
+                    </div>
+                  </div>
+                </div>
+              `)
+              .addTo(map.current!);
+          });
+        })
+        .catch(() => { /* API unavailable */ });
+
     return () => { popup.current?.remove(); tourAbort.current?.abort(); map.current?.remove(); map.current = null; mapLoaded.current = false; if (mapRef) { (mapRef as React.MutableRefObject<mapboxgl.Map | null>).current = null; } };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
