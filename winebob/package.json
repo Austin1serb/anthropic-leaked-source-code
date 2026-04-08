@@ -10,7 +10,7 @@
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts && tsx prisma/seedGrapes.ts && tsx prisma/seedAppellations.ts"
+    "db:seed": "node prisma/seed.mjs && node prisma/seedGrapes.mjs && node prisma/seedAppellations.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
