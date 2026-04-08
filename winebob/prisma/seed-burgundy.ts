@@ -483,9 +483,16 @@ async function main() {
   }
   console.log(`\n🏰 ${wineryCount} wineries seeded.\n`);
 
-  // 2. Upsert wines (skip duplicates by name+producer+region)
+  // 2. Build winery name → id lookup
+  const wineryLookup = new Map<string, string>();
+  const allWineries = await prisma.winery.findMany({ where: { region: "Burgundy" }, select: { id: true, name: true } });
+  for (const w of allWineries) wineryLookup.set(w.name, w.id);
+
+  // 3. Upsert wines linked to wineries via wineryId
   let wineCount = 0;
   for (const wine of BURGUNDY_WINES) {
+    const wineryId = wineryLookup.get(wine.producer) ?? null;
+
     const existing = await prisma.wine.findFirst({
       where: {
         name: wine.name,
@@ -504,6 +511,7 @@ async function main() {
           appellation: wine.appellation,
           description: wine.description,
           priceRange: wine.priceRange,
+          wineryId: wineryId,
           source: "seed",
           confidence: 0.95,
           isPublic: true,
@@ -521,6 +529,7 @@ async function main() {
           appellation: wine.appellation,
           description: wine.description,
           priceRange: wine.priceRange,
+          wineryId: wineryId,
           source: "seed",
           confidence: 0.95,
           isPublic: true,

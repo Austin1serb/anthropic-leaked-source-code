@@ -34,6 +34,8 @@ model User {
   consent           UserConsent?
   wineEvents        WineEvent[]
   segment           UserSegment?
+  claimedWineries   Winery[]           @relation("ClaimedWineries")
+  reviewedApplications WineryApplication[] @relation("ReviewedApplications")
 }
 
 model Account {
@@ -75,8 +77,7 @@ model VerificationToken {
 model Wine {
   id          String   @id @default(cuid())
   name        String
-  producer    String   // denormalized producer name (for display/search)
-  producerId  String?  // FK to Producer record (null for legacy/user-added wines)
+  producer    String   // legacy string field — use wineryId for proper FK
   vintage     Int?     // null = NV
   grapes      String[]
   region      String
@@ -93,6 +94,10 @@ model Wine {
   addedById   String?  // null = system-curated, userId = host-contributed
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
+
+  // ── Producer relationship ──
+  wineryId    String?  // FK to Winery — the producer of this wine
+  winery      Winery?  @relation(fields: [wineryId], references: [id], onDelete: SetNull)
 
   // ── Data intelligence fields ──
   barcode         String?
@@ -129,7 +134,7 @@ model Wine {
   @@index([source])
   @@index([canonicalWineId])
   @@index([importBatchId])
-  @@index([producerId])
+  @@index([wineryId])
 }
 
 // ============ WINERIES ============
@@ -140,13 +145,19 @@ model Winery {
   slug        String   @unique
   description String?
   history     String?  // longer story about the winery
+  philosophy  String?  // winemaking philosophy (organic, biodynamic, etc.)
   founded     Int?     // year founded
   owner       String?
+  winemaker   String?  // head winemaker name
   website     String?
   email       String?
   phone       String?
   image       String?  // hero image URL
   logo        String?
+
+  // Social
+  instagram   String?
+  facebook    String?
 
   // Location
   lat         Float
@@ -157,7 +168,9 @@ model Winery {
 
   // Business
   featured    Boolean  @default(false) // paid/sponsored
-  verified    Boolean  @default(false)
+  verified    Boolean  @default(false) // winebob-verified
+  claimedById String?  // userId of the producer who claimed this profile
+  claimedBy   User?    @relation("ClaimedWineries", fields: [claimedById], references: [id])
   visitBooking String? // URL for booking visits
 
   // Production
@@ -165,6 +178,11 @@ model Winery {
   vineyardSize   String? // e.g. "45 hectares"
   grapeVarieties String[] // main grapes they grow
   wineStyles     String[] // e.g. ["red", "white", "sparkling"]
+  certifications String[] // e.g. ["organic", "biodynamic", "sustainable"]
+
+  // Relations
+  wines       Wine[]
+  applications WineryApplication[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
@@ -172,6 +190,45 @@ model Winery {
   @@index([region, country])
   @@index([featured])
   @@index([lat, lng])
+  @@index([claimedById])
+}
+
+// ============ WINERY APPLICATIONS ============
+// Producers apply to claim/create their winery profile
+
+model WineryApplication {
+  id          String   @id @default(cuid())
+  status      String   @default("pending") // pending, approved, rejected
+  type        String   @default("claim")   // claim (existing), create (new)
+
+  // Applicant info
+  applicantName  String
+  applicantEmail String
+  applicantRole  String?  // owner, winemaker, marketing, etc.
+  applicantPhone String?
+  message        String?  // why they want to claim/create
+
+  // Winery reference
+  wineryId    String?  // if claiming an existing winery
+  winery      Winery?  @relation(fields: [wineryId], references: [id], onDelete: SetNull)
+
+  // For new winery applications
+  wineryName     String?
+  wineryRegion   String?
+  wineryCountry  String?
+  wineryWebsite  String?
+
+  // Review
+  reviewedById   String?
+  reviewedBy     User?    @relation("ReviewedApplications", fields: [reviewedById], references: [id])
+  reviewedAt     DateTime?
+  reviewNote     String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([status])
+  @@index([wineryId])
 }
 
 // ============ WINE FAVORITES (personal cellar) ============

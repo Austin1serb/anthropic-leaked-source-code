@@ -724,7 +724,7 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
                   ${desc ? `<p style="font-size:11px;color:#5A4A30;margin:0 0 8px;line-height:1.4">${desc}</p>` : ""}
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
                     <div style="display:flex;gap:3px;flex-wrap:wrap;flex:1;min-width:0">${grapePills}</div>
-                    <a href="/wines?search=${searchName}" style="flex-shrink:0;font-size:10px;font-weight:700;color:${accentColor};text-decoration:none;padding:4px 10px;border-radius:6px;background:${accentColor}12;white-space:nowrap">View wines →</a>
+                    <a href="/producers/${p.slug || ''}" style="flex-shrink:0;font-size:10px;font-weight:700;color:${accentColor};text-decoration:none;padding:4px 10px;border-radius:6px;background:${accentColor}12;white-space:nowrap">View wines →</a>
                   </div>
                 </div>
               </div>
