@@ -188,70 +188,114 @@ async function scrapeWineSearcher(query: string): Promise<Partial<ScrapedWine> |
     else if (priceText.includes("£") || priceText.includes("GBP")) priceCurrency = "GBP";
   }
 
-  // Style / type
+  // ── Use regex on raw HTML for reliable extraction ──
+  // Wine-Searcher embeds wine data in specific patterns that CSS selectors miss
+  // because navigation elements use similar class names.
+
+  // Style / type — pattern: "Style\n\nRed - Savory and Classic"
   let style = "";
-  $('[class*="style"], [class*="wine-type"]').each((_, el) => {
-    const text = $(el).text().trim();
-    if (text.includes("–") || text.match(/Red|White|Rosé|Sparkling/i)) {
-      if (!style) style = text;
-    }
-  });
+  const styleMatch = html.match(/((?:Red|White|Rosé|Rose|Sparkling|Dessert|Fortified|Orange)\s*[-–]\s*[A-Z][^<"]{5,60})/);
+  if (styleMatch) style = styleMatch[1].trim();
 
-  // Grapes
+  // Grapes — look for "Grape Variety" label followed by actual grape names
   const grapes: string[] = [];
-  $('[class*="grape"], [href*="/grape"]').each((_, el) => {
-    const grape = $(el).text().trim();
-    if (grape && grape.length < 40 && !grapes.includes(grape)) grapes.push(grape);
-  });
+  // Pattern 1: "Grape Variety\n\nMerlot" or "Grape Variety\n\nCabernet Franc - Cabernet Sauvignon"
+  const grapeBlockMatch = html.match(/Grape\s*Variety[^<]*?<[^>]*>([^<]+)/i)
+    || html.match(/Grape\s*Variety\s+([A-Z][a-zé]+(?: (?:Blanc|Noir|Gris|Grigio|Franc|Sauvignon|Meunier))?(?:\s*[-,/&]\s*[A-Z][a-zé]+(?: (?:Blanc|Noir|Gris|Grigio|Franc|Sauvignon|Meunier))?)*)/);
+  if (grapeBlockMatch) {
+    const raw = grapeBlockMatch[1].trim();
+    // Split on " - " or ", " or " / " or " & "
+    raw.split(/\s*[-–,/&]\s*/).forEach((g) => {
+      const cleaned = g.trim();
+      if (cleaned && cleaned.length > 2 && cleaned.length < 40
+        && !cleaned.includes("Home") && !cleaned.includes("Grapes")
+        && !cleaned.includes("See") && !cleaned.includes("Region")) {
+        grapes.push(cleaned);
+      }
+    });
+  }
+  // Fallback: look for the last "grape" link that contains actual grape text
+  if (grapes.length === 0) {
+    const allGrapeMatches = html.matchAll(/grape[^"]*"[^>]*>([A-Z][a-zé]+(?: (?:Blanc|Noir|Gris|Grigio|Franc|Sauvignon))?)<\/a>/gi);
+    for (const m of allGrapeMatches) {
+      const g = m[1].trim();
+      if (g.length > 3 && g.length < 35 && !grapes.includes(g)) grapes.push(g);
+    }
+  }
 
-  // Region / Appellation / Country
+  // Region / Appellation / Country — parse from page title or specific patterns
   let appellation = "";
   let country = "";
-  $('[class*="appellation"], [class*="region"], [href*="/regions"]').each((_, el) => {
-    const text = $(el).text().trim();
-    if (text && text.length < 60) {
-      if (!appellation) appellation = text;
+  // Pattern: title usually contains "Wine Name, Appellation, Country | Wine-Searcher"
+  const titleText = $("title").text();
+  const titleParts = titleText.split("|")[0].split(",").map((s: string) => s.trim());
+  if (titleParts.length >= 3) {
+    // Last part before "|" is often the country or region
+    country = titleParts[titleParts.length - 1];
+    appellation = titleParts.slice(1, -1).join(", ");
+  } else if (titleParts.length === 2) {
+    appellation = titleParts[1];
+  }
+  // Also try regex for appellation pattern in HTML
+  if (!appellation || appellation === "Regions") {
+    const appellMatch = html.match(/(?:Appellation|Region)[^<]*?<[^>]*>([A-Z][^<]{3,50})<\/a>/i);
+    if (appellMatch) appellation = appellMatch[1].trim();
+  }
+  // Extract country from known list in the HTML
+  if (!country) {
+    const countries = ["France", "Italy", "Spain", "Portugal", "Germany", "Austria",
+      "United States", "Australia", "New Zealand", "Chile", "Argentina", "South Africa",
+      "Greece", "Hungary", "Lebanon", "Georgia", "England"];
+    for (const c of countries) {
+      if (html.includes(`>${c}<`) || titleText.includes(c)) { country = c; break; }
     }
-  });
-  // Try to extract country from appellation or breadcrumbs
-  $('[class*="breadcrumb"] a, [class*="country"]').each((_, el) => {
-    const text = $(el).text().trim();
-    if (["France", "Italy", "Spain", "Portugal", "Germany", "Austria", "United States", "Australia", "New Zealand", "Chile", "Argentina", "South Africa"].includes(text)) {
-      country = text;
-    }
-  });
+  }
+  // Clean up — remove "Regions" nav artifacts
+  if (appellation === "Regions" || appellation === "Grapes") appellation = "";
 
-  // Producer / Winery
+  // Producer / Winery — look for merchant link pattern specific to the wine's producer
   let producer = "";
-  $('[class*="producer"], [class*="winery"], [href*="/merchant/"]').each((_, el) => {
-    const text = $(el).text().trim();
-    if (text && text.length < 60 && !text.includes("Buy") && !text.includes("Search")) {
-      if (!producer) producer = text;
-    }
-  });
+  const producerMatch = html.match(/merchant\/\d+-([^"]+)"[^>]*>([^<]+)<\/a>/);
+  if (producerMatch) {
+    producer = producerMatch[2].trim();
+  }
+  // Fallback: extract from wine name (remove vintage and appellation)
+  if (!producer && wineName) {
+    const nameWithoutVintage = wineName.replace(/^\d{4}\s+/, "").trim();
+    // Common pattern: "Domaine X Wine Name" or "Château X Wine"
+    const prodMatch = nameWithoutVintage.match(/^((?:Château|Chateau|Domaine|Tenuta|Bodega|Bodegas|Weingut|Maison)\s+[A-Za-zÀ-ÿ'-]+(?:\s+[A-Za-zÀ-ÿ'-]+)?)/i);
+    if (prodMatch) producer = prodMatch[1];
+    else producer = nameWithoutVintage.split(" ").slice(0, 2).join(" ");
+  }
 
-  // ABV
+  // ABV — look for percentage pattern near "alcohol" or "ABV"
   let abv: number | null = null;
-  const abvMatch = html.match(/(\d{1,2}(?:\.\d)?)\s*%?\s*(?:ABV|alcohol|vol)/i);
+  const abvMatch = html.match(/(?:ABV|alcohol|vol\.?)\s*:?\s*(\d{1,2}(?:\.\d{1,2})?)\s*%/i)
+    || html.match(/(\d{1,2}\.\d{1,2})\s*%\s*(?:ABV|alcohol|vol)/i);
   if (abvMatch) abv = parseFloat(abvMatch[1]);
 
-  // Tasting notes — look for descriptors
+  // Tasting notes — look for critic quote blocks (longer text with "vintage" mention)
   let tastingNotes = "";
-  $('[class*="tasting"], [class*="description"], [class*="notes"]').each((_, el) => {
+  $('[class*="tasting"], [class*="description"], [class*="notes"], [class*="review"]').each((_, el) => {
     const text = $(el).text().trim();
-    if (text.length > 30 && text.length < 500 && !tastingNotes) {
-      tastingNotes = text;
+    // Real tasting notes are usually 50+ chars with wine vocabulary
+    if (text.length > 50 && text.length < 800
+      && (text.includes("vintage") || text.includes("aroma") || text.includes("palate")
+        || text.includes("finish") || text.includes("fruit") || text.includes("tannin"))
+      && !tastingNotes) {
+      // Clean: extract just the quoted note if present
+      const quoteMatch = text.match(/"([^"]{40,500})"/);
+      tastingNotes = quoteMatch ? quoteMatch[1] : text;
     }
   });
 
-  // Food pairing
+  // Food pairing — use regex, skip "See All" links
   let foodPairing = "";
-  $('[class*="food"], [class*="pairing"]').each((_, el) => {
-    const text = $(el).text().trim();
-    if (text.length > 10 && text.length < 300 && !foodPairing) {
-      foodPairing = text;
-    }
-  });
+  const foodMatch = html.match(/(?:food pairing|pairs? with|serve with)[^<]*?<[^>]*>([^<]+(?:,\s*[^<]+)*)/i);
+  if (foodMatch) {
+    const cleaned = foodMatch[1].trim();
+    if (!cleaned.includes("See All") && cleaned.length > 5) foodPairing = cleaned;
+  }
 
   // Offers count
   let offersCount: number | null = null;
@@ -263,12 +307,17 @@ async function scrapeWineSearcher(query: string): Promise<Partial<ScrapedWine> |
   const lwinMatch = html.match(/LWIN[:\s]*(\d{6,})/i) || searchUrl.match(/lwin(\d+)/);
   if (lwinMatch) lwin = lwinMatch[1];
 
-  // Image
-  const imageUrl = $('[class*="wine-image"] img, [class*="label"] img, img[src*="label"]').first().attr("src") || null;
+  // Image — build full URL
+  let imageUrl: string | null = null;
+  const imgSrc = $('img[src*="label"]').first().attr("src")
+    || $('img[src*="wine"]').first().attr("src");
+  if (imgSrc) {
+    imageUrl = imgSrc.startsWith("http") ? imgSrc : `https://www.wine-searcher.com${imgSrc}`;
+  }
 
-  // Popularity
+  // Popularity — look for rank pattern
   let popularity: string | null = null;
-  const popMatch = html.match(/(?:popularity|rank)[:\s]*#?(\d+(?:st|nd|rd|th)?)/i);
+  const popMatch = html.match(/(?:popularity|search rank|ranked?)\s*(?::|#)?\s*(\d+(?:st|nd|rd|th)?)/i);
   if (popMatch) popularity = popMatch[1];
 
   const result: Partial<ScrapedWine> = {
