@@ -86,11 +86,11 @@ model Wine {
   type        String   // red, white, rosé, sparkling, dessert, fortified, orange
   description String?
   labelImage  String?
-  priceRange  String?  // budget, mid, premium, luxury (or null if unknown)
+  priceRange  String?  // budget, mid, premium, luxury
   abv         Float?   // alcohol by volume percentage
   tastingNotes String? // professional tasting notes
   foodPairing String?  // suggested food pairings
-  isPublic    Boolean  @default(true)  // visible in public wine library
+  isPublic    Boolean  @default(true)
   addedById   String?  // null = system-curated, userId = host-contributed
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
@@ -100,12 +100,12 @@ model Wine {
   winery      Winery?  @relation(fields: [wineryId], references: [id], onDelete: SetNull)
 
   // ── Data intelligence fields ──
-  barcode         String?   // EAN/UPC for retail scanning
-  lwin            String?   // London Wine Exchange ID
-  externalIds     Json?     // { wikidata: "Q123", openfoodfacts: "123", ttb_cola: "456" }
-  source          String    @default("user") // "seed", "user", "wikidata", "openfoodfacts", "ttb", "systembolaget"
-  confidence      Float     @default(1.0)    // 0.0-1.0 data reliability score
-  canonicalWineId String?   // dedup pointer to master record
+  barcode         String?
+  lwin            String?
+  externalIds     Json?
+  source          String    @default("user")
+  confidence      Float     @default(1.0)
+  canonicalWineId String?
   lastVerifiedAt  DateTime?
   importBatchId   String?
 
@@ -116,6 +116,7 @@ model Wine {
   wishlistEntries WineWishlist[]
   checkIns        WineCheckIn[]
   addedBy         User?          @relation("AddedWines", fields: [addedById], references: [id])
+  producerRef     Producer?      @relation(fields: [producerId], references: [id], onDelete: SetNull)
   canonicalWine   Wine?          @relation("WineDuplicates", fields: [canonicalWineId], references: [id], onDelete: SetNull)
   duplicates      Wine[]         @relation("WineDuplicates")
   importBatch     ImportBatch?   @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
@@ -689,6 +690,8 @@ model Producer {
   externalIds Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  wines       Wine[]
 
   @@unique([name, country])
   @@index([region])

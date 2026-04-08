@@ -10,7 +10,9 @@
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "node prisma/seed.mjs && node prisma/seedGrapes.mjs && node prisma/seedAppellations.mjs"
+    "db:seed": "node prisma/seed.mjs && node prisma/seedGrapes.mjs && node prisma/seedAppellations.mjs",
+    "db:seed:wines": "node prisma/seeds/seed-all.mjs",
+    "db:cleanup": "node prisma/seeds/cleanup.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",

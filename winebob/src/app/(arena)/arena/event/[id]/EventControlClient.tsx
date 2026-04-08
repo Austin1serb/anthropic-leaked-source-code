@@ -30,6 +30,7 @@ import {
   revealWine,
   scoreEvent,
 } from "@/lib/actions";
+import { decodeHtmlEntities } from "@/lib/importers/normalize";
 
 // ============ TYPES ============
 
@@ -377,7 +378,10 @@ export function EventControlClient({ event }: EventControlClientProps) {
                 const typeColor =
                   bw.wine?.type.toLowerCase() === "red" ? "bg-red-500" :
                   bw.wine?.type.toLowerCase() === "white" ? "bg-amber-200" :
-                  bw.wine?.type.toLowerCase() === "rosé" ? "bg-pink-300" : "bg-gray-300";
+                  bw.wine?.type.toLowerCase() === "rosé" ? "bg-pink-300" :
+                  bw.wine?.type.toLowerCase() === "sparkling" ? "bg-yellow-300" :
+                  bw.wine?.type.toLowerCase() === "orange" ? "bg-orange-300" :
+                  bw.wine?.type.toLowerCase() === "dessert" ? "bg-amber-300" : "bg-gray-300";
 
                 return (
                   <div
@@ -399,10 +403,10 @@ export function EventControlClient({ event }: EventControlClientProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <div className={`h-2.5 w-2.5 rounded-full ${typeColor} flex-shrink-0`} />
-                        <p className="text-[14px] font-semibold font-serif text-foreground truncate">{bw.wine?.name ?? "Unknown"}</p>
+                        <p className="text-[14px] font-semibold font-serif text-foreground truncate">{decodeHtmlEntities(bw.wine?.name ?? "Unknown")}</p>
                       </div>
                       <p className="text-[11px] text-muted truncate mt-0.5">
-                        {bw.wine?.producer}{bw.wine?.vintage ? <span className="nums"> {bw.wine.vintage}</span> : " NV"} · {bw.wine?.region}, {bw.wine?.country}
+                        {decodeHtmlEntities(bw.wine?.producer ?? "")}{bw.wine?.vintage ? <span className="nums"> {bw.wine.vintage}</span> : " NV"} · {bw.wine?.region}, {bw.wine?.country}
                       </p>
                     </div>
 

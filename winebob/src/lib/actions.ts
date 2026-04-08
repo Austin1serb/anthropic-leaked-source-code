@@ -448,10 +448,15 @@ export async function getEventById(id: string) {
 }
 
 export async function getTemplates() {
-  return prisma.eventTemplate.findMany({
-    where: { isPublic: true },
-    orderBy: [{ featured: "desc" }, { usageCount: "desc" }],
-  });
+  try {
+    return await prisma.eventTemplate.findMany({
+      where: { isPublic: true },
+      orderBy: [{ featured: "desc" }, { usageCount: "desc" }],
+    });
+  } catch (e) {
+    console.error("Failed to load templates:", e);
+    return [];
+  }
 }
 
 export async function searchWines(query: string) {
@@ -495,17 +500,22 @@ export async function getWineRegionCounts(): Promise<Record<string, number>> {
 }
 
 export async function getBrowseWines() {
-  const wines = await prisma.wine.findMany({
-    where: { isPublic: true },
-    take: 30,
-    orderBy: { name: "asc" },
-  });
+  try {
+    const wines = await prisma.wine.findMany({
+      where: { isPublic: true },
+      take: 30,
+      orderBy: { name: "asc" },
+    });
 
-  // Fire-and-forget: track browse view
-  const session = await auth().catch(() => null);
-  trackWineView(session?.user?.id ?? null, "", "browse").catch(() => {});
+    // Fire-and-forget: track browse view
+    const session = await auth().catch(() => null);
+    trackWineView(session?.user?.id ?? null, "", "browse").catch(() => {});
 
-  return wines;
+    return wines;
+  } catch (e) {
+    console.error("Failed to load browse wines:", e);
+    return [];
+  }
 }
 
 // ============ WINE LIBRARY ============

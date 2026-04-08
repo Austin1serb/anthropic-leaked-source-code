@@ -66,7 +66,7 @@ export default function CreateLiveEventPage() {
   // Check sommelier profile
   useEffect(() => {
     getMyProfile().then((p) => setHasSomProfile(!!p)).catch(() => setHasSomProfile(false));
-    getBrowseWines().then((data) => { setBrowseWines(data as WineResult[]); setBrowseLoaded(true); });
+    getBrowseWines().then((data) => { setBrowseWines(data as WineResult[]); setBrowseLoaded(true); }).catch(() => { setBrowseLoaded(true); });
   }, []);
 
   const handleSearch = useCallback(async (query: string) => {
