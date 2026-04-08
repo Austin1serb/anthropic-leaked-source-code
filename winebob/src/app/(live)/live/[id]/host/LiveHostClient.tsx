@@ -83,7 +83,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
 
   return (
     <div className="min-h-dvh safe-top safe-bottom bg-background">
-      <div className="container-app pt-5 pb-32">
+      <div className="px-5 pt-5 pb-32">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Link href="/live" className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted touch-target">
@@ -109,7 +109,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
         {event.joinCode && (
           <button
             onClick={copyJoinCode}
-            className="wine-card flex items-center gap-3 w-full px-4 py-3 mb-5 active:scale-[0.98] transition-transform"
+            className="bg-white rounded-[14px] border border-card-border/60 flex items-center gap-3 w-full px-4 py-3 mb-5 hover:opacity-95 transition-transform"
           >
             <div className="flex-1 text-left">
               <p className="label">Join Code</p>
@@ -126,15 +126,15 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
         {/* Live Stats */}
         {event.status === "live" && (
           <div className="grid grid-cols-3 gap-3 mb-5">
-            <div className="wine-card p-3 text-center">
+            <div className="bg-white rounded-[14px] border border-card-border/60 p-3 text-center">
               <p className="text-[20px] font-bold tabular-nums text-foreground">{event.participants.length}</p>
               <p className="label mt-1">Viewers</p>
             </div>
-            <div className="wine-card p-3 text-center">
+            <div className="bg-white rounded-[14px] border border-card-border/60 p-3 text-center">
               <p className="text-[20px] font-bold tabular-nums text-foreground">{currentGuessCount}</p>
               <p className="label mt-1">Guesses</p>
             </div>
-            <div className="wine-card p-3 text-center">
+            <div className="bg-white rounded-[14px] border border-card-border/60 p-3 text-center">
               <p className="text-[20px] font-bold tabular-nums text-foreground">
                 {currentWine?.position ?? event.wines.length}/{event.wines.length}
               </p>
@@ -145,7 +145,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
 
         {/* Scheduled */}
         {event.status === "scheduled" && (
-          <div className="wine-card p-6 text-center mb-6">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-6 text-center mb-6">
             <p className="text-[14px] text-muted mb-4">{event.participants.length} participants waiting</p>
             <button onClick={handleStart} disabled={isPending} className="btn-primary touch-target mx-auto max-w-xs">
               <Play className="h-5 w-5" /> {isPending ? "Starting..." : "Go Live"}
@@ -185,7 +185,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
               return (
                 <div
                   key={lw.id}
-                  className={`wine-card p-4 transition-all ${
+                  className={`bg-white rounded-[14px] border border-card-border/60 p-4 transition-all ${
                     isCurrent ? "ring-2 ring-cherry shadow-md" : lw.revealed ? "opacity-50" : "opacity-30"
                   }`}
                 >
@@ -214,7 +214,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
                   {isCurrent && (
                     <div className="space-y-2 mt-3">
                       {revealedHints.map((h) => (
-                        <div key={h.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-widget-sage/50">
+                        <div key={h.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-bg-emerald-50/50">
                           <Check className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
                           <span className="text-[12px] text-foreground flex-1">{h.content}</span>
                           <span className="text-[10px] text-muted capitalize">{h.hintType}</span>
@@ -225,7 +225,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
                         <button
                           onClick={() => handleReleaseHint(nextHint.id)}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2 px-3 py-3 rounded-xl border-2 border-dashed border-cherry/30 text-cherry font-semibold text-[13px] active:bg-widget-wine/30 transition-colors touch-target"
+                          className="w-full flex items-center gap-2 px-3 py-3 rounded-xl border-2 border-dashed border-cherry/30 text-cherry font-semibold text-[13px] active:bg-bg-cherry/8/30 transition-colors touch-target"
                         >
                           <Sparkles className="h-4 w-4" />
                           <span className="flex-1 text-left">
@@ -281,8 +281,8 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
 
         {/* Completed */}
         {event.status === "completed" && (
-          <div className="wine-card p-8 text-center">
-            <div className="h-16 w-16 rounded-3xl widget-gold flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-8 text-center">
+            <div className="h-16 w-16 rounded-3xl bg-amber-50 flex items-center justify-center mx-auto mb-4">
               <Trophy className="h-8 w-8 text-amber-600" />
             </div>
             <h2 className="text-[18px] font-bold text-foreground">Tasting Complete</h2>
