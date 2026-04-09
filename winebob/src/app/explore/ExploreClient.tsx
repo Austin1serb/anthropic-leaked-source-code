@@ -80,6 +80,7 @@ export default function ExploreClient({ wineries, regionCounts }: Props) {
     setActiveCity(null);
     setFlyToCoords(null);
     setTourRegion(null);
+    setVintagePick(null);
     // Fetch region detail from DB
     startTransition(async () => {
       try {
@@ -147,6 +148,8 @@ export default function ExploreClient({ wineries, regionCounts }: Props) {
         mapRef={mapRef}
         region={selectedRegion}
         vintagePick={vintagePick}
+        wines={regionDetail?.wines}
+        onPickWine={setVintagePick}
       />
       <FlavorGenomeLayer
         active={isActive("flavor-genome")}

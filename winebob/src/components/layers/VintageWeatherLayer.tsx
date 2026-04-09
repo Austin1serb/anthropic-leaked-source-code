@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { ChevronDown, Wine } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 
 // ── Region center coordinates (mirrored from WineRegionMap) ──
@@ -31,11 +32,21 @@ export type VintagePick = {
   vintage: number;
 };
 
+type RegionWineBasic = {
+  id: string;
+  name: string;
+  producer: string;
+  vintage?: number | null;
+  type: string;
+};
+
 type Props = {
   active: boolean;
   mapRef: React.RefObject<mapboxgl.Map | null>;
   region?: string | null;
   vintagePick?: VintagePick | null;
+  wines?: RegionWineBasic[];
+  onPickWine?: (pick: VintagePick) => void;
 };
 
 // ── Constants ──
@@ -86,13 +97,14 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function VintageWeatherLayer({ active, mapRef, region, vintagePick }: Props) {
+export function VintageWeatherLayer({ active, mapRef, region, vintagePick, wines, onPickWine }: Props) {
   const [selectedYear, setSelectedYear] = useState(2025);
   const [weatherData, setWeatherData] = useState<DailyData[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dayIndex, setDayIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [winePickerOpen, setWinePickerOpen] = useState(false);
   const yearScrollRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrubberRef = useRef<HTMLDivElement>(null);
@@ -307,6 +319,12 @@ export function VintageWeatherLayer({ active, mapRef, region, vintagePick }: Pro
 
   if (!active) return null;
 
+  // Wines with a vintage year (for the picker)
+  const vintageWines = React.useMemo(
+    () => (wines ?? []).filter((w): w is RegionWineBasic & { vintage: number } => !!w.vintage && w.vintage >= 1990),
+    [wines],
+  );
+
   // No region selected
   if (!region) {
     return (
@@ -376,6 +394,78 @@ export function VintageWeatherLayer({ active, mapRef, region, vintagePick }: Pro
                   <p className="text-[9px] font-bold text-cherry mt-0.5">{current.label}</p>
                 ) : null;
               })()}
+            </div>
+
+            {/* ── Wine Picker ── */}
+            {vintageWines.length > 0 && onPickWine && (
+              <div className="mt-2.5 pt-2 border-t border-white/[0.06]">
+                <button
+                  onClick={() => setWinePickerOpen((v) => !v)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Wine className="h-3 w-3 text-cherry" />
+                    <span className="text-[9px] font-bold text-white/50 uppercase tracking-wider">
+                      Pick a wine
+                    </span>
+                  </div>
+                  <ChevronDown
+                    className={`h-3 w-3 text-white/40 transition-transform ${winePickerOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {winePickerOpen && (
+                  <div className="mt-1.5 max-h-[150px] overflow-y-auto scrollbar-thin space-y-1">
+                    {vintageWines.map((w) => {
+                      const isSelected = vintagePick?.wineName === w.name && vintagePick?.vintage === w.vintage;
+                      return (
+                        <button
+                          key={w.id}
+                          onClick={() => {
+                            onPickWine({ wineName: w.name, producer: w.producer, vintage: w.vintage! });
+                            setWinePickerOpen(false);
+                          }}
+                          className={`w-full text-left px-2 py-1.5 rounded-[6px] transition-colors ${
+                            isSelected ? "bg-cherry/20 border border-cherry/30" : "bg-white/[0.04] hover:bg-white/[0.08]"
+                          }`}
+                        >
+                          <p className="text-[10px] font-semibold text-white/80 truncate">
+                            {w.name} · {w.vintage}
+                          </p>
+                          <p className="text-[8px] text-white/40 truncate">{w.producer}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Wine Picker (no weather data yet / loading) ── */}
+      {!weatherData && !loading && vintageWines.length > 0 && onPickWine && (
+        <div className="absolute top-28 right-3 z-20 w-[190px]">
+          <div className="rounded-[12px] bg-[#1A1412]/85 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Wine className="h-3.5 w-3.5 text-cherry" />
+              <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider">
+                Pick a wine to explore
+              </span>
+            </div>
+            <div className="max-h-[200px] overflow-y-auto scrollbar-thin space-y-1">
+              {vintageWines.map((w) => (
+                <button
+                  key={w.id}
+                  onClick={() => onPickWine({ wineName: w.name, producer: w.producer, vintage: w.vintage! })}
+                  className="w-full text-left px-2 py-1.5 rounded-[6px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
+                >
+                  <p className="text-[10px] font-semibold text-white/80 truncate">
+                    {w.name} · {w.vintage}
+                  </p>
+                  <p className="text-[8px] text-white/40 truncate">{w.producer}</p>
+                </button>
+              ))}
             </div>
           </div>
         </div>
