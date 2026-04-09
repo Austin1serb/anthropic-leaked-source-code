@@ -159,7 +159,7 @@ export default async function LiveEventsPage() {
                 <Link key={event.id} href={`/live/${event.id}`} className="group flex items-start gap-4 px-5 py-4 hover:bg-butter/60 transition-colors">
                   {/* Date block */}
                   <div className="bg-cherry/[0.06] rounded-[10px] px-3 py-2 text-center flex-shrink-0 min-w-[54px]">
-                    <p className="text-[9px] font-bold text-cherry uppercase tracking-wider">{dateStr.split(",")[0]}</p>
+                    <p className="text-[9px] font-bold text-cherry uppercase tracking-wider">{date.toLocaleDateString("en-US", { weekday: "short" })}</p>
                     <p className="text-[20px] font-bold text-foreground leading-tight">{date.getDate()}</p>
                     <p className="text-[9px] font-semibold text-muted">{date.toLocaleDateString("en-US", { month: "short" })}</p>
                   </div>
