@@ -46,17 +46,18 @@ export const SHOWCASE_WINERIES: ShowcaseWinery[] = [
     founded: 1590,
     owner: "Corinne Mentzelopoulos",
     winemaker: "Philippe Bascaules",
-    center: [-0.6770, 45.0425],
+    center: [-0.6687, 45.0444],
     // Approximate estate footprint (château + immediate grounds)
+    // Based on actual Château Margaux coordinates from mockWineries
     polygon: [
-      [-0.6790, 45.0435],
-      [-0.6755, 45.0438],
-      [-0.6745, 45.0430],
-      [-0.6740, 45.0418],
-      [-0.6752, 45.0410],
-      [-0.6785, 45.0412],
-      [-0.6795, 45.0420],
-      [-0.6790, 45.0435],
+      [-0.6710, 45.0460],
+      [-0.6660, 45.0462],
+      [-0.6650, 45.0450],
+      [-0.6648, 45.0435],
+      [-0.6660, 45.0425],
+      [-0.6705, 45.0425],
+      [-0.6715, 45.0440],
+      [-0.6710, 45.0460],
     ],
     accentColor: "#8B1A2B",
     pages: [
