@@ -252,15 +252,9 @@ function WineCard({ wine }: { wine: ShowcaseWine }) {
 
 // ── Main Layer Component ──
 
-const SOURCE_ID = "showcase-wineries";
-const FILL_LAYER = "showcase-wineries-fill";
-const BORDER_LAYER = "showcase-wineries-border";
-const LABEL_LAYER = "showcase-wineries-label";
-
 export function WineryShowcaseLayer({ mapRef }: Props) {
   const [selected, setSelected] = useState<ShowcaseWinery | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const layersAdded = useRef(false);
 
   const handleClose = useCallback(() => setSelected(null), []);
 
@@ -280,115 +274,14 @@ export function WineryShowcaseLayer({ mapRef }: Props) {
     return () => clearInterval(interval);
   }, [mapRef]);
 
-  // ── Add/remove map layers ──
+  // ── Handle clicks on showcase polygons ──
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
 
-    function addLayers(m: mapboxgl.Map) {
-      if (m.getSource(SOURCE_ID)) return;
-
-      // Build GeoJSON FeatureCollection from showcase wineries
-      const features: GeoJSON.Feature[] = SHOWCASE_WINERIES.map((w) => ({
-        type: "Feature",
-        properties: { id: w.id, name: w.name, accentColor: w.accentColor },
-        geometry: {
-          type: "Polygon",
-          coordinates: [w.polygon],
-        },
-      }));
-
-      m.addSource(SOURCE_ID, {
-        type: "geojson",
-        data: { type: "FeatureCollection", features },
-      });
-
-      // Fill layer — subtle at first, prominent when zoomed in
-      // slot:"top" ensures it renders above 3D buildings in Mapbox Standard style
-      m.addLayer({
-        id: FILL_LAYER,
-        type: "fill",
-        source: SOURCE_ID,
-        slot: "top",
-        paint: {
-          "fill-color": "#C8A255",
-          "fill-opacity": [
-            "interpolate", ["linear"], ["zoom"],
-            10, 0,
-            13, 0.15,
-            15, 0.25,
-            17, 0.35,
-          ],
-        },
-      } as mapboxgl.FillLayerSpecification & { slot?: string });
-
-      // Border layer — gold outline
-      m.addLayer({
-        id: BORDER_LAYER,
-        type: "line",
-        source: SOURCE_ID,
-        slot: "top",
-        paint: {
-          "line-color": "#C8A255",
-          "line-width": [
-            "interpolate", ["linear"], ["zoom"],
-            12, 1,
-            15, 3,
-            18, 4,
-          ],
-          "line-opacity": [
-            "interpolate", ["linear"], ["zoom"],
-            10, 0,
-            13, 0.6,
-            15, 0.9,
-            17, 1,
-          ],
-        },
-      } as mapboxgl.LineLayerSpecification & { slot?: string });
-
-      // Label layer
-      m.addLayer({
-        id: LABEL_LAYER,
-        type: "symbol",
-        source: SOURCE_ID,
-        slot: "top",
-        layout: {
-          "text-field": ["get", "name"],
-          "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
-          "text-size": [
-            "interpolate", ["linear"], ["zoom"],
-            12, 10,
-            15, 14,
-            18, 18,
-          ],
-          "text-offset": [0, -1.5],
-          "text-anchor": "bottom",
-        },
-        paint: {
-          "text-color": "#C8A255",
-          "text-halo-color": "rgba(26,20,18,0.9)",
-          "text-halo-width": 2,
-          "text-opacity": [
-            "interpolate", ["linear"], ["zoom"],
-            11, 0,
-            13, 1,
-          ],
-        },
-      });
-
-      layersAdded.current = true;
-    }
-
-    // Add layers when map is ready
-    if (map.isStyleLoaded()) {
-      addLayers(map);
-    }
-    const onLoad = () => addLayers(map);
-    map.on("style.load", onLoad);
-
-    // Click handler
     const onClick = (e: mapboxgl.MapMouseEvent) => {
-      const features = map.queryRenderedFeatures(e.point, { layers: [FILL_LAYER] });
+      // Query both the dedicated showcase layer AND fallback to checking the source directly
+      const features = map.queryRenderedFeatures(e.point, { layers: ["showcase-fill"] });
       if (features.length > 0) {
         const id = features[0].properties?.id;
         const winery = SHOWCASE_WINERIES.find((w) => w.id === id);
@@ -405,28 +298,42 @@ export function WineryShowcaseLayer({ mapRef }: Props) {
       }
     };
 
-    // Hover cursor
     const onMouseEnter = () => { map.getCanvas().style.cursor = "pointer"; };
     const onMouseLeave = () => { map.getCanvas().style.cursor = ""; };
 
-    map.on("click", FILL_LAYER, onClick);
-    map.on("mouseenter", FILL_LAYER, onMouseEnter);
-    map.on("mouseleave", FILL_LAYER, onMouseLeave);
+    // Wait for the layer to exist (added by WineRegionMap)
+    const tryAttach = () => {
+      if (map.getLayer("showcase-fill")) {
+        map.on("click", "showcase-fill", onClick);
+        map.on("mouseenter", "showcase-fill", onMouseEnter);
+        map.on("mouseleave", "showcase-fill", onMouseLeave);
+        return true;
+      }
+      return false;
+    };
+
+    if (!tryAttach()) {
+      // Retry until the layer is added by WineRegionMap
+      const interval = setInterval(() => {
+        if (tryAttach()) clearInterval(interval);
+      }, 500);
+      const cleanup = () => clearInterval(interval);
+      return () => {
+        cleanup();
+        try {
+          map.off("click", "showcase-fill", onClick);
+          map.off("mouseenter", "showcase-fill", onMouseEnter);
+          map.off("mouseleave", "showcase-fill", onMouseLeave);
+        } catch { /* layer might not exist */ }
+      };
+    }
 
     return () => {
-      map.off("style.load", onLoad);
-      map.off("click", FILL_LAYER, onClick);
-      map.off("mouseenter", FILL_LAYER, onMouseEnter);
-      map.off("mouseleave", FILL_LAYER, onMouseLeave);
-
-      // Clean up layers
       try {
-        if (map.getLayer(LABEL_LAYER)) map.removeLayer(LABEL_LAYER);
-        if (map.getLayer(BORDER_LAYER)) map.removeLayer(BORDER_LAYER);
-        if (map.getLayer(FILL_LAYER)) map.removeLayer(FILL_LAYER);
-        if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
-      } catch { /* already removed */ }
-      layersAdded.current = false;
+        map.off("click", "showcase-fill", onClick);
+        map.off("mouseenter", "showcase-fill", onMouseEnter);
+        map.off("mouseleave", "showcase-fill", onMouseLeave);
+      } catch { /* ignore */ }
     };
   }, [mapRef, mapReady]);
 
