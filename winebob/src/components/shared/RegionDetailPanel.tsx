@@ -1,6 +1,6 @@
 "use client";
 
-import { Wine, MapPin, Grape, ArrowRight, X, Star } from "lucide-react";
+import { Wine, MapPin, Grape, ArrowRight, X, Star, CloudSun } from "lucide-react";
 import Link from "next/link";
 
 type RegionWine = {
@@ -8,6 +8,7 @@ type RegionWine = {
   name: string;
   producer: string;
   type: string;
+  vintage?: number | null;
   priceRange: string | null;
   grapes: string[];
 };
@@ -36,6 +37,7 @@ type Props = {
   wineCount: number;
   producerCount: number;
   onClose: () => void;
+  onViewVintageWeather?: (wine: { name: string; producer: string; vintage: number }) => void;
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -64,6 +66,7 @@ export function RegionDetailPanel({
   wineCount,
   producerCount,
   onClose,
+  onViewVintageWeather,
 }: Props) {
   const allGrapes = Array.from(
     new Set(wineries.flatMap((w) => w.grapeVarieties))
@@ -177,30 +180,43 @@ export function RegionDetailPanel({
             </div>
             <div className="space-y-1.5">
               {wines.slice(0, 6).map((w) => (
-                <Link
+                <div
                   key={w.id}
-                  href={`/wines/${w.id}`}
-                  className="block px-2.5 py-2 rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
+                  className="flex items-center gap-1.5 rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
                 >
-                  <p className="text-[12px] font-semibold text-white/80 truncate">
-                    {w.name}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-[10px] text-white/40 truncate">
-                      {w.producer}
-                    </span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold ${TYPE_COLORS[w.type] ?? "bg-white/10 text-white/50"}`}
-                    >
-                      {w.type}
-                    </span>
-                    {w.priceRange && (
-                      <span className="text-[9px] font-bold text-white/30">
-                        {PRICE_LABELS[w.priceRange] ?? w.priceRange}
+                  <Link
+                    href={`/wines/${w.id}`}
+                    className="flex-1 min-w-0 px-2.5 py-2"
+                  >
+                    <p className="text-[12px] font-semibold text-white/80 truncate">
+                      {w.name}{w.vintage ? ` · ${w.vintage}` : ""}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[10px] text-white/40 truncate">
+                        {w.producer}
                       </span>
-                    )}
-                  </div>
-                </Link>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold ${TYPE_COLORS[w.type] ?? "bg-white/10 text-white/50"}`}
+                      >
+                        {w.type}
+                      </span>
+                      {w.priceRange && (
+                        <span className="text-[9px] font-bold text-white/30">
+                          {PRICE_LABELS[w.priceRange] ?? w.priceRange}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                  {w.vintage && onViewVintageWeather && (
+                    <button
+                      onClick={() => onViewVintageWeather({ name: w.name, producer: w.producer, vintage: w.vintage! })}
+                      className="flex-shrink-0 mr-2 p-1.5 rounded-[6px] bg-white/[0.06] hover:bg-cherry/20 text-white/30 hover:text-cherry transition-colors"
+                      title={`See ${w.vintage} growing season weather`}
+                    >
+                      <CloudSun className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </div>

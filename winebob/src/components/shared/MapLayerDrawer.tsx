@@ -95,7 +95,7 @@ export function MapLayerDrawer({ layers, onToggle, className = "" }: Props) {
   return (
     <div
       ref={panelRef}
-      className={`absolute bottom-24 right-3 md:bottom-auto md:top-1/2 md:right-5 md:-translate-y-1/2 z-30 pointer-events-none ${className}`}
+      className={`absolute bottom-24 right-3 md:bottom-auto md:top-1/2 md:right-5 md:-translate-y-1/2 z-40 pointer-events-none ${className}`}
     >
       {/* Panel */}
       <div

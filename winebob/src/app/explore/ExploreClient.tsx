@@ -12,6 +12,7 @@ import { useMapLayers } from "@/hooks/useMapLayers";
 import { MapLayerDrawer } from "@/components/shared/MapLayerDrawer";
 import type { MapLayer } from "@/components/shared/MapLayerDrawer";
 import { VintageWeatherLayer } from "@/components/layers/VintageWeatherLayer";
+import type { VintagePick } from "@/components/layers/VintageWeatherLayer";
 import { FlavorGenomeLayer } from "@/components/layers/FlavorGenomeLayer";
 import { LiveHeatmapLayer } from "@/components/layers/LiveHeatmapLayer";
 import DrawFlightLayer from "@/components/layers/DrawFlightLayer";
@@ -65,6 +66,7 @@ export default function ExploreClient({ wineries, regionCounts }: Props) {
   const [activeTourStop, setActiveTourStop] = useState<TourStop | null>(null);
   const [regionDetail, setRegionDetail] = useState<RegionData | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [vintagePick, setVintagePick] = useState<VintagePick | null>(null);
 
   function handleCityClick(city: { name: string; coords: [number, number] }) {
     setTourRegion(null);
@@ -144,6 +146,7 @@ export default function ExploreClient({ wineries, regionCounts }: Props) {
         active={isActive("vintage-weather")}
         mapRef={mapRef}
         region={selectedRegion}
+        vintagePick={vintagePick}
       />
       <FlavorGenomeLayer
         active={isActive("flavor-genome")}
@@ -243,6 +246,11 @@ export default function ExploreClient({ wineries, regionCounts }: Props) {
             wineCount={regionDetail.wineCount}
             producerCount={regionDetail.producerCount}
             onClose={() => setRegionDetail(null)}
+            onViewVintageWeather={(wine) => {
+              setVintagePick({ wineName: wine.name, producer: wine.producer, vintage: wine.vintage });
+              // Activate the vintage-weather layer if not already active
+              if (!isActive("vintage-weather")) rawToggle("vintage-weather");
+            }}
           />
         </div>
       )}

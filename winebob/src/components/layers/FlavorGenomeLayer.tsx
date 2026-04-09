@@ -143,7 +143,7 @@ function RadarSVG({
             return `${cx + r * level * Math.cos(angle)},${cy + r * level * Math.sin(angle)}`;
           }).join(" ")}
           fill="none"
-          stroke="rgba(255,255,255,0.08)"
+          stroke="rgba(255,255,255,0.15)"
           strokeWidth={0.5}
         />
       ))}
@@ -158,7 +158,7 @@ function RadarSVG({
             y1={cy}
             x2={cx + r * Math.cos(angle)}
             y2={cy + r * Math.sin(angle)}
-            stroke="rgba(255,255,255,0.08)"
+            stroke="rgba(255,255,255,0.15)"
             strokeWidth={0.5}
           />
         );
@@ -167,8 +167,8 @@ function RadarSVG({
       {/* Data polygon */}
       <polygon
         points={radarPoints(profile, size, padding)}
-        fill="rgba(116, 7, 14, 0.30)"
-        stroke="#74070E"
+        fill="rgba(160, 30, 40, 0.35)"
+        stroke="#c03040"
         strokeWidth={size > 60 ? 1.5 : 1}
       />
 
@@ -183,8 +183,8 @@ function RadarSVG({
             key={axis}
             cx={x}
             cy={y}
-            r={size > 60 ? 2.5 : 1.5}
-            fill="#74070E"
+            r={size > 60 ? 3 : 2}
+            fill="#e04050"
           />
         );
       })}
@@ -203,7 +203,7 @@ function RadarSVG({
               y={y}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="rgba(255,255,255,0.5)"
+              fill="rgba(255,255,255,0.75)"
               fontSize={9}
               fontWeight={600}
             >
@@ -239,7 +239,7 @@ function DetailCard({
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[17px] font-bold text-white tracking-tight font-serif">{profile.region}</p>
-          <p className="text-[11px] text-white/35 mt-0.5">{profile.country}</p>
+          <p className="text-[11px] text-white/55 mt-0.5">{profile.country}</p>
         </div>
         <button
           onClick={onClose}
@@ -255,12 +255,12 @@ function DetailCard({
       </div>
 
       {/* Dominant trait highlight */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-[10px] bg-white/[0.06]">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-[10px] bg-white/[0.10]">
         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: accentColor }} />
-        <span className="text-[11px] font-semibold text-white/70">
+        <span className="text-[11px] font-semibold text-white/85">
           Dominant: <span className="text-white" style={{ color: accentColor }}>{FLAVOR_LABELS[maxAxis]}</span>
         </span>
-        <span className="ml-auto text-[12px] font-bold text-white/80 tabular-nums">{(profile[maxAxis] * 100).toFixed(0)}%</span>
+        <span className="ml-auto text-[12px] font-bold text-white/95 tabular-nums">{(profile[maxAxis] * 100).toFixed(0)}%</span>
       </div>
 
       {/* Axis values — horizontal bars */}
@@ -270,19 +270,19 @@ function DetailCard({
           const isMax = axis === maxAxis;
           return (
             <div key={axis} className="flex items-center gap-2">
-              <span className={`text-[10px] font-semibold w-10 ${isMax ? "text-white/80" : "text-white/35"}`}>
+              <span className={`text-[10px] font-semibold w-10 ${isMax ? "text-white" : "text-white/60"}`}>
                 {FLAVOR_LABELS[axis]}
               </span>
-              <div className="flex-1 h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
+              <div className="flex-1 h-1.5 rounded-full bg-white/[0.12] overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${val * 100}%`,
-                    backgroundColor: isMax ? accentColor : "rgba(255,255,255,0.25)",
+                    backgroundColor: isMax ? accentColor : "rgba(255,255,255,0.40)",
                   }}
                 />
               </div>
-              <span className={`text-[10px] font-bold tabular-nums w-7 text-right ${isMax ? "text-white" : "text-white/50"}`}>
+              <span className={`text-[10px] font-bold tabular-nums w-7 text-right ${isMax ? "text-white" : "text-white/70"}`}>
                 {(val * 100).toFixed(0)}
               </span>
             </div>
@@ -316,8 +316,8 @@ function SimilarResults({
   onSelect: (profile: FlavorProfile) => void;
 }) {
   return (
-    <div className="border-t border-white/[0.06] pt-3 px-4 pb-4">
-      <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2">
+    <div className="border-t border-white/[0.10] pt-3 px-4 pb-4">
+      <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2">
         Regions similar to {source.region}
       </p>
       <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto scrollbar-thin">
@@ -325,7 +325,7 @@ function SimilarResults({
           <button
             key={r.profile.region}
             onClick={() => onSelect(r.profile)}
-            className="flex items-center gap-3 p-2 rounded-[10px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors text-left group"
+            className="flex items-center gap-3 p-2.5 rounded-[10px] bg-white/[0.07] hover:bg-white/[0.12] transition-colors text-left group"
           >
             <RadarSVG profile={r.profile} size={40} padding={3} />
             <div className="flex-1 min-w-0">
@@ -333,14 +333,14 @@ function SimilarResults({
                 <span className="text-[12px] font-bold text-white truncate">
                   {r.profile.region}
                 </span>
-                <span className="text-[11px] font-bold text-[#74070E] flex-shrink-0">
+                <span className="text-[11px] font-bold text-[#e8a040] flex-shrink-0">
                   {(r.similarity * 100).toFixed(0)}%
                 </span>
               </div>
-              <p className="text-[10px] text-white/35 truncate">
+              <p className="text-[10px] text-white/60 truncate">
                 {r.profile.country}
               </p>
-              <p className="text-[10px] text-white/50 italic mt-0.5 truncate">
+              <p className="text-[10px] text-white/70 italic mt-0.5 truncate">
                 {r.keyDifference}
               </p>
             </div>

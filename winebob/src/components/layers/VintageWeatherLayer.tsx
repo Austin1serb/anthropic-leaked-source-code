@@ -25,10 +25,17 @@ type DailyData = {
   precipitation: number;
 };
 
+export type VintagePick = {
+  wineName: string;
+  producer: string;
+  vintage: number;
+};
+
 type Props = {
   active: boolean;
   mapRef: React.RefObject<mapboxgl.Map | null>;
   region?: string | null;
+  vintagePick?: VintagePick | null;
 };
 
 // ── Constants ──
@@ -79,7 +86,7 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function VintageWeatherLayer({ active, mapRef, region }: Props) {
+export function VintageWeatherLayer({ active, mapRef, region, vintagePick }: Props) {
   const [selectedYear, setSelectedYear] = useState(2025);
   const [weatherData, setWeatherData] = useState<DailyData[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -90,6 +97,13 @@ export function VintageWeatherLayer({ active, mapRef, region }: Props) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrubberRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+
+  // ── Auto-select vintage year when a wine is picked ──
+  useEffect(() => {
+    if (vintagePick && vintagePick.vintage >= 1990 && vintagePick.vintage <= 2025) {
+      setSelectedYear(vintagePick.vintage);
+    }
+  }, [vintagePick]);
 
   // ── Fetch weather data ──
   useEffect(() => {
@@ -315,8 +329,16 @@ export function VintageWeatherLayer({ active, mapRef, region }: Props) {
     <>
       {/* ── Data Card (right side, below city pills) ── */}
       {weatherData && currentDay && (
-        <div className="absolute top-28 right-3 z-20 w-[170px]">
+        <div className="absolute top-28 right-3 z-20 w-[190px]">
           <div className="rounded-[12px] bg-[#1A1412]/85 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-3">
+            {/* Wine context badge */}
+            {vintagePick && vintagePick.vintage === selectedYear && (
+              <div className="mb-2 px-2 py-1.5 rounded-[8px] bg-cherry/15 border border-cherry/20">
+                <p className="text-[11px] font-bold text-white/90 truncate">{vintagePick.wineName}</p>
+                <p className="text-[9px] text-white/50 truncate">{vintagePick.producer} · {vintagePick.vintage}</p>
+              </div>
+            )}
+
             {/* Date */}
             <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider">
               {region} · {selectedYear}
@@ -388,7 +410,8 @@ export function VintageWeatherLayer({ active, mapRef, region }: Props) {
       )}
 
       {/* ── Bottom controls container ── */}
-      <div className="absolute bottom-28 left-4 right-4 z-30 flex flex-col gap-2">
+      {/* right-16 leaves a gap for the MapLayerDrawer FAB button */}
+      <div className="absolute bottom-28 left-4 right-16 z-30 flex flex-col gap-2">
         {/* ── Timeline Scrubber ── */}
         {weatherData && (
           <div className="rounded-[10px] bg-[#1A1412]/85 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] px-3 py-2">
