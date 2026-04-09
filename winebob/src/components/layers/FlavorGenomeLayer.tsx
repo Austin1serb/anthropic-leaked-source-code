@@ -578,20 +578,27 @@ export function FlavorGenomeLayer({ active, mapRef }: Props) {
         const coords = REGION_CITIES[profile.region];
         if (!coords) continue;
 
-        const el = buildMarkerEl(profile, size);
-        el.style.position = "absolute";
-        el.style.top = "0";
-        el.style.left = "0";
-        el.style.pointerEvents = "auto";
+        // Inner element handles visuals (hover scale, pop-in animation).
+        // Kept separate from the wrapper so the flavorPop CSS animation
+        // (fill-mode:both) doesn't override the positioning transform.
+        const inner = buildMarkerEl(profile, size);
 
-        el.addEventListener("click", (e) => {
+        inner.addEventListener("click", (e) => {
           e.stopPropagation();
           handleMarkerClick(profile);
           map!.flyTo({ center: coords, zoom: 6, duration: 1200 });
         });
 
-        container.appendChild(el);
-        markerEls.push({ el, coords });
+        // Outer wrapper only handles positioning via translate transform
+        const wrapper = document.createElement("div");
+        wrapper.style.position = "absolute";
+        wrapper.style.top = "0";
+        wrapper.style.left = "0";
+        wrapper.style.pointerEvents = "auto";
+        wrapper.appendChild(inner);
+
+        container.appendChild(wrapper);
+        markerEls.push({ el: wrapper, coords });
       }
 
       updatePositions();
