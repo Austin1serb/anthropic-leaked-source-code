@@ -259,14 +259,31 @@ const LABEL_LAYER = "showcase-wineries-label";
 
 export function WineryShowcaseLayer({ mapRef }: Props) {
   const [selected, setSelected] = useState<ShowcaseWinery | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const layersAdded = useRef(false);
 
   const handleClose = useCallback(() => setSelected(null), []);
 
+  // ── Poll for map readiness ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map) {
+      setMapReady(true);
+      return;
+    }
+    const interval = setInterval(() => {
+      if (mapRef.current) {
+        setMapReady(true);
+        clearInterval(interval);
+      }
+    }, 200);
+    return () => clearInterval(interval);
+  }, [mapRef]);
+
   // ── Add/remove map layers ──
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !mapReady) return;
 
     function addLayers(m: mapboxgl.Map) {
       if (m.getSource(SOURCE_ID)) return;
@@ -287,50 +304,54 @@ export function WineryShowcaseLayer({ mapRef }: Props) {
       });
 
       // Fill layer — subtle at first, prominent when zoomed in
+      // slot:"top" ensures it renders above 3D buildings in Mapbox Standard style
       m.addLayer({
         id: FILL_LAYER,
         type: "fill",
         source: SOURCE_ID,
+        slot: "top",
         paint: {
-          "fill-color": ["get", "accentColor"],
+          "fill-color": "#C8A255",
           "fill-opacity": [
             "interpolate", ["linear"], ["zoom"],
             10, 0,
-            13, 0.12,
-            15, 0.20,
-            17, 0.30,
+            13, 0.15,
+            15, 0.25,
+            17, 0.35,
           ],
         },
-      });
+      } as mapboxgl.FillLayerSpecification & { slot?: string });
 
-      // Border layer — gold/accent outline
+      // Border layer — gold outline
       m.addLayer({
         id: BORDER_LAYER,
         type: "line",
         source: SOURCE_ID,
+        slot: "top",
         paint: {
           "line-color": "#C8A255",
           "line-width": [
             "interpolate", ["linear"], ["zoom"],
-            12, 0.5,
-            15, 2,
-            18, 3,
+            12, 1,
+            15, 3,
+            18, 4,
           ],
           "line-opacity": [
             "interpolate", ["linear"], ["zoom"],
             10, 0,
-            13, 0.4,
-            15, 0.7,
+            13, 0.6,
+            15, 0.9,
             17, 1,
           ],
         },
-      });
+      } as mapboxgl.LineLayerSpecification & { slot?: string });
 
       // Label layer
       m.addLayer({
         id: LABEL_LAYER,
         type: "symbol",
         source: SOURCE_ID,
+        slot: "top",
         layout: {
           "text-field": ["get", "name"],
           "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
@@ -407,7 +428,7 @@ export function WineryShowcaseLayer({ mapRef }: Props) {
       } catch { /* already removed */ }
       layersAdded.current = false;
     };
-  }, [mapRef]);
+  }, [mapRef, mapReady]);
 
   if (!selected) return null;
 
