@@ -401,13 +401,13 @@ export function LiveEventClient({ event: initialEvent }: { event: EventData }) {
         {/* Reaction bar */}
         <div className="px-5 pt-2.5 pb-1">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            {REACTIONS.map((r) => (
+            {REACTIONS.map((emoji) => (
               <button
-                key={r.label}
-                onClick={() => addReaction(r.emoji)}
+                key={emoji}
+                onClick={() => addReaction(emoji)}
                 className="h-9 w-9 rounded-xl flex items-center justify-center text-[18px] hover:opacity-80 transition-transform flex-shrink-0 bg-card-border/20"
               >
-                {r.emoji}
+                {emoji}
               </button>
             ))}
           </div>

@@ -29,6 +29,12 @@ const BENEFITS = [
   { icon: TrendingUp, title: "Track Impact", desc: "See your events, viewers, and ratings grow" },
 ];
 
+const STEPS = [
+  { num: 1, title: "Create Your Profile", desc: "Add your name, bio, and expertise areas" },
+  { num: 2, title: "Set Up a Tasting", desc: "Choose wines, prepare hints, and schedule your event" },
+  { num: 3, title: "Go Live", desc: "Host your session while viewers guess along in real time" },
+];
+
 export default function BecomeSommelierPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -160,7 +166,7 @@ export default function BecomeSommelierPage() {
                 <button
                   key={item}
                   type="button"
-                  onClick={() => toggleExpertise(item)}
+                  onClick={() => toggle(expertise, setExpertise, item)}
                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all border ${
                     active ? "bg-cherry/[0.07] border-cherry/20 text-cherry" : "bg-white border-card-border/50 text-muted hover:border-card-border"
                   }`}
@@ -184,7 +190,7 @@ export default function BecomeSommelierPage() {
                 <button
                   key={item}
                   type="button"
-                  onClick={() => toggleCert(item)}
+                  onClick={() => toggle(certifications, setCertifications, item)}
                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border ${
                     active ? "bg-cherry/[0.07] border-cherry/20 text-cherry" : "bg-white border-card-border/50 text-muted hover:border-card-border"
                   }`}

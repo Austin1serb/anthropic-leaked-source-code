@@ -58,7 +58,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
         {/* Join Code */}
         {event.joinCode && (
           <button
-            onClick={copyJoinCode}
+            onClick={() => { if (event.joinCode) { navigator.clipboard.writeText(event.joinCode); setCopiedCode(true); setTimeout(() => setCopiedCode(false), 1500); } }}
             className="bg-white rounded-[14px] border border-card-border/60 flex items-center gap-3 w-full px-4 py-3 mb-5 hover:opacity-95 transition-transform"
           >
             <div className="flex-1 text-left">
@@ -92,7 +92,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
         {event.status === "scheduled" && (
           <div className="bg-white rounded-[14px] border border-card-border/60 p-6 text-center mb-6">
             <p className="text-[14px] text-muted mb-4">{event.participants.length} participants waiting</p>
-            <button onClick={handleStart} disabled={isPending} className="btn-primary touch-target mx-auto max-w-xs">
+            <button onClick={() => act(() => startLiveEvent(event.id))} disabled={isPending} className="btn-primary touch-target mx-auto max-w-xs">
               <Play className="h-5 w-5" /> {isPending ? "Starting..." : "Go Live"}
             </button>
           </div>
@@ -148,26 +148,26 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
 
                   {isCurrent && (
                     <div className="space-y-2 mt-3">
-                      {revealedHints.map((h) => (
-                        <div key={h.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-bg-emerald-50/50">
+                      {revealed.map((h: { id: string; content: string; hintType: string; revealed: boolean; position: number }) => (
+                        <div key={h.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50/50">
                           <Check className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
                           <span className="text-[12px] text-foreground flex-1">{h.content}</span>
                           <span className="text-[10px] text-muted capitalize">{h.hintType}</span>
                         </div>
                       ))}
 
-                      {nextHint && (
+                      {next && (
                         <button
-                          onClick={() => handleReleaseHint(nextHint.id)}
+                          onClick={() => act(() => releaseHint(next.id))}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2 px-3 py-3 rounded-xl border-2 border-dashed border-cherry/30 text-cherry font-semibold text-[13px] active:bg-bg-cherry/8/30 transition-colors touch-target"
+                          className="w-full flex items-center gap-2 px-3 py-3 rounded-xl border-2 border-dashed border-cherry/30 text-cherry font-semibold text-[13px] hover:bg-cherry/[0.06] transition-colors touch-target"
                         >
                           <Sparkles className="h-4 w-4" />
                           <span className="flex-1 text-left">
-                            {isPending ? "Releasing..." : `Drop Hint #${nextHint.position}`}
+                            {isPending ? "Releasing..." : `Drop Hint #${next.position}`}
                           </span>
                           <span className="text-[11px] text-muted max-w-[120px] truncate">
-                            &ldquo;{nextHint.content}&rdquo;
+                            &ldquo;{next.content}&rdquo;
                           </span>
                         </button>
                       )}
@@ -213,7 +213,7 @@ export function LiveHostClient({ event: initialEvent }: { event: EventData }) {
               </div>
               <div className="h-6 w-px bg-card-border" />
               <div className="text-center">
-                <p className="text-[18px] font-bold tabular-nums text-foreground">{totalGuesses}</p>
+                <p className="text-[18px] font-bold tabular-nums text-foreground">{event.guesses.length}</p>
                 <p className="label mt-0.5">Guesses</p>
               </div>
             </div>
