@@ -932,8 +932,10 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
             const p = e.features[0].properties as Record<string, any>;
 
             // If this experience is at a showcase winery, open showcase card instead
-            const wineryName = p.wineryName || p.title || "";
-            const showcaseMatch = SHOWCASE_WINERIES.find((sw) => wineryName.includes(sw.name));
+            const showcaseMatch = SHOWCASE_WINERIES.find((sw) =>
+              sw.slug === p.winerySlug || sw.slug === p.slug ||
+              (p.wineryName && typeof p.wineryName === "string" && p.wineryName.includes(sw.name))
+            );
             if (showcaseMatch && onShowcaseClickRef.current) {
               onShowcaseClickRef.current(showcaseMatch.id);
               map.current.flyTo({ center: showcaseMatch.center, zoom: Math.max(map.current.getZoom(), 15), pitch: 60, bearing: -20, duration: 1500 });
