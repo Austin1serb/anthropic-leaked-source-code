@@ -97,7 +97,7 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function VintageWeatherLayer({ active, mapRef, region, vintagePick, wines, onPickWine }: Props) {
+export function VintageWeatherLayer({ active, mapRef, region, vintagePick, wines: winesProp, onPickWine }: Props) {
   const [selectedYear, setSelectedYear] = useState(2025);
   const [weatherData, setWeatherData] = useState<DailyData[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -105,10 +105,28 @@ export function VintageWeatherLayer({ active, mapRef, region, vintagePick, wines
   const [dayIndex, setDayIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [winePickerOpen, setWinePickerOpen] = useState(false);
+  const [fetchedWines, setFetchedWines] = useState<RegionWineBasic[]>([]);
   const yearScrollRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrubberRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+
+  // ── Fetch wines for the region (self-contained, doesn't depend on panel state) ──
+  useEffect(() => {
+    if (!active || !region) {
+      setFetchedWines([]);
+      return;
+    }
+    const abortCtrl = new AbortController();
+    fetch(`/api/wines?region=${encodeURIComponent(region)}`, { signal: abortCtrl.signal })
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: RegionWineBasic[]) => setFetchedWines(data))
+      .catch(() => setFetchedWines([]));
+    return () => abortCtrl.abort();
+  }, [active, region]);
+
+  // Use prop wines if available, otherwise use self-fetched wines
+  const allWines = winesProp && winesProp.length > 0 ? winesProp : fetchedWines;
 
   // ── Auto-select vintage year when a wine is picked ──
   useEffect(() => {
@@ -320,8 +338,8 @@ export function VintageWeatherLayer({ active, mapRef, region, vintagePick, wines
   // Wines with a vintage year (for the picker)
   // Must be above early returns to respect Rules of Hooks
   const vintageWines = React.useMemo(
-    () => (wines ?? []).filter((w): w is RegionWineBasic & { vintage: number } => !!w.vintage && w.vintage >= 1990),
-    [wines],
+    () => allWines.filter((w): w is RegionWineBasic & { vintage: number } => !!w.vintage && w.vintage >= 1990),
+    [allWines],
   );
 
   if (!active) return null;
