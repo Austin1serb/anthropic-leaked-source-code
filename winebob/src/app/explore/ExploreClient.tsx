@@ -16,6 +16,7 @@ import type { VintagePick } from "@/components/layers/VintageWeatherLayer";
 import { FlavorGenomeLayer } from "@/components/layers/FlavorGenomeLayer";
 import { LiveHeatmapLayer } from "@/components/layers/LiveHeatmapLayer";
 import DrawFlightLayer from "@/components/layers/DrawFlightLayer";
+import { WineryShowcaseLayer } from "@/components/layers/WineryShowcaseLayer";
 import { getRegionDetail } from "@/lib/actions";
 import { useState, useRef, useTransition } from "react";
 import mapboxgl from "mapbox-gl";
@@ -167,6 +168,7 @@ export default function ExploreClient({ wineries, regionCounts }: Props) {
         active={isActive("draw-flight")}
         mapRef={mapRef}
       />
+      <WineryShowcaseLayer mapRef={mapRef} />
 
       {/* Top — branding + search + back */}
       <div className="absolute top-0 left-0 right-0 z-20 safe-top">
