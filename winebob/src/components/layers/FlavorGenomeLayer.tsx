@@ -316,8 +316,8 @@ function SimilarResults({
   onSelect: (profile: FlavorProfile) => void;
 }) {
   return (
-    <div className="border-t border-white/[0.06] pt-3 px-4 pb-4">
-      <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2">
+    <div className="border-t border-white/[0.10] pt-3 px-4 pb-4">
+      <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2">
         Regions similar to {source.region}
       </p>
       <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto scrollbar-thin">
@@ -325,7 +325,7 @@ function SimilarResults({
           <button
             key={r.profile.region}
             onClick={() => onSelect(r.profile)}
-            className="flex items-center gap-3 p-2 rounded-[10px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors text-left group"
+            className="flex items-center gap-3 p-2.5 rounded-[10px] bg-white/[0.07] hover:bg-white/[0.12] transition-colors text-left group"
           >
             <RadarSVG profile={r.profile} size={40} padding={3} />
             <div className="flex-1 min-w-0">
@@ -333,14 +333,14 @@ function SimilarResults({
                 <span className="text-[12px] font-bold text-white truncate">
                   {r.profile.region}
                 </span>
-                <span className="text-[11px] font-bold text-[#74070E] flex-shrink-0">
+                <span className="text-[11px] font-bold text-[#e8a040] flex-shrink-0">
                   {(r.similarity * 100).toFixed(0)}%
                 </span>
               </div>
-              <p className="text-[10px] text-white/35 truncate">
+              <p className="text-[10px] text-white/60 truncate">
                 {r.profile.country}
               </p>
-              <p className="text-[10px] text-white/50 italic mt-0.5 truncate">
+              <p className="text-[10px] text-white/70 italic mt-0.5 truncate">
                 {r.keyDifference}
               </p>
             </div>
