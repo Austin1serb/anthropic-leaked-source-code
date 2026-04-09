@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, X, MapPin, Star, Wine } from "lucide-react";
 import {
   SHOWCASE_WINERIES,
