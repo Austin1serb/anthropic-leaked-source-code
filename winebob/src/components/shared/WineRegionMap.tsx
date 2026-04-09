@@ -770,6 +770,15 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
         map.current.on("click", layerId, (e) => {
           if (!map.current || !e.features?.length) return;
           const p = e.features[0].properties as Record<string, any>;
+
+          // If this winery has a showcase entry, open the showcase card instead
+          const showcaseMatch = SHOWCASE_WINERIES.find((sw) => sw.slug === p.slug || sw.name === p.name);
+          if (showcaseMatch && onShowcaseClickRef.current) {
+            onShowcaseClickRef.current(showcaseMatch.id);
+            map.current.flyTo({ center: showcaseMatch.center, zoom: Math.max(map.current.getZoom(), 15), pitch: 60, bearing: -20, duration: 1500 });
+            return;
+          }
+
           const isFeatured = p.featured === true || p.featured === "true";
 
           let grapes: string[] = [];
