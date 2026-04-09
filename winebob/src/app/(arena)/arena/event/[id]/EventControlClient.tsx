@@ -105,9 +105,9 @@ type EventControlClientProps = {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   draft: { label: "Draft", color: "text-muted", bg: "bg-card-border/30" },
-  lobby: { label: "Lobby Open", color: "text-amber-700", bg: "widget-gold" },
-  live: { label: "Live", color: "text-green-700", bg: "widget-sage" },
-  revealing: { label: "Revealing", color: "text-purple-700", bg: "widget-lavender" },
+  lobby: { label: "Lobby Open", color: "text-amber-700", bg: "bg-amber-50" },
+  live: { label: "Live", color: "text-green-700", bg: "bg-emerald-50" },
+  revealing: { label: "Revealing", color: "text-purple-700", bg: "bg-purple-50" },
   completed: { label: "Completed", color: "text-muted", bg: "bg-card-border/30" },
 };
 
@@ -263,166 +263,146 @@ export function EventControlClient({ event }: EventControlClientProps) {
     "bg-orange-300 text-orange-800",
   ];
 
+  const WINE_DOT: Record<string, string> = {
+    red: "bg-[#74070E]", white: "bg-[#D4A843]", "rosé": "bg-[#E8A0B4]",
+    sparkling: "bg-[#C9B037]", orange: "bg-[#D4782F]", dessert: "bg-[#B5651D]",
+    fortified: "bg-[#5C1A1B]",
+  };
+
   return (
     <div className="min-h-screen pb-36 pt-6 safe-top bg-background">
-      <div className="px-4 md:px-8 lg:px-10">
+      <div className="px-5 md:px-8">
         {/* ========== HEADER ========== */}
         <header className="mb-6">
           <Link
             href="/arena"
-            className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted mb-3 active:text-foreground transition-colors touch-target"
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted mb-3 hover:text-foreground transition-colors touch-target"
           >
-            <ChevronLeft className="h-4 w-4" />
-            Tastings
+            <ChevronLeft className="h-4 w-4" /> Tastings
           </Link>
           <div className="flex items-start justify-between gap-3 mb-5">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight leading-tight flex-1">
+            <h1 className="text-[22px] font-bold text-foreground tracking-tight leading-tight flex-1">
               {event.title}
             </h1>
             <StatusBadge status={event.status} />
           </div>
 
           {/* Join Code hero card */}
-          <div className="rounded-[20px] bg-gradient-to-br from-cherry to-cherry/90 p-6 flex flex-col items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)]">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
+          <div className="rounded-[14px] bg-gradient-to-br from-cherry to-cherry/85 p-6 flex flex-col items-center gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
               Join Code
             </p>
-            <p className="font-mono text-5xl sm:text-6xl font-black tracking-[0.3em] text-white select-all leading-none nums">
+            <p className="font-mono text-[44px] font-black tracking-[0.3em] text-white select-all leading-none nums">
               {event.joinCode}
             </p>
             {event.guests.length > 0 && (
-              <p className="text-[13px] font-semibold text-white/60 nums">
-                {event.guests.length} participant{event.guests.length !== 1 ? "s" : ""} joined
+              <p className="text-[12px] font-semibold text-white/50 nums">
+                {event.guests.length} participant{event.guests.length !== 1 ? "s" : ""}
               </p>
             )}
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2 mt-1">
               <button
                 onClick={handleCopyCode}
-                className="touch-target inline-flex items-center gap-2 rounded-[12px] bg-white/20 px-4 py-2.5 text-[13px] font-semibold text-white active:scale-95 transition-transform"
+                className="touch-target inline-flex items-center gap-1.5 rounded-[8px] bg-white/15 px-3.5 py-2 text-[12px] font-semibold text-white hover:bg-white/25 transition-colors"
               >
-                {copied ? <><Check className="h-4 w-4 text-green-300" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy</>}
+                {copied ? <><Check className="h-3.5 w-3.5 text-green-300" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
               </button>
               <button
                 onClick={handleShowQR}
-                className="touch-target inline-flex items-center gap-2 rounded-[12px] bg-white/20 px-4 py-2.5 text-[13px] font-semibold text-white active:scale-95 transition-transform"
+                className="touch-target inline-flex items-center gap-1.5 rounded-[8px] bg-white/15 px-3.5 py-2 text-[12px] font-semibold text-white hover:bg-white/25 transition-colors"
               >
-                <QrCode className="h-4 w-4" /> Share QR
+                <QrCode className="h-3.5 w-3.5" /> QR
               </button>
             </div>
           </div>
         </header>
 
-        {/* ========== GUEST LIST + WINE FLIGHT — 2 col on desktop ========== */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* ========== GUEST LIST ========== */}
+        {/* ========== GUEST LIST + WINE FLIGHT ========== */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+          {/* ── Guests ── */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-7 w-7 rounded-[8px] widget-sage flex items-center justify-center">
-                <Users className="h-3.5 w-3.5 text-emerald-700" />
-              </div>
-              <h2 className="text-[15px] font-bold text-foreground">Guests</h2>
-              <span className="ml-auto text-[13px] font-semibold text-muted nums">{event.guests.length}</span>
-            </div>
-
-            {event.guests.length === 0 ? (
-              <div className="bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] py-10 flex flex-col items-center text-center px-4">
-                <div className="h-12 w-12 rounded-[16px] widget-sage flex items-center justify-center mb-3">
-                  <Users className="h-6 w-6 text-emerald-700/30" />
+            <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-card-border/40">
+                <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest">Guests</h2>
+                <div className="flex items-center gap-2">
+                  {event.status === "live" && event.currentWine > 0 && !isCurrentRevealed && (
+                    <span className="text-[11px] font-semibold text-cherry nums">{guessCount}/{event.guests.length} guessed</span>
+                  )}
+                  <span className="text-[12px] font-bold text-muted nums">{event.guests.length}</span>
                 </div>
-                <p className="text-[13px] text-muted">No guests yet. Share the join code.</p>
               </div>
-            ) : (
-              <>
-                {/* Guess progress indicator (only during live tasting) */}
-                {event.status === "live" && event.currentWine > 0 && !isCurrentRevealed && (
-                  <div className="mb-2 px-1">
-                    <p className="text-[12px] font-semibold text-muted nums">
-                      <span className="text-cherry font-bold">{guessCount}</span> of {event.guests.length} guessed
-                    </p>
-                  </div>
-                )}
-                <div className="bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] divide-y divide-card-border/40">
+
+              {event.guests.length === 0 ? (
+                <div className="py-10 flex flex-col items-center text-center px-4">
+                  <Users className="h-6 w-6 text-muted/20 mb-2" />
+                  <p className="text-[13px] text-muted">No guests yet. Share the join code.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-card-border/30">
                   {event.guests.map((guest) => {
                     const hasGuessed = guestsWhoGuessed.has(guest.id);
                     return (
-                      <div key={guest.id} className="flex items-center gap-3 px-4 py-3">
+                      <div key={guest.id} className="flex items-center gap-3 px-5 py-3">
                         <div className="relative">
-                          <div className="h-9 w-9 rounded-[8px] widget-wine flex items-center justify-center text-[13px] font-bold text-cherry">
+                          <div className="h-8 w-8 rounded-full bg-cherry/8 flex items-center justify-center text-[12px] font-bold text-cherry">
                             {guest.displayName.charAt(0).toUpperCase()}
                           </div>
                           {event.status === "live" && event.currentWine > 0 && !isCurrentRevealed && hasGuessed && (
                             <div className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white" />
                           )}
                         </div>
-                        <span className="text-[14px] font-medium text-foreground">{guest.displayName}</span>
+                        <span className="text-[13px] font-medium text-foreground">{guest.displayName}</span>
                       </div>
                     );
                   })}
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </section>
 
-          {/* ========== WINE FLIGHT ========== */}
+          {/* ── Wine Flight ── */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-7 w-7 rounded-[8px] widget-wine flex items-center justify-center">
-                <Wine className="h-3.5 w-3.5 text-cherry" />
+            <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-card-border/40">
+                <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest">Wine Flight</h2>
+                <span className="text-[12px] font-bold text-muted nums">{event.wines.length} wines</span>
               </div>
-              <h2 className="text-[15px] font-bold text-foreground">Wine Flight</h2>
-              <span className="ml-auto text-[13px] font-semibold text-muted nums">{event.wines.length} wines</span>
-            </div>
 
-            <div className="space-y-2">
-              {event.wines.map((bw) => {
-                const isCurrent = bw.position === event.currentWine;
-                const isPast = bw.position < event.currentWine;
-                const typeColor =
-                  bw.wine?.type.toLowerCase() === "red" ? "bg-red-500" :
-                  bw.wine?.type.toLowerCase() === "white" ? "bg-amber-200" :
-                  bw.wine?.type.toLowerCase() === "rosé" ? "bg-pink-300" :
-                  bw.wine?.type.toLowerCase() === "sparkling" ? "bg-yellow-300" :
-                  bw.wine?.type.toLowerCase() === "orange" ? "bg-orange-300" :
-                  bw.wine?.type.toLowerCase() === "dessert" ? "bg-amber-300" : "bg-gray-300";
-
-                return (
-                  <div
-                    key={bw.id}
-                    className={`bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] px-4 py-3.5 flex items-center gap-3 transition-all ${
-                      isCurrent ? "ring-2 ring-cherry shadow-md border-l-4 border-l-cherry" : ""
-                    } ${isPast && bw.revealed ? "opacity-60" : ""}`}
-                  >
-                    <div className={`flex-shrink-0 h-9 w-9 rounded-[8px] flex items-center justify-center text-[13px] font-bold nums ${
-                      isCurrent
-                        ? "bg-cherry text-white"
-                        : bw.revealed
-                          ? "bg-green-50 text-green-600"
-                          : "bg-card-border/30 text-muted"
-                    }`}>
-                      {bw.revealed ? <Check className="h-4 w-4" strokeWidth={3} /> : bw.position}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <div className={`h-2.5 w-2.5 rounded-full ${typeColor} flex-shrink-0`} />
-                        <p className="text-[14px] font-semibold font-serif text-foreground truncate">{decodeHtmlEntities(bw.wine?.name ?? "Unknown")}</p>
+              <div className="divide-y divide-card-border/30">
+                {event.wines.map((bw) => {
+                  const isCurrent = bw.position === event.currentWine;
+                  const isPast = bw.position < event.currentWine;
+                  return (
+                    <div
+                      key={bw.id}
+                      className={`px-5 py-3.5 flex items-center gap-3 transition-all ${
+                        isCurrent ? "bg-cherry/[0.04] border-l-3 border-l-cherry" : ""
+                      } ${isPast && bw.revealed ? "opacity-50" : ""}`}
+                    >
+                      <div className={`flex-shrink-0 h-8 w-8 rounded-[8px] flex items-center justify-center text-[12px] font-bold nums ${
+                        isCurrent ? "bg-cherry text-white"
+                          : bw.revealed ? "bg-green-50 text-green-600"
+                          : "bg-card-border/20 text-muted"
+                      }`}>
+                        {bw.revealed ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : bw.position}
                       </div>
-                      <p className="text-[11px] text-muted truncate mt-0.5">
-                        {decodeHtmlEntities(bw.wine?.producer ?? "")}{bw.wine?.vintage ? <span className="nums"> {bw.wine.vintage}</span> : " NV"} · {bw.wine?.region}, {bw.wine?.country}
-                      </p>
-                    </div>
 
-                    {bw.revealed && (
-                      <span className="flex-shrink-0 text-[11px] font-semibold text-green-600 flex items-center gap-1">
-                        <Eye className="h-3 w-3" /> Revealed
-                      </span>
-                    )}
-                    {isCurrent && !bw.revealed && (
-                      <span className="flex-shrink-0 text-[11px] font-bold text-cherry animate-pulse">Current</span>
-                    )}
-                  </div>
-                );
-              })}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <div className={`h-2 w-2 rounded-full flex-shrink-0 ${WINE_DOT[bw.wine?.type.toLowerCase() ?? ""] || "bg-gray-300"}`} />
+                          <p className="text-[13px] font-medium text-foreground truncate">{decodeHtmlEntities(bw.wine?.name ?? "Unknown")}</p>
+                        </div>
+                        <p className="text-[11px] text-muted truncate mt-0.5 pl-4">
+                          {decodeHtmlEntities(bw.wine?.producer ?? "")}{bw.wine?.vintage ? <span className="nums"> · {bw.wine.vintage}</span> : ""}
+                        </p>
+                      </div>
+
+                      {bw.revealed && <span className="flex-shrink-0 text-[10px] font-semibold text-green-600">Revealed</span>}
+                      {isCurrent && !bw.revealed && <span className="flex-shrink-0 text-[10px] font-bold text-cherry animate-pulse">Current</span>}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
         </div>
@@ -430,37 +410,30 @@ export function EventControlClient({ event }: EventControlClientProps) {
         {/* ========== LEADERBOARD ========== */}
         {hasAnyScores && (
           <section className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-7 w-7 rounded-[8px] widget-gold flex items-center justify-center">
-                <Trophy className="h-3.5 w-3.5 text-amber-700" />
+            <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-card-border/40">
+                <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest">
+                  {event.status === "completed" ? "Final Scoreboard" : "Leaderboard"}
+                </h2>
+                <Trophy className="h-4 w-4 text-amber-500" />
               </div>
-              <h2 className="text-[15px] font-bold text-foreground">
-                {event.status === "completed" ? "Final Scoreboard" : "Leaderboard"}
-              </h2>
-            </div>
-
-            <div className="bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
-              {/* Table header */}
-              <div className="flex items-center gap-3 px-4 py-2.5 border-b border-card-border/40 bg-card-border/10">
-                <span className="flex-shrink-0 w-8 text-[11px] font-bold text-muted uppercase tracking-wider">#</span>
-                <span className="flex-1 text-[11px] font-bold text-muted uppercase tracking-wider">Guest</span>
-                <span className="text-[11px] font-bold text-muted uppercase tracking-wider">Score</span>
-              </div>
-              {rankedGuests.map((guest, idx) => (
-                <div key={guest.id} className={`flex items-center gap-3 px-4 py-3 ${idx === 0 ? "bg-widget-gold/30" : ""} ${idx < rankedGuests.length - 1 ? "border-b border-card-border/20" : ""}`}>
-                  <div className={`flex-shrink-0 h-8 w-8 rounded-[8px] flex items-center justify-center text-[12px] font-bold ${
-                    idx < 3 ? MEDAL_COLORS[idx] : "bg-card-border/30 text-muted"
-                  }`}>
-                    {idx === 0 ? <Crown className="h-3.5 w-3.5" /> : idx + 1}
+              <div className="divide-y divide-card-border/30">
+                {rankedGuests.map((guest, idx) => (
+                  <div key={guest.id} className={`flex items-center gap-3 px-5 py-3 ${idx === 0 ? "bg-amber-50/50" : ""}`}>
+                    <div className={`flex-shrink-0 h-7 w-7 rounded-[6px] flex items-center justify-center text-[11px] font-bold ${
+                      idx < 3 ? MEDAL_COLORS[idx] : "bg-card-border/20 text-muted"
+                    }`}>
+                      {idx === 0 ? <Crown className="h-3.5 w-3.5" /> : idx + 1}
+                    </div>
+                    <span className="flex-1 text-[13px] font-medium text-foreground truncate">
+                      {guest.displayName}
+                    </span>
+                    <span className="text-[13px] font-bold nums text-cherry">
+                      {guest.totalScore}
+                    </span>
                   </div>
-                  <span className="flex-1 text-[14px] font-medium text-foreground truncate">
-                    {guest.displayName}
-                  </span>
-                  <span className="text-[14px] font-bold nums text-cherry">
-                    {guest.totalScore} pts
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </section>
         )}
@@ -468,12 +441,10 @@ export function EventControlClient({ event }: EventControlClientProps) {
         {/* Completed — no scores */}
         {event.status === "completed" && !hasAnyScores && (
           <section className="mb-6">
-            <div className="bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] py-10 flex flex-col items-center text-center px-4">
-              <div className="h-14 w-14 rounded-[16px] widget-gold flex items-center justify-center mb-3">
-                <Trophy className="h-7 w-7 text-amber-600/40" />
-              </div>
-              <p className="text-[16px] font-bold text-foreground">Tasting Complete</p>
-              <p className="mt-1 text-[13px] text-muted">No scores were recorded.</p>
+            <div className="bg-white rounded-[14px] border border-card-border/60 py-10 flex flex-col items-center text-center px-4">
+              <Trophy className="h-8 w-8 text-amber-300 mb-3" />
+              <p className="text-[15px] font-bold text-foreground">Tasting Complete</p>
+              <p className="mt-1 text-[12px] text-muted">No scores were recorded.</p>
             </div>
           </section>
         )}
@@ -540,10 +511,9 @@ export function EventControlClient({ event }: EventControlClientProps) {
       {/* ========== QR CODE MODAL ========== */}
       {showQR && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowQR(false)}>
-          <div className="bg-white rounded-[16px] border border-card-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-8 max-w-[340px] w-full mx-4 text-center animate-scale-in relative" onClick={(e) => e.stopPropagation()}>
-            {/* Close */}
-            <button onClick={() => setShowQR(false)} className="absolute top-4 right-4 h-8 w-8 rounded-[8px] bg-card-border/20 flex items-center justify-center touch-target">
-              <X className="h-4 w-4 text-stone" />
+          <div className="bg-white rounded-[14px] border border-card-border/60 p-8 max-w-[340px] w-full mx-4 text-center animate-scale-in relative" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowQR(false)} className="absolute top-3 right-3 h-8 w-8 rounded-full bg-card-border/20 flex items-center justify-center touch-target hover:bg-card-border/40 transition-colors">
+              <X className="h-4 w-4 text-muted" />
             </button>
 
             {/* Logo */}

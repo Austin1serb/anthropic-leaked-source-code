@@ -476,7 +476,7 @@ export function SmartSearchOverlay() {
                       }`}
                     >
                       <div
-                        className="w-[3px] h-8 rounded-full flex-shrink-0"
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{
                           background:
                             TYPES_COLORS[w.type.toLowerCase()] ?? "#8C7E6E",
@@ -682,7 +682,7 @@ export function SmartSearchOverlay() {
         <div className="sm:hidden px-4 pb-4">
           <button
             onClick={closeSearch}
-            className="w-full h-11 rounded-2xl bg-white/[0.06] border border-white/[0.06] text-white/40 text-[14px] font-semibold active:scale-[0.98] transition-transform"
+            className="w-full h-11 rounded-[10px] bg-white/10 border border-white/10 text-white/60 text-[14px] font-semibold hover:bg-white/15 transition-colors"
           >
             Cancel
           </button>

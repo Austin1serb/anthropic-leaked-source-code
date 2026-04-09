@@ -25,13 +25,10 @@ const GUESS_FIELDS = [
   { key: "producer", label: "Producer" }, { key: "type", label: "Type" },
 ];
 
-function typeColor(type: string): string {
-  switch (type.toLowerCase()) {
-    case "red": return "bg-[#8B1A2A]"; case "white": return "bg-[#D4B86A]";
-    case "rosé": return "bg-[#D4828A]"; case "sparkling": return "bg-[#C8B868]";
-    case "orange": return "bg-[#C8864A]"; default: return "bg-stone-light";
-  }
-}
+const TYPE_DOT: Record<string, string> = {
+  red: "bg-[#74070E]", white: "bg-[#D4A843]", "rosé": "bg-[#E8A0B4]",
+  sparkling: "bg-[#C9B037]", orange: "bg-[#D4782F]", dessert: "bg-[#B5651D]",
+};
 
 export default function CreateLiveEventPage() {
   const router = useRouter();
@@ -39,7 +36,6 @@ export default function CreateLiveEventPage() {
   const [error, setError] = useState("");
   const [hasSomProfile, setHasSomProfile] = useState<boolean | null>(null);
 
-  // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(true);
@@ -49,24 +45,21 @@ export default function CreateLiveEventPage() {
   const [guessFields, setGuessFields] = useState<string[]>(["grape", "region", "country", "vintage"]);
   const [difficulty, setDifficulty] = useState("intermediate");
 
-  // Wine selection
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<WineResult[]>([]);
-  const [browseWines, setBrowseWines] = useState<WineResult[]>([]);
+  const [browseWineList, setBrowseWineList] = useState<WineResult[]>([]);
   const [browseLoaded, setBrowseLoaded] = useState(false);
   const [searching, setSearching] = useState(false);
   const [selectedWines, setSelectedWines] = useState<WineWithHints[]>([]);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
 
-  // Hint editing
   const [editingWineIdx, setEditingWineIdx] = useState<number | null>(null);
   const [newHintContent, setNewHintContent] = useState("");
   const [newHintType, setNewHintType] = useState("aroma");
 
-  // Check sommelier profile
   useEffect(() => {
     getMyProfile().then((p) => setHasSomProfile(!!p)).catch(() => setHasSomProfile(false));
-    getBrowseWines().then((data) => { setBrowseWines(data as WineResult[]); setBrowseLoaded(true); }).catch(() => { setBrowseLoaded(true); });
+    getBrowseWines().then((data) => { setBrowseWineList(data as WineResult[]); setBrowseLoaded(true); }).catch(() => setBrowseLoaded(true));
   }, []);
 
   const handleSearch = useCallback(async (query: string) => {
@@ -80,12 +73,10 @@ export default function CreateLiveEventPage() {
     if (selectedWines.some((w) => w.wine.id === wine.id)) return;
     setSelectedWines((prev) => [...prev, { wine, hints: [] }]);
   }
-
   function removeWine(wineId: string) {
     setSelectedWines((prev) => prev.filter((w) => w.wine.id !== wineId));
     setEditingWineIdx(null);
   }
-
   function addHint(wineIdx: number) {
     if (!newHintContent.trim()) return;
     setSelectedWines((prev) => {
@@ -95,7 +86,6 @@ export default function CreateLiveEventPage() {
     });
     setNewHintContent("");
   }
-
   function removeHint(wineIdx: number, hintIdx: number) {
     setSelectedWines((prev) => {
       const next = [...prev];
@@ -103,21 +93,19 @@ export default function CreateLiveEventPage() {
       return next;
     });
   }
-
   function toggleGuessField(field: string) {
     setGuessFields((prev) => prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]);
   }
 
   const displayWines = searchQuery.trim().length >= 2
     ? searchResults
-    : browseWines.filter((w) => !typeFilter || w.type.toLowerCase() === typeFilter);
+    : browseWineList.filter((w) => !typeFilter || w.type.toLowerCase() === typeFilter);
 
   function handleCreate() {
     if (!title.trim()) { setError("Title is required"); return; }
     if (!scheduledAt) { setError("Schedule date is required"); return; }
     if (selectedWines.length === 0) { setError("Add at least one wine"); return; }
     setError("");
-
     const scoringConfig: Record<string, number> = {};
     const defaultWeights: Record<string, number> = { grape: 25, region: 20, country: 15, vintage: 15, producer: 15, type: 10 };
     for (const f of guessFields) scoringConfig[f] = defaultWeights[f] ?? 10;
@@ -125,19 +113,10 @@ export default function CreateLiveEventPage() {
     startTransition(async () => {
       try {
         const event = await createLiveEvent({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          isPublic,
-          scheduledAt,
+          title: title.trim(), description: description.trim() || undefined, isPublic, scheduledAt,
           maxParticipants: maxParticipants ? parseInt(maxParticipants, 10) : undefined,
-          guessFields,
-          scoringConfig,
-          difficulty,
-          showCrowdStats,
-          wines: selectedWines.map((w) => ({
-            wineId: w.wine.id,
-            hints: w.hints,
-          })),
+          guessFields, scoringConfig, difficulty, showCrowdStats,
+          wines: selectedWines.map((w) => ({ wineId: w.wine.id, hints: w.hints })),
         });
         router.push(`/live/${event.id}/host`);
       } catch (err) {
@@ -147,213 +126,212 @@ export default function CreateLiveEventPage() {
   }
 
   if (hasSomProfile === null) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="h-6 w-6 skeleton rounded-full" /></div>;
+    return <div className="min-h-screen flex items-center justify-center"><div className="h-6 w-6 rounded-full border-2 border-cherry border-t-transparent animate-spin" /></div>;
   }
 
   if (hasSomProfile === false) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center container-app text-center">
-        <Wine className="h-10 w-10 text-stone-light mb-4" />
-        <h1 className="heading-lg text-foreground mb-2">Sommelier Profile Required</h1>
-        <p className="body-sm mb-6">You need a sommelier profile to host live events.</p>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
+        <div className="h-14 w-14 rounded-full bg-cherry/10 flex items-center justify-center mb-4">
+          <Wine className="h-7 w-7 text-cherry/40" />
+        </div>
+        <h1 className="text-[20px] font-bold text-foreground font-serif mb-2">Sommelier Profile Required</h1>
+        <p className="text-[13px] text-muted mb-6">You need a sommelier profile to host live events.</p>
         <Link href="/sommeliers/become" className="btn-primary px-8 touch-target">Become a Sommelier</Link>
       </div>
     );
   }
 
   const TYPE_FILTERS = [
-    { value: null, label: "All", icon: Wine },
+    { value: null, label: "All" },
     { value: "red", label: "Red" }, { value: "white", label: "White" },
     { value: "rosé", label: "Rosé" }, { value: "sparkling", label: "Sparkling" },
-    { value: "orange", label: "Orange" },
   ];
 
   return (
-    <div className="min-h-screen pb-28 safe-top bg-background">
-      <div className="container-app pt-6">
-        <Link href="/live" className="inline-flex items-center gap-1 text-[12px] font-semibold text-stone touch-target mb-4">
-          <ChevronLeft className="h-4 w-4" /> Cancel
-        </Link>
+    <div className="px-5 pt-6 pb-28">
+      <Link href="/live" className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted hover:text-foreground transition-colors touch-target mb-5">
+        <ChevronLeft className="h-3.5 w-3.5" /> Cancel
+      </Link>
 
-        <h1 className="heading-xl text-foreground mb-1">Create Live Event</h1>
-        <p className="body-sm mb-6">Set up a live tasting for your audience.</p>
+      <h1 className="text-[24px] font-bold text-foreground tracking-tight font-serif mb-1">Create Live Event</h1>
+      <p className="text-[13px] text-muted mb-6">Set up a live tasting for your audience.</p>
 
-        {/* ── Event Details ── */}
-        <section className="space-y-4 mb-8">
-          <p className="label">Event Details</p>
-
-          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event title" className="input-field w-full touch-target" />
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description (optional)" rows={2} className="input-field w-full resize-none" />
-
+      {/* ── Event Details ── */}
+      <div className="bg-white rounded-[14px] border border-card-border/60 p-5 mb-5">
+        <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-4">Event Details</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="text-[12px] font-semibold text-foreground">Title *</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event title" className="input-field w-full touch-target mt-1.5" />
+          </div>
+          <div>
+            <label className="text-[12px] font-semibold text-foreground">Description</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description (optional)" rows={2} className="input-field w-full resize-none mt-1.5" />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="caption mb-1.5">Date & Time</p>
-              <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} className="input-field w-full text-[13px] touch-target" />
+              <label className="text-[12px] font-semibold text-foreground">Date & Time *</label>
+              <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} className="input-field w-full mt-1.5" />
             </div>
             <div>
-              <p className="caption mb-1.5">Max Participants</p>
-              <input type="number" value={maxParticipants} onChange={(e) => setMaxParticipants(e.target.value)} placeholder="Unlimited" className="input-field w-full text-[13px] touch-target" />
+              <label className="text-[12px] font-semibold text-foreground">Max Participants</label>
+              <input type="number" value={maxParticipants} onChange={(e) => setMaxParticipants(e.target.value)} placeholder="Unlimited" className="input-field w-full mt-1.5" />
             </div>
           </div>
-
-          <div className="flex gap-3">
-            <button type="button" onClick={() => setIsPublic(true)} className={`flex-1 wine-card p-3.5 flex items-center gap-2.5 transition-all ${isPublic ? "ring-2 ring-cherry" : ""}`}>
-              <Globe className={`h-4 w-4 ${isPublic ? "text-cherry" : "text-stone"}`} />
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setIsPublic(true)} className={`rounded-[10px] p-3 flex items-center gap-2.5 transition-all border ${isPublic ? "bg-cherry/[0.06] border-cherry/20" : "bg-white border-card-border/60"}`}>
+              <Globe className={`h-4 w-4 ${isPublic ? "text-cherry" : "text-muted"}`} />
               <div className="text-left">
-                <p className="heading-sm text-foreground text-[13px]">Public</p>
-                <p className="caption">Anyone can join</p>
+                <p className="text-[13px] font-semibold text-foreground">Public</p>
+                <p className="text-[10px] text-muted">Anyone can join</p>
               </div>
             </button>
-            <button type="button" onClick={() => setIsPublic(false)} className={`flex-1 wine-card p-3.5 flex items-center gap-2.5 transition-all ${!isPublic ? "ring-2 ring-cherry" : ""}`}>
-              <Lock className={`h-4 w-4 ${!isPublic ? "text-cherry" : "text-stone"}`} />
+            <button type="button" onClick={() => setIsPublic(false)} className={`rounded-[10px] p-3 flex items-center gap-2.5 transition-all border ${!isPublic ? "bg-cherry/[0.06] border-cherry/20" : "bg-white border-card-border/60"}`}>
+              <Lock className={`h-4 w-4 ${!isPublic ? "text-cherry" : "text-muted"}`} />
               <div className="text-left">
-                <p className="heading-sm text-foreground text-[13px]">Private</p>
-                <p className="caption">Join code required</p>
+                <p className="text-[13px] font-semibold text-foreground">Private</p>
+                <p className="text-[10px] text-muted">Code required</p>
               </div>
             </button>
           </div>
-        </section>
+        </div>
+      </div>
 
-        {/* ── Guess Fields ── */}
-        <section className="mb-8">
-          <p className="label mb-3">What Viewers Guess</p>
-          <div className="flex flex-wrap gap-2">
-            {GUESS_FIELDS.map((f) => (
-              <button key={f.key} type="button" onClick={() => toggleGuessField(f.key)} className={`chip text-[12px] ${guessFields.includes(f.key) ? "chip-active" : ""}`}>
-                {guessFields.includes(f.key) && <Check className="h-3 w-3" />}
+      {/* ── Guess Fields ── */}
+      <div className="bg-white rounded-[14px] border border-card-border/60 p-5 mb-5">
+        <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-3">What Viewers Guess</h2>
+        <div className="flex flex-wrap gap-1.5">
+          {GUESS_FIELDS.map((f) => {
+            const active = guessFields.includes(f.key);
+            return (
+              <button key={f.key} type="button" onClick={() => toggleGuessField(f.key)}
+                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all ${
+                  active ? "bg-cherry/[0.07] border-cherry/20 text-cherry" : "bg-white border-card-border/50 text-muted"
+                }`}>
+                {active && <Check className="h-3 w-3" />}
                 {f.label}
               </button>
-            ))}
-          </div>
-        </section>
+            );
+          })}
+        </div>
+      </div>
 
-        {/* ── Wine Selection ── */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <p className="label">Wines</p>
-            {selectedWines.length > 0 && (
-              <span className="text-[12px] font-semibold text-cherry">{selectedWines.length} selected</span>
-            )}
-          </div>
+      {/* ── Wine Selection ── */}
+      <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden mb-5">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-card-border/40">
+          <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest">Wines</h2>
+          {selectedWines.length > 0 && <span className="text-[12px] font-bold text-cherry nums">{selectedWines.length}</span>}
+        </div>
 
-          {/* Search */}
-          <div className="relative mb-3">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-light pointer-events-none" />
-            <input
-              type="text" value={searchQuery} onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search by name, producer, region..."
-              className="input-field w-full pl-10 text-[14px] touch-target"
-            />
+        <div className="p-4 border-b border-card-border/40">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted/40 pointer-events-none" />
+            <input type="text" value={searchQuery} onChange={(e) => handleSearch(e.target.value)} placeholder="Search wines..." className="input-field w-full pl-9" />
           </div>
-
-          {/* Type chips */}
           {searchQuery.trim().length < 2 && (
-            <div className="flex gap-1.5 overflow-x-auto pb-3 scrollbar-hide">
+            <div className="flex gap-1.5 mt-3 overflow-x-auto scrollbar-hide">
               {TYPE_FILTERS.map((f) => (
                 <button key={f.label} onClick={() => setTypeFilter(f.value)}
-                  className={`flex-shrink-0 chip text-[12px] ${typeFilter === f.value ? "chip-active" : ""}`}>
-                  {f.value && <span className={`h-2.5 w-2.5 rounded-full ${typeColor(f.value)}`} />}
+                  className={`flex-shrink-0 px-3 py-1 rounded-[8px] text-[11px] font-semibold transition-colors ${
+                    typeFilter === f.value ? "bg-cherry text-white" : "text-muted hover:bg-butter/80"
+                  }`}>
                   {f.label}
                 </button>
               ))}
             </div>
           )}
+        </div>
 
-          {/* Wine list */}
-          <div className="wine-card divide-y divide-card-border max-h-[320px] overflow-y-auto">
-            {!browseLoaded && searchQuery.trim().length < 2 ? (
-              <div className="py-8 flex justify-center"><div className="h-5 w-5 skeleton rounded-full" /></div>
-            ) : displayWines.length === 0 ? (
-              <div className="py-8 text-center"><p className="body-sm">No wines found</p></div>
-            ) : displayWines.map((wine) => {
-              const added = selectedWines.some((w) => w.wine.id === wine.id);
-              return (
-                <button key={wine.id} onClick={() => added ? removeWine(wine.id) : addWine(wine)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors touch-target ${added ? "bg-tint-wine" : "active:bg-tint-wine/50"}`}>
-                  <span className={`h-3 w-3 rounded-full flex-shrink-0 ${typeColor(wine.type)}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="heading-sm text-foreground text-[14px] line-clamp-1">{wine.name}</p>
-                    <p className="caption line-clamp-1">{[wine.producer, wine.region].filter(Boolean).join(" · ")}{wine.vintage ? ` · ${wine.vintage}` : ""}</p>
-                  </div>
-                  {added ? (
-                    <div className="h-6 w-6 rounded-full bg-cherry flex items-center justify-center flex-shrink-0">
-                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <Plus className="h-4 w-4 text-stone-light flex-shrink-0" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── Selected Wines + Hints ── */}
-        {selectedWines.length > 0 && (
-          <section className="mb-8">
-            <p className="label mb-3">Flight Order & Hints</p>
-            <div className="space-y-3">
-              {selectedWines.map((sw, idx) => (
-                <div key={sw.wine.id} className="wine-card p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="h-7 w-7 rounded-lg bg-tint-wine flex items-center justify-center text-[12px] font-bold text-cherry flex-shrink-0">{idx + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="heading-sm text-foreground text-[14px] line-clamp-1">{sw.wine.name}</p>
-                      <p className="caption">{sw.wine.producer}</p>
-                    </div>
-                    <button onClick={() => removeWine(sw.wine.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-stone active:text-red-500 touch-target">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Hints */}
-                  {sw.hints.length > 0 && (
-                    <div className="space-y-1.5 mb-2">
-                      {sw.hints.map((h, hi) => (
-                        <div key={hi} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-tint-gold">
-                          <Sparkles className="h-3 w-3 text-gold flex-shrink-0" />
-                          <span className="text-[12px] text-foreground flex-1">{h.content}</span>
-                          <span className="caption capitalize">{h.hintType}</span>
-                          <button onClick={() => removeHint(idx, hi)} className="text-stone"><X className="h-3 w-3" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Add hint */}
-                  {editingWineIdx === idx ? (
-                    <div className="flex gap-2 mt-2">
-                      <input type="text" value={newHintContent} onChange={(e) => setNewHintContent(e.target.value)} placeholder="e.g. Dark ruby color..." className="input-field flex-1 text-[13px] py-2" />
-                      <select value={newHintType} onChange={(e) => setNewHintType(e.target.value)} className="input-field text-[12px] py-2 w-24">
-                        {HINT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <button onClick={() => addHint(idx)} className="h-[38px] w-[38px] rounded-lg bg-cherry text-white flex items-center justify-center flex-shrink-0">
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={() => setEditingWineIdx(idx)} className="text-[12px] font-semibold text-cherry mt-1 touch-target">
-                      + Add hints for this wine
-                    </button>
-                  )}
+        <div className="divide-y divide-card-border/30 max-h-[300px] overflow-y-auto">
+          {!browseLoaded && searchQuery.trim().length < 2 ? (
+            <div className="py-8 flex justify-center"><div className="h-5 w-5 rounded-full border-2 border-cherry border-t-transparent animate-spin" /></div>
+          ) : displayWines.length === 0 ? (
+            <div className="py-8 text-center"><p className="text-[13px] text-muted">No wines found</p></div>
+          ) : displayWines.map((wine) => {
+            const added = selectedWines.some((w) => w.wine.id === wine.id);
+            return (
+              <button key={wine.id} onClick={() => added ? removeWine(wine.id) : addWine(wine)}
+                className={`w-full flex items-center gap-3 px-5 py-3 text-left transition-colors ${added ? "bg-cherry/[0.04]" : "hover:bg-butter/60"}`}>
+                <div className={`h-2 w-2 rounded-full flex-shrink-0 ${TYPE_DOT[wine.type.toLowerCase()] || "bg-gray-300"}`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[13px] font-medium line-clamp-1 ${added ? "text-cherry" : "text-foreground"}`}>{wine.name}</p>
+                  <p className="text-[11px] text-muted line-clamp-1">{wine.producer}{wine.region ? ` · ${wine.region}` : ""}</p>
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="wine-card p-3 bg-red-50 mb-4">
-            <p className="text-red-600 text-[13px] font-medium">{error}</p>
-          </div>
-        )}
-
-        {/* Create button */}
-        <button onClick={handleCreate} disabled={isPending} className="btn-primary touch-target w-full">
-          {isPending ? "Creating..." : "Create Live Event"}
-        </button>
+                <div className={`h-5 w-5 rounded-[5px] border-2 flex items-center justify-center flex-shrink-0 ${
+                  added ? "bg-cherry border-cherry" : "border-card-border/60 bg-white"
+                }`}>
+                  {added && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {/* ── Flight Order + Hints ── */}
+      {selectedWines.length > 0 && (
+        <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden mb-5">
+          <div className="px-5 py-3 border-b border-card-border/40">
+            <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest">Flight Order & Hints</h2>
+          </div>
+          <div className="divide-y divide-card-border/30">
+            {selectedWines.map((sw, idx) => (
+              <div key={sw.wine.id} className="px-5 py-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="h-7 w-7 rounded-[6px] bg-cherry/[0.07] flex items-center justify-center text-[11px] font-bold text-cherry nums flex-shrink-0">{idx + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-foreground line-clamp-1">{sw.wine.name}</p>
+                    <p className="text-[11px] text-muted">{sw.wine.producer}</p>
+                  </div>
+                  <button onClick={() => removeWine(sw.wine.id)} className="h-7 w-7 rounded-[6px] flex items-center justify-center text-muted/40 hover:text-red-500 hover:bg-red-50 transition-colors">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                {sw.hints.length > 0 && (
+                  <div className="space-y-1 mb-2 pl-10">
+                    {sw.hints.map((h, hi) => (
+                      <div key={hi} className="flex items-center gap-2 px-3 py-1.5 rounded-[8px] bg-amber-50/60">
+                        <Sparkles className="h-3 w-3 text-amber-500 flex-shrink-0" />
+                        <span className="text-[11px] text-foreground flex-1">{h.content}</span>
+                        <span className="text-[9px] text-muted capitalize">{h.hintType}</span>
+                        <button onClick={() => removeHint(idx, hi)} className="text-muted/40 hover:text-red-500"><X className="h-3 w-3" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {editingWineIdx === idx ? (
+                  <div className="flex gap-2 pl-10">
+                    <input type="text" value={newHintContent} onChange={(e) => setNewHintContent(e.target.value)} placeholder="e.g. Dark ruby color..." className="input-field flex-1 text-[12px]" />
+                    <select value={newHintType} onChange={(e) => setNewHintType(e.target.value)} className="input-field text-[11px] w-20">
+                      {HINT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <button onClick={() => addHint(idx)} className="h-9 w-9 rounded-[8px] bg-cherry text-white flex items-center justify-center flex-shrink-0">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setEditingWineIdx(idx)} className="text-[11px] font-semibold text-cherry pl-10">
+                    + Add hint
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-[10px] bg-red-50 border border-red-200 p-3 mb-4">
+          <p className="text-red-600 text-[13px] font-medium">{error}</p>
+        </div>
+      )}
+
+      <button onClick={handleCreate} disabled={isPending} className="btn-primary touch-target w-full">
+        {isPending ? "Creating..." : "Create Live Event"}
+      </button>
     </div>
   );
 }

@@ -226,39 +226,79 @@ function DetailCard({
   onClose: () => void;
   onFindSimilar: () => void;
 }) {
+  const maxAxis = FLAVOR_AXES.reduce((a, b) => (profile[a] > profile[b] ? a : b));
+  const DOMINANT_COLORS: Record<string, string> = {
+    acidity: "#ffd700", tannin: "#e03030", body: "#c06020",
+    fruit: "#f03060", earth: "#a08c50", floral: "#d070f0",
+  };
+  const accentColor = DOMINANT_COLORS[maxAxis] ?? "#74070E";
+
   return (
-    <div className="flex flex-col items-center gap-3 p-4">
-      <div className="flex items-center justify-between w-full">
+    <div className="flex flex-col gap-4 p-5">
+      {/* Header */}
+      <div className="flex items-start justify-between">
         <div>
-          <p className="text-[15px] font-bold text-white">{profile.region}</p>
-          <p className="text-[11px] text-white/40">{profile.country}</p>
+          <p className="text-[17px] font-bold text-white tracking-tight font-serif">{profile.region}</p>
+          <p className="text-[11px] text-white/35 mt-0.5">{profile.country}</p>
         </div>
         <button
           onClick={onClose}
-          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 text-white/40 hover:text-white/70 transition-colors text-[12px]"
+          className="w-7 h-7 flex items-center justify-center rounded-full bg-white/[0.08] text-white/40 hover:bg-white/15 hover:text-white/70 transition-colors"
         >
-          ✕
+          <span className="text-[14px]">✕</span>
         </button>
       </div>
-      <RadarSVG profile={profile} size={120} showLabels padding={20} />
-      {/* Axis values */}
-      <div className="grid grid-cols-3 gap-x-4 gap-y-1 w-full">
-        {FLAVOR_AXES.map((axis) => (
-          <div key={axis} className="flex items-center justify-between gap-2">
-            <span className="text-[10px] text-white/40 font-semibold">
-              {FLAVOR_LABELS[axis]}
-            </span>
-            <span className="text-[10px] text-white/70 font-bold tabular-nums">
-              {(profile[axis] * 100).toFixed(0)}
-            </span>
-          </div>
-        ))}
+
+      {/* Radar chart — larger */}
+      <div className="flex justify-center">
+        <RadarSVG profile={profile} size={140} showLabels padding={24} />
       </div>
+
+      {/* Dominant trait highlight */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-[10px] bg-white/[0.06]">
+        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: accentColor }} />
+        <span className="text-[11px] font-semibold text-white/70">
+          Dominant: <span className="text-white" style={{ color: accentColor }}>{FLAVOR_LABELS[maxAxis]}</span>
+        </span>
+        <span className="ml-auto text-[12px] font-bold text-white/80 tabular-nums">{(profile[maxAxis] * 100).toFixed(0)}%</span>
+      </div>
+
+      {/* Axis values — horizontal bars */}
+      <div className="space-y-2">
+        {FLAVOR_AXES.map((axis) => {
+          const val = profile[axis];
+          const isMax = axis === maxAxis;
+          return (
+            <div key={axis} className="flex items-center gap-2">
+              <span className={`text-[10px] font-semibold w-10 ${isMax ? "text-white/80" : "text-white/35"}`}>
+                {FLAVOR_LABELS[axis]}
+              </span>
+              <div className="flex-1 h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${val * 100}%`,
+                    backgroundColor: isMax ? accentColor : "rgba(255,255,255,0.25)",
+                  }}
+                />
+              </div>
+              <span className={`text-[10px] font-bold tabular-nums w-7 text-right ${isMax ? "text-white" : "text-white/50"}`}>
+                {(val * 100).toFixed(0)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Find Similar button */}
       <button
         onClick={onFindSimilar}
-        className="mt-1 px-4 py-2 rounded-full bg-[#74070E] text-white text-[12px] font-bold active:scale-95 transition-transform hover:bg-[#8a1018]"
+        className="w-full py-2.5 rounded-[10px] text-[12px] font-bold transition-colors"
+        style={{ backgroundColor: `${accentColor}30`, color: accentColor }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${accentColor}50`; }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = `${accentColor}30`; }}
       >
-        Find Similar
+        Find Similar Regions →
       </button>
     </div>
   );
@@ -393,30 +433,41 @@ export function FlavorGenomeLayer({ active, mapRef }: Props) {
       el.style.flexDirection = "column";
       el.style.alignItems = "center";
       el.style.cursor = "pointer";
-      el.style.transition = "transform 0.15s ease";
-      el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.15)"; });
-      el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
+      el.style.transition = "transform 0.2s ease, filter 0.2s ease";
+      el.style.animation = "flavorPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both";
+      el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.2)"; el.style.filter = "brightness(1.2)"; });
+      el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; el.style.filter = "brightness(1)"; });
 
       const padding = 4;
       const cx = markerSize / 2;
       const cy = markerSize / 2;
       const r = (markerSize - padding * 2) / 2;
-      const levels = [0.5, 1.0];
 
+      // Grid rings at 33%, 66%, 100%
+      const levels = [0.33, 0.66, 1.0];
       const gridPolygons = levels
         .map((level) => {
           const pts = FLAVOR_AXES.map((_, i) => {
             const angle = (Math.PI * 2 * i) / FLAVOR_AXES.length - Math.PI / 2;
             return `${cx + r * level * Math.cos(angle)},${cy + r * level * Math.sin(angle)}`;
           }).join(" ");
-          return `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>`;
+          return `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5" stroke-dasharray="${level < 1 ? '2,2' : 'none'}"/>`;
         })
         .join("");
 
       const axisLines = FLAVOR_AXES.map((_, i) => {
         const angle = (Math.PI * 2 * i) / FLAVOR_AXES.length - Math.PI / 2;
-        return `<line x1="${cx}" y1="${cy}" x2="${cx + r * Math.cos(angle)}" y2="${cy + r * Math.sin(angle)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>`;
+        return `<line x1="${cx}" y1="${cy}" x2="${cx + r * Math.cos(angle)}" y2="${cy + r * Math.sin(angle)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>`;
       }).join("");
+
+      // Axis labels at the tips (only on larger markers)
+      const AXIS_LABELS = ["Acid", "Tan", "Body", "Fruit", "Earth", "Flora"];
+      const axisLabelEls = markerSize >= 50 ? FLAVOR_AXES.map((_, i) => {
+        const angle = (Math.PI * 2 * i) / FLAVOR_AXES.length - Math.PI / 2;
+        const lx = cx + (r + 8) * Math.cos(angle);
+        const ly = cy + (r + 8) * Math.sin(angle);
+        return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.4)" font-size="6" font-weight="600" font-family="system-ui">${AXIS_LABELS[i]}</text>`;
+      }).join("") : "";
 
       const dataPoints = FLAVOR_AXES.map((axis, i) => {
         const angle = (Math.PI * 2 * i) / FLAVOR_AXES.length - Math.PI / 2;
@@ -424,47 +475,64 @@ export function FlavorGenomeLayer({ active, mapRef }: Props) {
         return `${cx + r * val * Math.cos(angle)},${cy + r * val * Math.sin(angle)}`;
       }).join(" ");
 
-      // Dominant trait determines accent color
+      // Data point dots at each axis value
+      const dataDots = FLAVOR_AXES.map((axis, i) => {
+        const angle = (Math.PI * 2 * i) / FLAVOR_AXES.length - Math.PI / 2;
+        const val = profile[axis];
+        const dx = cx + r * val * Math.cos(angle);
+        const dy = cy + r * val * Math.sin(angle);
+        return `<circle cx="${dx}" cy="${dy}" r="${markerSize > 40 ? 2.5 : 1.5}" fill="white" opacity="0.9"/>`;
+      }).join("");
+
+      // Dominant trait determines vivid accent color
       const maxAxis = FLAVOR_AXES.reduce((a, b) => (profile[a] > profile[b] ? a : b));
-      const AXIS_COLORS: Record<string, string> = {
-        acidity: "rgba(255,220,50,0.45)",
-        tannin: "rgba(180,50,50,0.45)",
-        body: "rgba(160,80,40,0.45)",
-        fruit: "rgba(220,60,80,0.45)",
-        earth: "rgba(140,120,80,0.45)",
-        floral: "rgba(200,120,220,0.45)",
+      const AXIS_COLORS: Record<string, { fill: string; stroke: string; glow: string }> = {
+        acidity: { fill: "rgba(255,220,50,0.6)", stroke: "#ffd700", glow: "rgba(255,220,50,0.4)" },
+        tannin: { fill: "rgba(200,40,40,0.6)", stroke: "#e03030", glow: "rgba(200,40,40,0.4)" },
+        body: { fill: "rgba(180,100,40,0.6)", stroke: "#c06020", glow: "rgba(180,100,40,0.4)" },
+        fruit: { fill: "rgba(240,60,90,0.6)", stroke: "#f03060", glow: "rgba(240,60,90,0.4)" },
+        earth: { fill: "rgba(160,140,80,0.6)", stroke: "#a08c50", glow: "rgba(160,140,80,0.4)" },
+        floral: { fill: "rgba(220,120,240,0.6)", stroke: "#d070f0", glow: "rgba(220,120,240,0.4)" },
       };
-      const fillColor = AXIS_COLORS[maxAxis] ?? "rgba(116,7,14,0.40)";
-      const AXIS_STROKES: Record<string, string> = {
-        acidity: "#d4b830",
-        tannin: "#b43232",
-        body: "#a05028",
-        fruit: "#dc3c50",
-        earth: "#8c7850",
-        floral: "#c878dc",
-      };
-      const strokeColor = AXIS_STROKES[maxAxis] ?? "#74070E";
+      const colors = AXIS_COLORS[maxAxis] ?? { fill: "rgba(116,7,14,0.6)", stroke: "#b01020", glow: "rgba(116,7,14,0.4)" };
+
+      const svgSize = markerSize + (markerSize >= 50 ? 20 : 0);
+      const offset = (svgSize - markerSize) / 2;
 
       el.innerHTML = `
-        <svg width="${markerSize}" height="${markerSize}" viewBox="0 0 ${markerSize} ${markerSize}" style="display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4))">
-          <circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(26,20,18,0.85)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
-          ${gridPolygons}
-          ${axisLines}
-          <polygon points="${dataPoints}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${markerSize > 40 ? 1.5 : 1}"/>
+        <svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" style="display:block">
+          <defs>
+            <filter id="glow-${profile.region.replace(/\s/g, "")}" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <g transform="translate(${offset},${offset})">
+            <circle cx="${cx}" cy="${cy}" r="${r + 1}" fill="rgba(26,20,18,0.75)" stroke="${colors.stroke}" stroke-width="1" stroke-opacity="0.4"/>
+            ${gridPolygons}
+            ${axisLines}
+            <polygon points="${dataPoints}" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="${markerSize > 40 ? 2 : 1.5}" filter="url(#glow-${profile.region.replace(/\s/g, "")})" stroke-linejoin="round"/>
+            ${dataDots}
+            ${axisLabelEls}
+          </g>
         </svg>
         <span style="
           display:block;
-          margin-top:2px;
-          font-size:${markerSize > 40 ? 10 : 8}px;
+          margin-top:3px;
+          font-size:${markerSize > 40 ? 11 : 9}px;
           font-weight:700;
           color:white;
           text-align:center;
-          text-shadow:0 1px 4px rgba(0,0,0,0.8);
+          text-shadow:0 1px 6px rgba(0,0,0,0.9), 0 0 12px ${colors.glow};
           white-space:nowrap;
-          max-width:${markerSize * 2}px;
+          max-width:${markerSize * 2.5}px;
           overflow:hidden;
           text-overflow:ellipsis;
           pointer-events:none;
+          letter-spacing:0.02em;
         ">${profile.region}</span>
       `;
 
@@ -479,54 +547,74 @@ export function FlavorGenomeLayer({ active, mapRef }: Props) {
       return 50;
     }
 
+    // Use a container div overlaid on the map for manual positioning
+    // (Mapbox Markers with the "standard" style have positioning bugs)
+    const container = document.createElement("div");
+    container.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;";
+    map.getContainer().appendChild(container);
+
     let currentSize = sizeForZoom(map.getZoom());
+    const markerEls: { el: HTMLElement; coords: [number, number] }[] = [];
 
-    for (const profile of REGION_FLAVORS) {
-      const coords = REGION_CITIES[profile.region];
-      if (!coords) continue;
-
-      const el = buildMarkerEl(profile, currentSize);
-
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        handleMarkerClick(profile);
-        map.flyTo({ center: coords, zoom: 6, duration: 1200 });
-      });
-
-      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-        .setLngLat(coords)
-        .addTo(map);
-
-      markersRef.current.push(marker);
+    // Position all marker elements using map.project()
+    function updatePositions() {
+      if (!map) return;
+      for (const { el, coords } of markerEls) {
+        const point = map.project(coords as mapboxgl.LngLatLike);
+        el.style.transform = `translate(${point.x}px, ${point.y}px) translate(-50%, -50%)`;
+      }
     }
 
-    // Resize markers on zoom
-    const onZoom = () => {
-      const newSize = sizeForZoom(map.getZoom());
-      if (newSize === currentSize) return;
-      currentSize = newSize;
+    function rebuildMarkers() {
+      if (!map) return;
+      // Clear existing
+      markerEls.length = 0;
+      container.innerHTML = "";
 
-      // Rebuild all marker elements
-      markersRef.current.forEach((marker, idx) => {
-        const profile = REGION_FLAVORS[idx];
-        if (!profile) return;
-        const newEl = buildMarkerEl(profile, newSize);
-        newEl.addEventListener("click", (e) => {
+      const size = sizeForZoom(map.getZoom());
+      currentSize = size;
+
+      for (const profile of REGION_FLAVORS) {
+        const coords = REGION_CITIES[profile.region];
+        if (!coords) continue;
+
+        const el = buildMarkerEl(profile, size);
+        el.style.position = "absolute";
+        el.style.top = "0";
+        el.style.left = "0";
+        el.style.pointerEvents = "auto";
+
+        el.addEventListener("click", (e) => {
           e.stopPropagation();
           handleMarkerClick(profile);
-          const coords = REGION_CITIES[profile.region];
-          if (coords) map.flyTo({ center: coords, zoom: 6, duration: 1200 });
+          map!.flyTo({ center: coords, zoom: 6, duration: 1200 });
         });
-        (marker as unknown as { _element: HTMLElement })._element.replaceWith(newEl);
-        // Update internal reference
-        (marker as unknown as { _element: HTMLElement })._element = newEl;
-      });
+
+        container.appendChild(el);
+        markerEls.push({ el, coords });
+      }
+
+      updatePositions();
+    }
+
+    rebuildMarkers();
+
+    // Reposition on every render frame (pan, zoom, rotate)
+    const onRender = () => updatePositions();
+    map.on("render", onRender);
+
+    // Rebuild on zoom change (marker size changes)
+    const onZoom = () => {
+      const newSize = sizeForZoom(map!.getZoom());
+      if (newSize !== currentSize) rebuildMarkers();
     };
-    map.on("zoom", onZoom);
+    map.on("zoomend", onZoom);
 
     return () => {
-      map.off("zoom", onZoom);
-      clearMarkers();
+      map!.off("render", onRender);
+      map!.off("zoomend", onZoom);
+      container.remove();
+      markerEls.length = 0;
     };
   }, [active, mapReady, mapRef, clearMarkers, handleMarkerClick]);
 

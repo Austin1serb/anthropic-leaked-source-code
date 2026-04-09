@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ChevronLeft, Wine, BadgeCheck, Radio, Users, Star,
-  ArrowRight, CheckCircle2, Sparkles, Trophy, TrendingUp, Mic,
+  ChevronLeft, Wine, BadgeCheck, Radio, Users,
+  ArrowRight, Check, Sparkles, Trophy, TrendingUp, Mic,
 } from "lucide-react";
 import { createSommelierProfile } from "@/lib/liveActions";
 
@@ -55,135 +55,158 @@ export default function BecomeSommelierPage() {
     });
   }
 
-  // ============ INTRO ============
+  // ── INTRO ──
   if (step === "intro") {
     return (
-      <div className="min-h-screen pb-28 safe-top bg-background">
-        <div className="container-app pt-4">
-          <Link href="/sommeliers" className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted touch-target">
-            <ChevronLeft className="h-3.5 w-3.5" /> Back
-          </Link>
-        </div>
+      <div className="px-5 pt-6 pb-28">
+        <Link href="/sommeliers" className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted hover:text-foreground transition-colors touch-target mb-6">
+          <ChevronLeft className="h-3.5 w-3.5" /> Back
+        </Link>
 
-        <div className="container-app pt-4 text-center">
-          <Mic className="h-7 w-7 text-cherry/50 mx-auto mb-2" />
-          <h1 className="text-[18px] font-bold text-foreground tracking-tight">Become a Sommelier</h1>
-          <p className="text-[12px] text-muted mt-1 max-w-[260px] mx-auto">
-            Host live blind tasting events and build a community of wine lovers.
+        {/* Hero */}
+        <div className="text-center mb-8">
+          <div className="h-16 w-16 rounded-full bg-cherry/10 flex items-center justify-center mx-auto mb-4">
+            <Mic className="h-8 w-8 text-cherry/60" />
+          </div>
+          <h1 className="text-[26px] font-bold text-foreground tracking-tight font-serif mb-2">
+            Become a Sommelier
+          </h1>
+          <p className="text-[14px] text-muted max-w-[300px] mx-auto leading-relaxed">
+            Host live blind tasting events, share your knowledge, and build a community.
           </p>
         </div>
 
-        <div className="container-app mt-5">
-          {/* Benefits */}
-          <div className="grid grid-cols-2 gap-2 mb-5">
-            {BENEFITS.map((b) => (
-              <div key={b.title} className="wine-card p-3">
-                <b.icon className="h-4 w-4 text-cherry/40 mb-1.5" />
-                <h3 className="text-[12px] font-bold text-foreground">{b.title}</h3>
-                <p className="text-[10px] text-muted mt-0.5 leading-relaxed">{b.desc}</p>
+        {/* Benefits */}
+        <div className="grid grid-cols-2 gap-3 mb-8">
+          {BENEFITS.map((b) => (
+            <div key={b.title} className="bg-white rounded-[14px] border border-card-border/60 p-4">
+              <div className="h-9 w-9 rounded-[8px] bg-cherry/8 flex items-center justify-center mb-3">
+                <b.icon className="h-4 w-4 text-cherry/60" />
               </div>
-            ))}
-          </div>
-
-          {/* How it works */}
-          <h2 className="label mb-2">How It Works</h2>
-          <div className="wine-card divide-y divide-card-border/40 mb-5">
-            {[
-              ["1", "Create Profile", "Add name, bio, expertise"],
-              ["2", "Set Up Tasting", "Choose wines, prepare hints"],
-              ["3", "Go Live", "Host while viewers guess in real time"],
-            ].map(([num, title, desc]) => (
-              <div key={num} className="flex items-center gap-3 px-3.5 py-2.5">
-                <div className={`h-6 w-6 rounded-lg flex items-center justify-center text-[11px] font-bold ${num === "1" ? "bg-cherry text-white" : "widget-wine text-cherry"}`}>
-                  {num}
-                </div>
-                <div>
-                  <p className="text-[12px] font-bold text-foreground">{title}</p>
-                  <p className="text-[10px] text-muted">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Testimonial */}
-          <div className="wine-card p-3.5 mb-5 text-center" style={{ background: "var(--widget-wine)" }}>
-            <div className="flex items-center justify-center gap-0.5 mb-1">
-              {[1,2,3,4,5].map((s) => <Star key={s} className="h-3 w-3 text-amber-500 fill-amber-500" />)}
+              <h3 className="text-[13px] font-semibold text-foreground mb-1">{b.title}</h3>
+              <p className="text-[11px] leading-relaxed text-muted">{b.desc}</p>
             </div>
-            <p className="text-[11px] italic text-foreground leading-relaxed">
-              &ldquo;The live guessing makes it way more engaging than any tasting I&apos;ve done.&rdquo;
-            </p>
-            <p className="text-[10px] font-semibold text-muted mt-1">— Community Sommelier</p>
-          </div>
-
-          <button onClick={() => setStep("form")} className="btn-primary w-full py-3 text-[14px]">
-            Get Started <ArrowRight className="h-4 w-4" />
-          </button>
-          <p className="text-center text-[10px] text-muted mt-2">Free to join — no commitments</p>
+          ))}
         </div>
+
+        {/* How It Works */}
+        <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-3">How It Works</h2>
+        <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden divide-y divide-card-border/30 mb-8">
+          {STEPS.map((s, i) => (
+            <div key={s.num} className="flex items-start gap-4 px-5 py-4">
+              <div className={`h-8 w-8 rounded-[8px] flex items-center justify-center text-[13px] font-bold flex-shrink-0 ${
+                i === 0 ? "bg-cherry text-white" : "bg-cherry/8 text-cherry"
+              }`}>
+                {s.num}
+              </div>
+              <div>
+                <h3 className="text-[13px] font-semibold text-foreground">{s.title}</h3>
+                <p className="text-[12px] text-muted mt-0.5">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <button onClick={() => setStep("form")} className="btn-primary touch-target w-full">
+          Get Started <ArrowRight className="h-5 w-5" />
+        </button>
+        <p className="text-center text-[11px] text-muted mt-3">Free to join — no commitments required</p>
       </div>
     );
   }
 
-  // ============ FORM ============
+  // ── FORM ──
   return (
-    <div className="min-h-screen pb-28 safe-top bg-background">
-      <div className="container-app pt-4">
-        <button onClick={() => setStep("intro")} className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted touch-target mb-4">
-          <ChevronLeft className="h-3.5 w-3.5" /> Back
-        </button>
+    <div className="px-5 pt-6 pb-28">
+      <button onClick={() => setStep("intro")} className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted hover:text-foreground transition-colors touch-target mb-6">
+        <ChevronLeft className="h-3.5 w-3.5" /> Back
+      </button>
 
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="h-9 w-9 rounded-xl bg-cherry flex items-center justify-center">
-            <Wine className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h1 className="text-[16px] font-bold text-foreground tracking-tight">Your Profile</h1>
-            <p className="text-[11px] text-muted">How viewers will see you</p>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="h-11 w-11 rounded-[10px] bg-cherry flex items-center justify-center">
+          <Wine className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h1 className="text-[20px] font-bold text-foreground tracking-tight font-serif">Your Profile</h1>
+          <p className="text-[12px] text-muted">This is how viewers will see you</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Display Name */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-5">
+          <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-4">Basic Info</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="text-[12px] font-semibold text-foreground">Display Name *</label>
+              <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="How you'll appear to viewers" className="input-field w-full touch-target mt-1.5" />
+            </div>
+            <div>
+              <label className="text-[12px] font-semibold text-foreground">Bio</label>
+              <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell viewers about your wine journey..." rows={3} className="input-field w-full resize-none mt-1.5" />
+            </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <p className="label mb-1.5">Display Name *</p>
-            <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="How you'll appear to viewers" className="input-field w-full text-[14px]" />
-          </div>
-          <div>
-            <p className="label mb-1.5">Bio</p>
-            <textarea value={bio} onChange={(e) => setBio(e.target.value)}
-              placeholder="Your wine journey, favourite regions..." rows={2} className="input-field w-full resize-none text-[14px]" />
-          </div>
-          <div>
-            <p className="label mb-1.5">Expertise</p>
-            <div className="flex flex-wrap gap-1.5">
-              {EXPERTISE_OPTIONS.map((item) => (
-                <button key={item} type="button" onClick={() => toggle(expertise, setExpertise, item)}
-                  className={`chip text-[11px] py-1.5 px-2.5 ${expertise.includes(item) ? "chip-active" : ""}`}>
-                  {expertise.includes(item) && <CheckCircle2 className="h-2.5 w-2.5" />}{item}
+        {/* Expertise */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-5">
+          <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-1">Expertise</h2>
+          <p className="text-[12px] text-muted mb-3">Select regions and styles you know best</p>
+          <div className="flex flex-wrap gap-1.5">
+            {EXPERTISE_OPTIONS.map((item) => {
+              const active = expertise.includes(item);
+              return (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => toggleExpertise(item)}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all border ${
+                    active ? "bg-cherry/[0.07] border-cherry/20 text-cherry" : "bg-white border-card-border/50 text-muted hover:border-card-border"
+                  }`}
+                >
+                  {active && <Check className="h-3 w-3" />}
+                  {item}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-          <div>
-            <p className="label mb-1.5">Certifications <span className="font-normal text-muted">(optional)</span></p>
-            <div className="flex flex-wrap gap-1.5">
-              {CERT_OPTIONS.map((item) => (
-                <button key={item} type="button" onClick={() => toggle(certifications, setCertifications, item)}
-                  className={`chip text-[11px] py-1.5 px-2.5 ${certifications.includes(item) ? "chip-active" : ""}`}>
-                  <BadgeCheck className="h-2.5 w-2.5" />{item}
+        </div>
+
+        {/* Certifications */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-5">
+          <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-1">Certifications</h2>
+          <p className="text-[12px] text-muted mb-3">Optional — builds trust with viewers</p>
+          <div className="flex flex-wrap gap-1.5">
+            {CERT_OPTIONS.map((item) => {
+              const active = certifications.includes(item);
+              return (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => toggleCert(item)}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border ${
+                    active ? "bg-cherry/[0.07] border-cherry/20 text-cherry" : "bg-white border-card-border/50 text-muted hover:border-card-border"
+                  }`}
+                >
+                  <BadgeCheck className="h-3 w-3" />
+                  {item}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
+        </div>
 
-          {error && <div className="wine-card p-2.5 bg-red-50"><p className="text-red-600 text-[12px] font-medium">{error}</p></div>}
+        {error && (
+          <div className="rounded-[10px] bg-red-50 border border-red-200 p-3">
+            <p className="text-red-600 text-[13px] font-medium">{error}</p>
+          </div>
+        )}
 
-          <button type="submit" disabled={isPending} className="btn-primary w-full py-3 text-[14px]">
-            {isPending ? "Creating..." : <><Sparkles className="h-3.5 w-3.5" /> Create Sommelier Profile</>}
-          </button>
-        </form>
-      </div>
+        <button type="submit" disabled={isPending} className="btn-primary touch-target w-full">
+          {isPending ? "Creating..." : <><Sparkles className="h-4 w-4" /> Create Sommelier Profile</>}
+        </button>
+      </form>
     </div>
   );
 }

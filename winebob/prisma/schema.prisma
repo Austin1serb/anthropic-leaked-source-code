@@ -39,6 +39,8 @@ model User {
   claimedWineries   Winery[]           @relation("ClaimedWineries")
   reviewedApplications WineryApplication[] @relation("ReviewedApplications")
   experienceBookings ExperienceBooking[]
+  subscription       Subscription?
+  scanHistory        WineScan[]
 }
 
 model Account {
@@ -1026,4 +1028,42 @@ model ApiKey {
 
   @@index([key])
   @@index([producerName])
+}
+
+// ============ SUBSCRIPTIONS (Stripe) ============
+
+model Subscription {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  stripeCustomerId    String    @unique
+  stripeSubscriptionId String?  @unique
+  plan                String    @default("scanner") // scanner, pro, etc.
+  status              String    @default("inactive") // active, inactive, past_due, cancelled
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([stripeCustomerId])
+}
+
+// ============ WINE SCANS (label recognition) ============
+
+model WineScan {
+  id          String   @id @default(cuid())
+  userId      String
+  imageUrl    String?  // stored in Vercel Blob
+  result      Json     // Claude Vision response: { name, producer, vintage, region, ... }
+  matchedWineId String? // if matched to existing wine in DB
+  confidence  Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
 }

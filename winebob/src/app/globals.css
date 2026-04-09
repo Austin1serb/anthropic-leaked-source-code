@@ -556,6 +556,12 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes flavorPop {
+  0% { opacity: 0; transform: scale(0) rotate(-10deg); }
+  60% { opacity: 1; transform: scale(1.15) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
 .animate-scale-in {
   animation: scaleIn 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
 }

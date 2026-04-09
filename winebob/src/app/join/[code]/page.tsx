@@ -3,6 +3,7 @@
 import { use, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { getEventByJoinCode, joinEvent } from "@/lib/actions";
+import { Wine, MapPin, Users, ChevronLeft, Loader2, X } from "lucide-react";
 
 const COUNTRIES = [
   "Argentina", "Australia", "Austria", "Brazil", "Canada", "Chile", "China",
@@ -141,10 +142,10 @@ export default function JoinPage({
     return (
       <div className="min-h-dvh bg-background flex items-center justify-center px-4">
         <div className="text-center animate-fade-in-up">
-          <div className="text-5xl mb-4">🍷</div>
-          <p className="text-lg text-muted font-serif">
-            Finding your tasting...
-          </p>
+          <div className="h-14 w-14 rounded-full bg-cherry/10 flex items-center justify-center mx-auto mb-4">
+            <Wine className="h-7 w-7 text-cherry animate-pulse" />
+          </div>
+          <p className="text-[14px] text-muted font-medium">Finding your tasting...</p>
         </div>
       </div>
     );
@@ -154,19 +155,18 @@ export default function JoinPage({
   if (notFound || !event) {
     return (
       <div className="min-h-dvh bg-background flex items-center justify-center px-4">
-        <div className="text-center animate-fade-in-up max-w-md mx-auto">
-          <div className="text-5xl mb-4">😕</div>
-          <h1 className="text-2xl font-serif font-bold text-foreground mb-2">
+        <div className="text-center animate-fade-in-up max-w-sm mx-auto">
+          <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+            <X className="h-7 w-7 text-red-400" />
+          </div>
+          <h1 className="text-[22px] font-serif font-bold text-foreground mb-2">
             Event not found
           </h1>
-          <p className="text-muted mb-6">
-            That join code doesn&apos;t match any active tasting event.
+          <p className="text-[14px] text-muted mb-6">
+            That join code doesn&apos;t match any active tasting.
           </p>
-          <a
-            href="/"
-            className="btn-primary inline-block touch-target"
-          >
-            ← Back to Home
+          <a href="/" className="btn-primary inline-block touch-target">
+            <ChevronLeft className="h-4 w-4" /> Back to Home
           </a>
         </div>
       </div>
@@ -180,187 +180,172 @@ export default function JoinPage({
     <div className="min-h-dvh bg-background safe-top safe-bottom">
       {/* Server error banner */}
       {serverError && (
-        <div className="sticky top-0 z-50 bg-red-50 border-b border-red-200 text-red-700 px-4 py-3 text-center text-sm font-medium animate-fade-in-up">
+        <div className="sticky top-0 z-50 bg-red-50 border-b border-red-200 text-red-700 px-4 py-3 text-center text-[13px] font-medium animate-fade-in-up">
           {serverError}
-          <button
-            onClick={() => setServerError("")}
-            className="ml-3 underline text-red-800"
-          >
+          <button onClick={() => setServerError("")} className="ml-3 underline text-red-800">
             Dismiss
           </button>
         </div>
       )}
 
-      <div className="max-w-md mx-auto px-4 py-8">
+      <div className="max-w-md mx-auto px-5 py-8">
         {/* Back link */}
-        <a
-          href="/"
-          className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-foreground active:text-foreground transition-colors touch-target mb-6"
-        >
-          ← Back to Home
+        <a href="/" className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted hover:text-foreground transition-colors touch-target mb-6">
+          <ChevronLeft className="h-3.5 w-3.5" /> Back
         </a>
 
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <div className="text-4xl mb-3">🍷</div>
-          <h1 className="text-3xl font-serif font-bold text-foreground tracking-tight mb-1">
+          <div className="h-14 w-14 rounded-full bg-cherry/10 flex items-center justify-center mx-auto mb-4">
+            <Wine className="h-7 w-7 text-cherry" />
+          </div>
+          <h1 className="text-[26px] font-serif font-bold text-foreground tracking-tight mb-1">
             {event.title}
           </h1>
-          <p className="text-muted text-[15px]">
-            Hosted by <span className="font-medium text-foreground">{hostName}</span>
+          <p className="text-[14px] text-muted">
+            Hosted by <span className="font-semibold text-foreground">{hostName}</span>
           </p>
           {event.guests.length > 0 && (
-            <p className="text-[13px] text-muted mt-1 nums">
-              {event.guests.length} guest{event.guests.length !== 1 ? "s" : ""}{" "}
-              already joined
-            </p>
+            <div className="inline-flex items-center gap-1.5 mt-2 text-[12px] text-muted">
+              <Users className="h-3 w-3" />
+              <span className="nums">{event.guests.length}</span> already joined
+            </div>
           )}
         </div>
 
         {/* Form Card */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-black/[0.06] rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-6 animate-fade-in-up"
+          className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden animate-fade-in-up"
         >
-          {/* Display Name */}
-          <div className="mb-5">
-            <label
-              htmlFor="displayName"
-              className="block text-sm font-semibold text-foreground mb-1.5"
-            >
-              Your Name
-            </label>
-            <input
-              id="displayName"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="How you'll appear on the scoreboard"
-              autoComplete="given-name"
-              className="input-field w-full touch-target"
-            />
-            {errors.displayName && (
-              <p className="text-red-600 text-sm mt-1.5">{errors.displayName}</p>
-            )}
-          </div>
-
-          {/* Birth Year */}
-          <div className="mb-5">
-            <label
-              htmlFor="birthYear"
-              className="block text-sm font-semibold text-foreground mb-1.5"
-            >
-              Birth Year
-            </label>
-            <select
-              id="birthYear"
-              value={birthYear}
-              onChange={(e) => setBirthYear(e.target.value)}
-              className="input-field w-full touch-target text-lg appearance-none"
-              style={{
-                backgroundImage:
-                  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' fill=\'%23888\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M8 11L3 6h10z\'/%3E%3C/svg%3E")',
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 14px center",
-              }}
-            >
-              <option value="">Select year</option>
-              {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map(
-                (year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                )
+          <div className="p-6 space-y-5">
+            {/* Display Name */}
+            <div>
+              <label htmlFor="displayName" className="block text-[12px] font-semibold text-foreground mb-1.5">
+                Your Name *
+              </label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="How you'll appear on the scoreboard"
+                autoComplete="given-name"
+                className="input-field w-full touch-target"
+              />
+              {errors.displayName && (
+                <p className="text-red-600 text-[12px] mt-1.5">{errors.displayName}</p>
               )}
-            </select>
-            {errors.birthYear && (
-              <p className="text-red-600 text-sm mt-1.5">{errors.birthYear}</p>
-            )}
+            </div>
+
+            {/* Birth Year */}
+            <div>
+              <label htmlFor="birthYear" className="block text-[12px] font-semibold text-foreground mb-1.5">
+                Birth Year *
+              </label>
+              <select
+                id="birthYear"
+                value={birthYear}
+                onChange={(e) => setBirthYear(e.target.value)}
+                className="input-field w-full touch-target"
+              >
+                <option value="">Select year</option>
+                {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map(
+                  (year) => (
+                    <option key={year} value={year}>{year}</option>
+                  )
+                )}
+              </select>
+              {errors.birthYear && (
+                <p className="text-red-600 text-[12px] mt-1.5">{errors.birthYear}</p>
+              )}
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-[12px] font-semibold text-foreground mb-1.5">
+                Location <span className="text-muted font-normal">(optional)</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={handleDetectLocation}
+                disabled={detectingLocation}
+                className={`w-full mb-3 px-4 py-3 rounded-[10px] text-[13px] font-semibold touch-target transition-all flex items-center justify-center gap-2 ${
+                  locationDetected
+                    ? "bg-green-50 border border-green-200 text-green-700"
+                    : "bg-cherry/[0.06] border border-cherry/15 text-cherry hover:bg-cherry/10"
+                } disabled:opacity-50`}
+              >
+                {detectingLocation ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Detecting...</>
+                ) : locationDetected ? (
+                  <><MapPin className="h-4 w-4" /> {locationCity}</>
+                ) : (
+                  <><MapPin className="h-4 w-4" /> Use my location</>
+                )}
+              </button>
+
+              {!locationDetected && (
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="City"
+                    className="input-field flex-1 touch-target"
+                  />
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="input-field flex-1 touch-target"
+                  >
+                    <option value="">Country</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Location */}
-          <div className="mb-5">
-            <label className="block text-sm font-semibold text-foreground mb-1.5">
-              Location{" "}
-              <span className="text-muted font-normal">(optional)</span>
-            </label>
-
-            {/* Detect button */}
-            <button
-              type="button"
-              onClick={handleDetectLocation}
-              disabled={detectingLocation}
-              className="w-full mb-3 px-4 py-3 rounded-[12px] border-2 border-dashed border-cherry/20 text-cherry font-medium text-base touch-target hover:bg-cherry/5 transition-colors disabled:opacity-50"
-            >
-              {detectingLocation
-                ? "Detecting..."
-                : locationDetected
-                  ? `Location detected: ${locationCity}`
-                  : "📍 Use my location"}
-            </button>
-
-            {/* Manual fallback */}
-            {!locationDetected && (
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="City"
-                  className="input-field flex-1 touch-target"
-                />
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="input-field flex-1 touch-target"
-                >
-                  <option value="">Country</option>
-                  {COUNTRIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          {/* GDPR Consent */}
-          <div className="mb-6">
-            <label className="flex items-start gap-3 cursor-pointer">
+          {/* Consent + Submit — footer section */}
+          <div className="px-6 py-5 border-t border-card-border/40 bg-butter/30">
+            <label className="flex items-start gap-3 cursor-pointer mb-5">
               <input
                 type="checkbox"
                 checked={consent}
                 onChange={(e) => setConsent(e.target.checked)}
                 className="mt-0.5 h-5 w-5 rounded border-black/10 accent-cherry shrink-0"
               />
-              <span className="text-sm text-muted leading-relaxed">
+              <span className="text-[12px] text-muted leading-relaxed">
                 I agree that anonymized tasting data may be used for wine
                 industry insights.{" "}
-                <a
-                  href="/privacy"
-                  className="underline text-cherry hover:text-cherry/80"
-                >
+                <a href="/privacy" className="underline text-cherry hover:text-cherry/80">
                   Privacy Policy
                 </a>
               </span>
             </label>
             {errors.consent && (
-              <p className="text-red-600 text-sm mt-1.5">{errors.consent}</p>
+              <p className="text-red-600 text-[12px] mb-3">{errors.consent}</p>
             )}
-          </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isPending}
-            className="btn-primary w-full touch-target text-lg"
-          >
-            {isPending ? "Joining..." : "Join Tasting 🍷"}
-          </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="btn-primary w-full touch-target"
+            >
+              {isPending ? (
+                <><Loader2 className="h-5 w-5 animate-spin" /> Joining...</>
+              ) : (
+                <><Wine className="h-5 w-5" /> Join Tasting</>
+              )}
+            </button>
+          </div>
         </form>
 
-        <p className="text-center text-xs text-muted mt-6">
+        <p className="text-center text-[11px] text-muted mt-5">
           No account needed. Join instantly.
         </p>
       </div>

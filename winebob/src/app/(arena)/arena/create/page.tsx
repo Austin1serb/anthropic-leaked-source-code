@@ -56,20 +56,20 @@ type WineResult = {
 // ============ CONSTANTS ============
 
 const DIFFICULTIES = [
-  { value: "beginner", label: "Beginner", emoji: "\u{1F331}", color: "bg-widget-sage", textColor: "text-emerald-700" },
-  { value: "intermediate", label: "Intermediate", emoji: "\u{1F377}", color: "bg-widget-gold", textColor: "text-amber-700" },
-  { value: "advanced", label: "Advanced", emoji: "\u{1F525}", color: "bg-widget-wine", textColor: "text-cherry" },
-  { value: "master", label: "Master", emoji: "\u{1F451}", color: "bg-widget-lavender", textColor: "text-purple-700" },
+  { value: "beginner", label: "Beginner", emoji: "\u{1F331}", color: "bg-emerald-50", textColor: "text-emerald-700" },
+  { value: "intermediate", label: "Intermediate", emoji: "\u{1F377}", color: "bg-amber-50", textColor: "text-amber-700" },
+  { value: "advanced", label: "Advanced", emoji: "\u{1F525}", color: "bg-cherry/8", textColor: "text-cherry" },
+  { value: "master", label: "Master", emoji: "\u{1F451}", color: "bg-purple-50", textColor: "text-purple-700" },
 ] as const;
 
 const ALL_GUESS_FIELDS = [
-  { key: "grape", label: "Grape", icon: Grape, color: "bg-widget-wine", iconColor: "text-cherry" },
-  { key: "region", label: "Region", icon: MapPin, color: "bg-widget-gold", iconColor: "text-amber-700" },
-  { key: "country", label: "Country", icon: Globe, color: "bg-widget-sky", iconColor: "text-blue-600" },
-  { key: "vintage", label: "Vintage", icon: Clock, color: "bg-widget-sage", iconColor: "text-emerald-700" },
-  { key: "producer", label: "Producer", icon: Tag, color: "bg-widget-lavender", iconColor: "text-purple-600" },
-  { key: "type", label: "Type", icon: Wine, color: "bg-widget-peach", iconColor: "text-orange-600" },
-  { key: "price", label: "Price", icon: DollarSign, color: "bg-widget-gold", iconColor: "text-amber-700" },
+  { key: "grape", label: "Grape", icon: Grape, color: "bg-cherry/8", iconColor: "text-cherry" },
+  { key: "region", label: "Region", icon: MapPin, color: "bg-amber-50", iconColor: "text-amber-700" },
+  { key: "country", label: "Country", icon: Globe, color: "bg-blue-50", iconColor: "text-blue-600" },
+  { key: "vintage", label: "Vintage", icon: Clock, color: "bg-emerald-50", iconColor: "text-emerald-700" },
+  { key: "producer", label: "Producer", icon: Tag, color: "bg-purple-50", iconColor: "text-purple-600" },
+  { key: "type", label: "Type", icon: Wine, color: "bg-orange-50", iconColor: "text-orange-600" },
+  { key: "price", label: "Price", icon: DollarSign, color: "bg-amber-50", iconColor: "text-amber-700" },
 ] as const;
 
 const DEFAULT_SCORING: Record<string, number> = {
@@ -362,6 +362,13 @@ function CreateEventInner() {
 
   // ============ STEP 1: CHOOSE STARTING POINT ============
 
+  const DIFFICULTY_BADGE: Record<string, { label: string; bg: string; text: string }> = {
+    beginner: { label: "Beginner", bg: "bg-emerald-50", text: "text-emerald-700" },
+    intermediate: { label: "Intermediate", bg: "bg-amber-50", text: "text-amber-700" },
+    advanced: { label: "Advanced", bg: "bg-red-50", text: "text-red-700" },
+    master: { label: "Master", bg: "bg-purple-50", text: "text-purple-700" },
+  };
+
   function renderStep1() {
     return (
       <div className="animate-fade-in-up">
@@ -372,47 +379,54 @@ function CreateEventInner() {
           Start from scratch or pick a template.
         </p>
 
-        {/* From scratch */}
+        {/* ── From scratch — hero card with cherry accent ── */}
         <button
           onClick={() => {
             setSelectedTemplateId(null);
             setStep(2);
           }}
-          className="touch-target w-full flex items-center gap-4 p-5 mb-6 active:scale-[0.98] transition-transform bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)]"
+          className="touch-target group w-full flex items-center gap-5 p-6 mb-8 active:scale-[0.98] transition-all bg-white border-2 border-cherry/15 rounded-[14px] hover:border-cherry/30 hover:shadow-[0_4px_16px_rgba(116,7,14,0.08)]"
         >
-          <div className="h-14 w-14 rounded-[16px] bg-cherry/10 flex items-center justify-center flex-shrink-0">
-            <Plus className="h-6 w-6 text-cherry" />
+          <div className="h-14 w-14 rounded-[12px] bg-cherry flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Plus className="h-6 w-6 text-white" />
           </div>
           <div className="text-left flex-1">
-            <p className="font-bold text-[16px] text-foreground">
+            <p className="font-bold text-[17px] text-foreground tracking-tight">
               Start from scratch
             </p>
-            <p className="text-[13px] text-muted mt-0.5">
-              Full control over every detail
+            <p className="text-[13px] text-muted mt-1 leading-relaxed">
+              Full control — choose wines, set rules, and host your way.
             </p>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted/40" />
+          <ChevronRight className="h-5 w-5 text-cherry/40 group-hover:text-cherry transition-colors flex-shrink-0" />
         </button>
 
+        {/* ── Templates section ── */}
         {templatesLoading ? (
           <div className="flex justify-center py-16">
-            <div className="h-8 w-8 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
+            <div className="h-7 w-7 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
           </div>
         ) : templates.length > 0 ? (
           <>
-            <h2 className="text-[11px] font-bold text-muted uppercase tracking-wide mb-4">
-              Templates
-            </h2>
-            <div className="space-y-3 stagger-children">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-card-border/60" />
+              <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest px-1">
+                Or use a template
+              </h2>
+              <div className="h-px flex-1 bg-card-border/60" />
+            </div>
+
+            <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden divide-y divide-card-border/40">
               {templates.map((tmpl, i) => {
-                const color = [
-                  "bg-widget-wine", "bg-widget-gold", "bg-widget-sage",
-                  "bg-widget-sky", "bg-widget-lavender", "bg-widget-peach",
+                const iconBg = [
+                  "bg-cherry/8", "bg-amber-500/8", "bg-emerald-600/8",
+                  "bg-blue-500/8", "bg-purple-500/8", "bg-orange-500/8",
                 ][i % 6];
                 const iconColor = [
-                  "text-cherry", "text-amber-700", "text-emerald-700",
+                  "text-cherry", "text-amber-600", "text-emerald-600",
                   "text-blue-600", "text-purple-600", "text-orange-600",
                 ][i % 6];
+                const diff = DIFFICULTY_BADGE[tmpl.difficulty] || DIFFICULTY_BADGE.intermediate;
 
                 return (
                   <button
@@ -421,37 +435,30 @@ function CreateEventInner() {
                       applyTemplate(tmpl);
                       setStep(2);
                     }}
-                    className="touch-target w-full text-left p-4 active:scale-[0.98] transition-transform bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)]"
+                    className="touch-target group w-full text-left px-5 py-4 flex items-center gap-4 hover:bg-butter/60 active:bg-butter transition-colors"
                   >
-                    <div className="flex items-center gap-3.5">
-                      <div className={`h-12 w-12 rounded-[16px] ${color} flex items-center justify-center flex-shrink-0`}>
-                        <Wine className={`h-5 w-5 ${iconColor}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-[15px] text-foreground leading-tight line-clamp-1">
-                          {tmpl.name}
-                        </h3>
-                        {tmpl.description && (
-                          <p className="mt-1 text-[12px] text-muted line-clamp-1 leading-relaxed">
-                            {tmpl.description}
-                          </p>
-                        )}
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[11px] font-semibold text-muted nums">
-                            {tmpl.wineCount} wines
-                          </span>
-                          <span className="text-muted/30">&middot;</span>
-                          <span className={`text-[11px] font-semibold capitalize ${
-                            tmpl.difficulty === "beginner" ? "text-emerald-600" :
-                            tmpl.difficulty === "intermediate" ? "text-amber-600" :
-                            tmpl.difficulty === "advanced" ? "text-red-600" : "text-purple-600"
-                          }`}>
-                            {tmpl.difficulty}
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted/30 flex-shrink-0" />
+                    <div className={`h-11 w-11 rounded-[10px] ${iconBg} flex items-center justify-center flex-shrink-0`}>
+                      <Wine className={`h-5 w-5 ${iconColor}`} />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-[15px] text-foreground leading-tight line-clamp-1">
+                        {tmpl.name}
+                      </h3>
+                      {tmpl.description && (
+                        <p className="mt-0.5 text-[12px] text-muted line-clamp-1 leading-relaxed">
+                          {tmpl.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-[11px] font-semibold text-muted/70 nums">
+                        {tmpl.wineCount} wines
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diff.bg} ${diff.text}`}>
+                        {diff.label}
+                      </span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted/30 group-hover:text-muted/60 transition-colors flex-shrink-0" />
                   </button>
                 );
               })}
@@ -470,59 +477,57 @@ function CreateEventInner() {
         <h1 className="text-[28px] font-bold font-serif text-foreground tracking-tight mb-1">
           Configure
         </h1>
-        <p className="text-muted text-[15px] mb-7">
+        <p className="text-muted text-[15px] mb-8">
           Set up the details for your tasting.
         </p>
 
-        {/* Title */}
-        <label className="block mb-6">
-          <span className="text-[11px] font-bold text-foreground uppercase tracking-wide">
-            Event Title
-          </span>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Friday Night Flight"
-            className="input-field touch-target mt-2 block w-full"
-          />
-        </label>
+        {/* ── Event details card ── */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-6 mb-6">
+          <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-5">Event Details</h2>
 
-        {/* Description */}
-        <label className="block mb-6">
-          <span className="text-[11px] font-bold text-foreground uppercase tracking-wide">
-            Description{" "}
-            <span className="font-normal normal-case text-muted tracking-normal">(optional)</span>
-          </span>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="A few words about this tasting..."
-            rows={3}
-            className="input-field mt-2 block w-full resize-none"
-          />
-        </label>
+          <label className="block mb-5">
+            <span className="text-[12px] font-semibold text-foreground">Title *</span>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Friday Night Flight"
+              className="input-field touch-target mt-1.5 block w-full"
+            />
+          </label>
 
-        {/* Difficulty — 2x2 grid with 16px radius */}
-        <div className="mb-6">
-          <span className="text-[13px] font-bold text-foreground uppercase tracking-wide block mb-3">
-            Difficulty
-          </span>
-          <div className="grid grid-cols-2 gap-2.5">
+          <label className="block">
+            <span className="text-[12px] font-semibold text-foreground">
+              Description <span className="font-normal text-muted">(optional)</span>
+            </span>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="A few words about this tasting..."
+              rows={2}
+              className="input-field mt-1.5 block w-full resize-none"
+            />
+          </label>
+        </div>
+
+        {/* ── Difficulty card ── */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-6 mb-6">
+          <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-4">Difficulty</h2>
+          <div className="grid grid-cols-4 gap-2">
             {DIFFICULTIES.map((d) => {
               const isActive = difficulty === d.value;
               return (
                 <button
                   key={d.value}
                   onClick={() => setDifficulty(d.value)}
-                  className={`touch-target rounded-[16px] p-3.5 text-left transition-all ${
+                  className={`touch-target rounded-[10px] py-3 px-2 text-center transition-all ${
                     isActive
-                      ? `${d.color} ring-2 ring-cherry/30 shadow-sm`
-                      : "bg-card-bg border border-card-border"
+                      ? "bg-cherry text-white shadow-sm"
+                      : "bg-butter/80 text-foreground/70 hover:bg-butter"
                   }`}
                 >
-                  <span className="text-xl">{d.emoji}</span>
-                  <p className={`mt-1.5 font-bold text-[14px] ${isActive ? d.textColor : "text-foreground"}`}>
+                  <span className="text-lg block">{d.emoji}</span>
+                  <p className={`mt-1 font-semibold text-[11px] ${isActive ? "text-white" : "text-foreground/70"}`}>
                     {d.label}
                   </p>
                 </button>
@@ -531,15 +536,12 @@ function CreateEventInner() {
           </div>
         </div>
 
-        {/* Guess Fields — 2-column grid */}
-        <div className="mb-6">
-          <span className="text-[13px] font-bold text-foreground uppercase tracking-wide block mb-1">
-            Guess Fields
-          </span>
-          <p className="text-[12px] text-muted mb-3">
-            What will your guests try to identify?
-          </p>
-          <div className="grid grid-cols-2 gap-2.5">
+        {/* ── Guess Fields card ── */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-6 mb-6">
+          <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest mb-1">Guess Fields</h2>
+          <p className="text-[12px] text-muted mb-4">What will your guests try to identify?</p>
+
+          <div className="grid grid-cols-2 gap-2">
             {ALL_GUESS_FIELDS.map((field) => {
               const active = guessFields.includes(field.key);
               const Icon = field.icon;
@@ -547,44 +549,38 @@ function CreateEventInner() {
                 <button
                   key={field.key}
                   onClick={() => toggleGuessField(field.key)}
-                  className={`touch-target rounded-[16px] p-3.5 flex items-center gap-3 transition-all ${
+                  className={`touch-target rounded-[10px] px-3.5 py-3 flex items-center gap-3 transition-all border ${
                     active
-                      ? `${field.color} ring-2 ring-cherry/20 shadow-sm`
-                      : "bg-card-bg border border-card-border"
+                      ? "bg-cherry/[0.06] border-cherry/25 text-foreground"
+                      : "bg-white border-card-border/60 text-muted hover:border-card-border"
                   }`}
                 >
-                  <div className={`h-9 w-9 rounded-[12px] flex items-center justify-center flex-shrink-0 ${
-                    active ? "bg-white/50" : "bg-card-border/30"
+                  <Icon className={`h-4 w-4 flex-shrink-0 ${active ? "text-cherry" : "text-muted/50"}`} />
+                  <span className={`font-medium text-[13px] flex-1 text-left ${active ? "text-foreground" : "text-muted"}`}>
+                    {field.label}
+                  </span>
+                  <div className={`h-5 w-5 rounded-[5px] border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                    active ? "bg-cherry border-cherry" : "border-card-border/80 bg-white"
                   }`}>
-                    <Icon className={`h-4 w-4 ${active ? field.iconColor : "text-muted"}`} />
+                    {active && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
                   </div>
-                  <div className="flex-1 text-left">
-                    <p className={`font-semibold text-[13px] ${active ? "text-foreground" : "text-muted"}`}>
-                      {field.label}
-                    </p>
-                  </div>
-                  {active && (
-                    <div className="h-5 w-5 rounded-full bg-cherry flex items-center justify-center flex-shrink-0">
-                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                    </div>
-                  )}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Timer */}
-        <div className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-4">
+        {/* ── Timer card ── */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-[12px] widget-sky flex items-center justify-center">
-                <Clock className="h-4.5 w-4.5 text-blue-600" />
+              <div className="h-9 w-9 rounded-[8px] bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Clock className="h-4 w-4 text-blue-600" />
               </div>
               <div>
-                <span className="text-[14px] font-bold text-foreground">Timer per wine</span>
+                <span className="text-[13px] font-semibold text-foreground">Timer per wine</span>
                 {timerEnabled && (
-                  <p className="text-[12px] text-muted mt-0.5 nums">
+                  <p className="text-[11px] text-muted mt-0.5 nums">
                     {Math.floor(timePerWine / 60)}:{String(timePerWine % 60).padStart(2, "0")} per wine
                   </p>
                 )}
@@ -598,7 +594,7 @@ function CreateEventInner() {
             </button>
           </div>
           {timerEnabled && (
-            <div className="mt-4 pt-3 border-t border-card-border/40">
+            <div className="mt-4 pt-4 border-t border-card-border/40">
               <input
                 type="range"
                 min={30}
@@ -608,7 +604,7 @@ function CreateEventInner() {
                 onChange={(e) => setTimePerWine(Number(e.target.value))}
                 className="w-full accent-cherry h-1.5"
               />
-              <div className="flex justify-between mt-1">
+              <div className="flex justify-between mt-1.5">
                 <span className="text-[10px] text-muted">0:30</span>
                 <span className="text-[10px] text-muted">10:00</span>
               </div>
@@ -637,121 +633,100 @@ function CreateEventInner() {
     : browseWines.filter((w) => !typeFilter || w.type.toLowerCase() === typeFilter);
 
   function renderStep3() {
+    const TYPE_DOT: Record<string, string> = {
+      red: "bg-[#74070E]", white: "bg-[#D4A843]", "rosé": "bg-[#E8A0B4]",
+      sparkling: "bg-[#C9B037]", orange: "bg-[#D4782F]", dessert: "bg-[#B5651D]",
+      fortified: "bg-[#5C1A1B]",
+    };
+
     return (
       <div className="animate-fade-in-up">
-        {/* Selected wines count badge in header */}
+        {/* Header */}
         <div className="flex items-start justify-between mb-1">
           <h1 className="text-[28px] font-bold font-serif text-foreground tracking-tight">
             Add Wines
           </h1>
           {selectedWines.length > 0 && (
-            <span className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cherry text-white text-[12px] font-bold nums">
+            <span className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cherry text-white text-[12px] font-bold nums">
               <Wine className="h-3 w-3" />
-              {selectedWines.length} selected
+              {selectedWines.length}
             </span>
           )}
         </div>
-        <p className="text-muted text-[15px] mb-5">
-          Tap to add wines to your flight.
+        <p className="text-muted text-[15px] mb-6">
+          Search our database or add your own.
         </p>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted/50 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search by name, producer, region..."
-            className="input-field touch-target block w-full pl-12 pr-4"
-          />
-          {searching && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              <div className="h-4 w-4 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
-            </div>
-          )}
-        </div>
+        {/* ── Search + add custom — grouped in one card ── */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 p-5 mb-5">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted/40 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Search by name, producer, region..."
+              className="input-field touch-target block w-full pl-10 pr-4 text-[14px]"
+            />
+            {searching && (
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                <div className="h-4 w-4 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
+              </div>
+            )}
+          </div>
 
-        {/* Add your own wine */}
-        <div className="mb-4">
+          {/* Divider with "or" */}
+          <div className="flex items-center gap-3 my-4">
+            <div className="h-px flex-1 bg-card-border/50" />
+            <span className="text-[10px] font-semibold text-muted/60 uppercase tracking-wider">or</span>
+            <div className="h-px flex-1 bg-card-border/50" />
+          </div>
+
+          {/* Add custom wine toggle */}
           <button
             onClick={() => setShowCustomForm(!showCustomForm)}
-            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[13px] font-semibold transition-all ${
+            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-[10px] text-[13px] font-semibold transition-all border ${
               showCustomForm
-                ? "bg-cherry/10 text-cherry border border-cherry/20"
-                : "bg-card-bg border border-card-border text-foreground/70 active:scale-[0.98]"
+                ? "bg-cherry/[0.06] text-cherry border-cherry/20"
+                : "bg-butter/60 border-transparent text-foreground/60 hover:bg-butter"
             }`}
           >
             <Plus className="h-4 w-4" />
-            {showCustomForm ? "Close" : "Can\u2019t find your wine? Add it"}
+            {showCustomForm ? "Close form" : "Add a wine manually"}
           </button>
 
+          {/* Custom wine form */}
           {showCustomForm && (
-            <div className="mt-3 p-4 rounded-[14px] bg-card-bg border border-card-border space-y-3">
+            <div className="mt-4 pt-4 border-t border-card-border/40 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Wine name *</label>
-                  <input
-                    type="text"
-                    value={customWine.name}
-                    onChange={(e) => setCustomWine({ ...customWine, name: e.target.value })}
-                    placeholder="e.g. Gaja Barbaresco"
-                    className="input-field mt-1 w-full text-[13px]"
-                  />
+                  <label className="text-[12px] font-semibold text-foreground">Wine name *</label>
+                  <input type="text" value={customWine.name} onChange={(e) => setCustomWine({ ...customWine, name: e.target.value })} placeholder="e.g. Gaja Barbaresco" className="input-field mt-1.5 w-full" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Producer *</label>
-                  <input
-                    type="text"
-                    value={customWine.producer}
-                    onChange={(e) => setCustomWine({ ...customWine, producer: e.target.value })}
-                    placeholder="e.g. Gaja"
-                    className="input-field mt-1 w-full text-[13px]"
-                  />
+                  <label className="text-[12px] font-semibold text-foreground">Producer *</label>
+                  <input type="text" value={customWine.producer} onChange={(e) => setCustomWine({ ...customWine, producer: e.target.value })} placeholder="e.g. Gaja" className="input-field mt-1.5 w-full" />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Vintage</label>
-                  <input
-                    type="number"
-                    value={customWine.vintage}
-                    onChange={(e) => setCustomWine({ ...customWine, vintage: e.target.value })}
-                    placeholder="2020"
-                    min="1900"
-                    max="2030"
-                    className="input-field mt-1 w-full text-[13px]"
-                  />
+                  <label className="text-[12px] font-semibold text-foreground">Vintage</label>
+                  <input type="number" value={customWine.vintage} onChange={(e) => setCustomWine({ ...customWine, vintage: e.target.value })} placeholder="2020" min="1900" max="2030" className="input-field mt-1.5 w-full" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Country *</label>
-                  <input
-                    type="text"
-                    value={customWine.country}
-                    onChange={(e) => setCustomWine({ ...customWine, country: e.target.value })}
-                    placeholder="France"
-                    className="input-field mt-1 w-full text-[13px]"
-                  />
+                  <label className="text-[12px] font-semibold text-foreground">Country *</label>
+                  <input type="text" value={customWine.country} onChange={(e) => setCustomWine({ ...customWine, country: e.target.value })} placeholder="France" className="input-field mt-1.5 w-full" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Region</label>
-                  <input
-                    type="text"
-                    value={customWine.region}
-                    onChange={(e) => setCustomWine({ ...customWine, region: e.target.value })}
-                    placeholder="Bordeaux"
-                    className="input-field mt-1 w-full text-[13px]"
-                  />
+                  <label className="text-[12px] font-semibold text-foreground">Region</label>
+                  <input type="text" value={customWine.region} onChange={(e) => setCustomWine({ ...customWine, region: e.target.value })} placeholder="Bordeaux" className="input-field mt-1.5 w-full" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Type</label>
-                  <select
-                    value={customWine.type}
-                    onChange={(e) => setCustomWine({ ...customWine, type: e.target.value })}
-                    className="input-field mt-1 w-full text-[13px]"
-                  >
+                  <label className="text-[12px] font-semibold text-foreground">Type</label>
+                  <select value={customWine.type} onChange={(e) => setCustomWine({ ...customWine, type: e.target.value })} className="input-field mt-1.5 w-full">
                     <option value="red">Red</option>
                     <option value="white">White</option>
                     <option value="rosé">Rosé</option>
@@ -762,18 +737,12 @@ function CreateEventInner() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Grapes</label>
-                  <input
-                    type="text"
-                    value={customWine.grapes}
-                    onChange={(e) => setCustomWine({ ...customWine, grapes: e.target.value })}
-                    placeholder="Nebbiolo, Merlot"
-                    className="input-field mt-1 w-full text-[13px]"
-                  />
+                  <label className="text-[12px] font-semibold text-foreground">Grapes</label>
+                  <input type="text" value={customWine.grapes} onChange={(e) => setCustomWine({ ...customWine, grapes: e.target.value })} placeholder="Nebbiolo, Merlot" className="input-field mt-1.5 w-full" />
                 </div>
               </div>
               {customMessage && (
-                <p className={`text-[12px] font-medium ${customMessage.startsWith("✓") ? "text-green-700" : "text-red-600"}`}>
+                <p className={`text-[12px] font-medium ${customMessage.startsWith("\u2713") ? "text-green-700" : "text-red-600"}`}>
                   {customMessage}
                 </p>
               )}
@@ -792,120 +761,106 @@ function CreateEventInner() {
           )}
         </div>
 
-        {/* Type filter chips (only show when browsing, not searching) */}
-        {searchQuery.trim().length < 2 && (
-          <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-2">
-            {WINE_TYPE_FILTERS.map((f) => (
-              <button
-                key={f.label}
-                onClick={() => setTypeFilter(f.value)}
-                className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[12px] text-[13px] font-semibold transition-all ${
-                  typeFilter === f.value
-                    ? "bg-cherry text-white shadow-sm"
-                    : "bg-card-bg border border-card-border text-foreground active:scale-[0.95]"
-                }`}
-              >
-                <span className="text-[14px]">{f.emoji}</span>
-                {f.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Wine list */}
-        {loadError && searchQuery.trim().length < 2 ? (
-          <div className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] flex flex-col items-center justify-center py-10 px-6 text-center mb-4">
-            <p className="text-[14px] text-muted mb-3">{loadError}</p>
-            <button
-              onClick={() => { setBrowseLoaded(false); setLoadError(null); }}
-              className="btn-secondary text-[13px] px-4 py-2"
-            >
-              Try again
-            </button>
-          </div>
-        ) : !browseLoaded && searchQuery.trim().length < 2 ? (
-          <div className="flex justify-center py-12">
-            <div className="h-6 w-6 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
-          </div>
-        ) : displayWines.length === 0 ? (
-          <div className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] flex flex-col items-center justify-center py-10 px-6 text-center mb-4">
-            <p className="text-[14px] text-muted">
-              {searchQuery.trim().length >= 2 ? "No wines found" : "No wines in this category"}
-            </p>
-          </div>
-        ) : (
-          <div className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] divide-y divide-card-border/40 mb-4 max-h-[340px] overflow-y-auto">
-            {displayWines.map((wine) => {
-              const alreadyAdded = selectedWines.some((w) => w.id === wine.id);
-              const typeColor =
-                wine.type.toLowerCase() === "red" ? "bg-red-500" :
-                wine.type.toLowerCase() === "white" ? "bg-amber-200" :
-                wine.type.toLowerCase() === "ros\u00E9" ? "bg-pink-300" :
-                wine.type.toLowerCase() === "sparkling" ? "bg-yellow-300" :
-                wine.type.toLowerCase() === "orange" ? "bg-orange-300" :
-                wine.type.toLowerCase() === "dessert" ? "bg-amber-300" : "bg-gray-300";
-
-              return (
+        {/* ── Wine catalog card ── */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden mb-5">
+          {/* Type filter row */}
+          {searchQuery.trim().length < 2 && (
+            <div className="flex gap-1.5 p-3 border-b border-card-border/40 overflow-x-auto scrollbar-hide">
+              {WINE_TYPE_FILTERS.map((f) => (
                 <button
-                  key={wine.id}
-                  onClick={() => alreadyAdded ? removeWine(wine.id) : addWine(wine)}
-                  className={`touch-target w-full text-left px-4 py-3 flex items-center gap-3 transition-all ${
-                    alreadyAdded ? "bg-widget-wine/40" : "active:bg-widget-wine/20"
+                  key={f.label}
+                  onClick={() => setTypeFilter(f.value)}
+                  className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] text-[12px] font-semibold transition-all ${
+                    typeFilter === f.value
+                      ? "bg-cherry text-white"
+                      : "text-muted hover:bg-butter/80"
                   }`}
                 >
-                  {/* Wine type dot */}
-                  <div className={`h-3 w-3 rounded-full ${typeColor} flex-shrink-0`} />
-
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-semibold font-serif text-[14px] leading-tight line-clamp-1 ${alreadyAdded ? "text-cherry" : "text-foreground"}`}>
-                      {wineName(wine.name)}
-                    </p>
-                    <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
-                      {wineName(wine.producer)}{wine.region ? ` \u00B7 ${wine.region}` : ""}
-                      {wine.vintage ? <span className="nums"> \u00B7 {wine.vintage}</span> : ""}
-                    </p>
-                  </div>
-
-                  {alreadyAdded ? (
-                    <div className="h-7 w-7 rounded-full bg-cherry flex items-center justify-center flex-shrink-0">
-                      <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="h-7 w-7 rounded-full bg-card-border/30 flex items-center justify-center flex-shrink-0">
-                      <Plus className="h-4 w-4 text-muted" />
-                    </div>
-                  )}
+                  <span className="text-[13px]">{f.emoji}</span>
+                  {f.label}
                 </button>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {/* Selected wines — Flight Order */}
+          {/* Wine list */}
+          {loadError && searchQuery.trim().length < 2 ? (
+            <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
+              <p className="text-[13px] text-muted mb-3">{loadError}</p>
+              <button onClick={() => { setBrowseLoaded(false); setLoadError(null); }} className="text-[12px] font-semibold text-cherry">
+                Try again
+              </button>
+            </div>
+          ) : !browseLoaded && searchQuery.trim().length < 2 ? (
+            <div className="flex justify-center py-12">
+              <div className="h-5 w-5 rounded-full border-2 border-cherry border-t-transparent animate-spin" />
+            </div>
+          ) : displayWines.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
+              <Wine className="h-6 w-6 text-muted/20 mb-2" />
+              <p className="text-[13px] text-muted">
+                {searchQuery.trim().length >= 2 ? "No wines found" : "No wines in this category"}
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-card-border/30 max-h-[360px] overflow-y-auto">
+              {displayWines.map((wine) => {
+                const alreadyAdded = selectedWines.some((w) => w.id === wine.id);
+                return (
+                  <button
+                    key={wine.id}
+                    onClick={() => alreadyAdded ? removeWine(wine.id) : addWine(wine)}
+                    className={`touch-target w-full text-left px-5 py-3.5 flex items-center gap-3 transition-colors ${
+                      alreadyAdded ? "bg-cherry/[0.04]" : "hover:bg-butter/60"
+                    }`}
+                  >
+                    <div className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${TYPE_DOT[wine.type.toLowerCase()] || "bg-gray-300"}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium text-[14px] leading-tight line-clamp-1 ${alreadyAdded ? "text-cherry" : "text-foreground"}`}>
+                        {wineName(wine.name)}
+                      </p>
+                      <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
+                        {wineName(wine.producer)}{wine.region ? ` \u00B7 ${wine.region}` : ""}
+                        {wine.vintage ? <span className="nums"> \u00B7 {wine.vintage}</span> : ""}
+                      </p>
+                    </div>
+                    <div className={`h-6 w-6 rounded-[6px] border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                      alreadyAdded ? "bg-cherry border-cherry" : "border-card-border/60 bg-white"
+                    }`}>
+                      {alreadyAdded && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ── Flight Order — selected wines ── */}
         {selectedWines.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3 mt-2">
-              <h2 className="text-[11px] font-bold text-foreground uppercase tracking-wide">
+          <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-card-border/40">
+              <h2 className="text-[11px] font-bold text-muted uppercase tracking-widest">
                 Flight Order
               </h2>
               <button
                 onClick={() => setSelectedWines([])}
-                className="text-[11px] font-semibold text-cherry active:opacity-70"
+                className="text-[11px] font-semibold text-cherry hover:text-cherry/70 transition-colors"
               >
                 Clear all
               </button>
             </div>
-            <div className="space-y-2">
+            <div className="divide-y divide-card-border/30">
               {selectedWines.map((wine, idx) => (
                 <div
                   key={wine.id}
-                  className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] flex items-center gap-3 p-3.5 animate-scale-in"
+                  className="flex items-center gap-3 px-5 py-3 animate-scale-in"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-[12px] widget-wine text-[13px] font-bold text-cherry flex-shrink-0 nums">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-cherry/[0.07] text-[12px] font-bold text-cherry flex-shrink-0 nums">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold font-serif text-[14px] text-foreground line-clamp-1">
+                    <p className="font-medium text-[14px] text-foreground line-clamp-1">
                       {wineName(wine.name)}
                     </p>
                     <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
@@ -914,10 +869,10 @@ function CreateEventInner() {
                   </div>
                   <button
                     onClick={() => removeWine(wine.id)}
-                    className="touch-target flex h-9 w-9 items-center justify-center rounded-[12px] text-muted/60 active:bg-red-50 active:text-red-500 transition-colors flex-shrink-0"
+                    className="touch-target flex h-8 w-8 items-center justify-center rounded-[8px] text-muted/40 hover:bg-red-50 hover:text-red-500 transition-colors flex-shrink-0"
                     aria-label={`Remove ${wine.name}`}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}
@@ -932,39 +887,39 @@ function CreateEventInner() {
 
   function renderStep4() {
     const selectedDifficulty = DIFFICULTIES.find((d) => d.value === difficulty);
+    const diffBadge = DIFFICULTY_BADGE[difficulty] || DIFFICULTY_BADGE.intermediate;
 
     return (
       <div className="animate-fade-in-up">
         <h1 className="text-[28px] font-bold font-serif text-foreground tracking-tight mb-1">
           Review & Create
         </h1>
-        <p className="text-muted text-[15px] mb-7">
+        <p className="text-muted text-[15px] mb-8">
           Everything look good?
         </p>
 
-        {/* Event summary card */}
-        <div className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-5 mb-4">
-          <h2 className="text-xl font-bold font-serif text-foreground tracking-tight">
-            {title || "Blind Tasting"}
-          </h2>
-          {description && (
-            <p className="text-[13px] text-muted mt-1.5 leading-relaxed">{description}</p>
-          )}
+        {/* ── Event summary card ── */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden mb-5">
+          {/* Title section */}
+          <div className="px-6 pt-6 pb-4">
+            <h2 className="text-[20px] font-bold font-serif text-foreground tracking-tight">
+              {title || "Blind Tasting"}
+            </h2>
+            {description && (
+              <p className="text-[13px] text-muted mt-1.5 leading-relaxed">{description}</p>
+            )}
+          </div>
 
-          <div className="mt-5 space-y-4">
-            {/* Difficulty */}
-            <div className="flex items-center justify-between">
+          {/* Settings rows */}
+          <div className="border-t border-card-border/40 divide-y divide-card-border/30">
+            <div className="flex items-center justify-between px-6 py-3.5">
               <span className="text-[13px] text-muted">Difficulty</span>
-              <div className="flex items-center gap-1.5">
-                <span>{selectedDifficulty?.emoji}</span>
-                <span className={`text-[13px] font-semibold ${selectedDifficulty?.textColor ?? "text-foreground"}`}>
-                  {selectedDifficulty?.label ?? difficulty}
-                </span>
-              </div>
+              <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${diffBadge.bg} ${diffBadge.text}`}>
+                {selectedDifficulty?.emoji} {selectedDifficulty?.label ?? difficulty}
+              </span>
             </div>
 
-            {/* Timer */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between px-6 py-3.5">
               <span className="text-[13px] text-muted">Timer</span>
               <span className="text-[13px] font-semibold text-foreground nums">
                 {timerEnabled
@@ -973,19 +928,16 @@ function CreateEventInner() {
               </span>
             </div>
 
-            {/* Guess Fields */}
-            <div>
+            <div className="px-6 py-3.5">
               <span className="text-[13px] text-muted block mb-2">Guess Fields</span>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 flex-wrap">
                 {guessFields.map((f) => {
                   const field = ALL_GUESS_FIELDS.find((gf) => gf.key === f);
-                  const Icon = field?.icon ?? Wine;
                   return (
                     <span
                       key={f}
-                      className={`inline-flex items-center gap-1.5 rounded-[8px] ${field?.color ?? "bg-widget-wine"} px-3 py-1.5 text-[12px] font-semibold ${field?.iconColor ?? "text-cherry"}`}
+                      className="inline-flex items-center gap-1 rounded-full bg-cherry/[0.07] px-2.5 py-1 text-[11px] font-semibold text-cherry"
                     >
-                      <Icon className="h-3 w-3" />
                       {field?.label ?? f}
                     </span>
                   );
@@ -995,32 +947,32 @@ function CreateEventInner() {
           </div>
         </div>
 
-        {/* Wines card */}
-        <div className="bg-card-bg border border-card-border rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_0_1px_rgba(0,0,0,0.04)] p-5 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[13px] font-bold text-foreground uppercase tracking-wide">
-              Wines
+        {/* ── Wines card ── */}
+        <div className="bg-white rounded-[14px] border border-card-border/60 overflow-hidden mb-8">
+          <div className="flex items-center justify-between px-6 py-3.5 border-b border-card-border/40">
+            <h3 className="text-[11px] font-bold text-muted uppercase tracking-widest">
+              Wine Flight
             </h3>
-            <span className="text-[13px] font-bold text-cherry nums">{selectedWines.length}</span>
+            <span className="text-[12px] font-bold text-cherry nums">{selectedWines.length} wines</span>
           </div>
-          <div className="space-y-3">
+          <div className="divide-y divide-card-border/30">
             {selectedWines.map((wine, idx) => (
-              <div key={wine.id} className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-[12px] widget-wine text-[11px] font-bold text-cherry flex-shrink-0 nums">
+              <div key={wine.id} className="flex items-center gap-3 px-6 py-3.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-[6px] bg-cherry/[0.07] text-[11px] font-bold text-cherry flex-shrink-0 nums">
                   {idx + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold font-serif text-foreground line-clamp-1">
+                  <p className="text-[14px] font-medium text-foreground line-clamp-1">
                     {wineName(wine.name)}
                   </p>
-                  <p className="text-[11px] text-muted">{wineName(wine.producer)}</p>
+                  <p className="text-[11px] text-muted mt-0.5">{wineName(wine.producer)}{wine.region ? ` \u00B7 ${wine.region}` : ""}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Create button */}
+        {/* ── Create button ── */}
         <button
           onClick={handleCreate}
           disabled={isPending}

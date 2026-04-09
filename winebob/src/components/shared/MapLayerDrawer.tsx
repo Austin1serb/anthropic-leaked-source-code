@@ -125,41 +125,41 @@ export function MapLayerDrawer({ layers, onToggle, className = "" }: Props) {
           </div>
 
           {/* Layer groups */}
-          <div className="px-4 py-3 max-h-[60vh] overflow-y-auto space-y-4">
+          <div className="px-4 py-3 max-h-[60vh] overflow-y-auto space-y-5">
             {grouped.map(({ group, label, items }) => (
               <div key={group}>
-                {/* Group header */}
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2">
+                <p className="text-[9px] font-bold text-white/25 uppercase tracking-[0.15em] mb-3">
                   {label}
                 </p>
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {items.map((layer) => (
                     <div
                       key={layer.id}
-                      className={`flex items-center gap-3 ${!layer.available ? "opacity-40" : ""}`}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-colors ${
+                        layer.enabled ? "bg-white/[0.06]" : ""
+                      } ${!layer.available ? "opacity-35" : ""}`}
                     >
-                      {/* Icon */}
-                      <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-white/60">
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
+                        layer.enabled ? "bg-cherry/30 text-cherry" : "bg-white/[0.06] text-white/50"
+                      }`}>
                         {layer.icon}
                       </div>
 
-                      {/* Text */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-bold text-white leading-tight truncate">
+                        <p className={`text-[13px] font-semibold leading-tight truncate ${
+                          layer.enabled ? "text-white" : "text-white/80"
+                        }`}>
                           {layer.name}
                         </p>
-                        <p className="text-[10px] text-white/40 leading-snug line-clamp-2">
+                        <p className="text-[10px] text-white/35 leading-snug line-clamp-1 mt-0.5">
                           {layer.description}
                         </p>
                         {!layer.available && layer.availableHint && (
-                          <p className="text-[9px] text-white/30 mt-0.5 leading-snug">
-                            {layer.availableHint}
-                          </p>
+                          <p className="text-[9px] text-white/25 mt-0.5">{layer.availableHint}</p>
                         )}
                       </div>
 
-                      {/* Toggle */}
                       <Toggle
                         on={layer.enabled}
                         disabled={!layer.available}
