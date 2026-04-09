@@ -450,6 +450,58 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
       } as mapboxgl.LayerSpecification);
     }
 
+    // ── Showcase Wineries — highlighted estate polygons ──
+    if (!m.getSource("showcase-wineries")) {
+      m.addSource("showcase-wineries", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: SHOWCASE_WINERIES.map((w) => ({
+            type: "Feature" as const,
+            properties: { id: w.id, name: w.name },
+            geometry: { type: "Polygon" as const, coordinates: [w.polygon] },
+          })),
+        },
+      });
+
+      m.addLayer({
+        id: "showcase-fill", type: "fill", source: "showcase-wineries",
+        slot: "top",
+        paint: {
+          "fill-color": "#C8A255",
+          "fill-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 13, 0.15, 15, 0.25, 18, 0.40],
+        },
+      } as mapboxgl.LayerSpecification);
+
+      m.addLayer({
+        id: "showcase-border", type: "line", source: "showcase-wineries",
+        slot: "top",
+        paint: {
+          "line-color": "#C8A255",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 12, 0.5, 15, 2.5, 18, 4],
+          "line-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 13, 0.5, 15, 0.8, 18, 1],
+        },
+      } as mapboxgl.LayerSpecification);
+
+      m.addLayer({
+        id: "showcase-label", type: "symbol", source: "showcase-wineries",
+        slot: "top",
+        minzoom: 13,
+        layout: {
+          "text-field": "★ {name}",
+          "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 13, 11, 16, 16],
+          "text-offset": [0, -1.8],
+          "text-anchor": "bottom",
+        },
+        paint: {
+          "text-color": "#C8A255",
+          "text-halo-color": "rgba(26,20,18,0.9)",
+          "text-halo-width": 2,
+        },
+      } as mapboxgl.LayerSpecification);
+    }
+
     // Restore region visibility state
     if (exploreRegionRef.current) {
       setRegionVisibility(false);
@@ -672,58 +724,6 @@ export function WineRegionMap({ onRegionClick, regionCounts, height = "100%", cl
           "text-emissive-strength": 1.0,
         },
       });
-
-      // ── Showcase Wineries — highlighted estate polygons ──
-      if (!m.getSource("showcase-wineries")) {
-        m.addSource("showcase-wineries", {
-          type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: SHOWCASE_WINERIES.map((w) => ({
-              type: "Feature" as const,
-              properties: { id: w.id, name: w.name },
-              geometry: { type: "Polygon" as const, coordinates: [w.polygon] },
-            })),
-          },
-        });
-
-        m.addLayer({
-          id: "showcase-fill", type: "fill", source: "showcase-wineries",
-          slot: "top",
-          paint: {
-            "fill-color": "#C8A255",
-            "fill-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 13, 0.15, 15, 0.25, 18, 0.40],
-          },
-        } as mapboxgl.LayerSpecification);
-
-        m.addLayer({
-          id: "showcase-border", type: "line", source: "showcase-wineries",
-          slot: "top",
-          paint: {
-            "line-color": "#C8A255",
-            "line-width": ["interpolate", ["linear"], ["zoom"], 12, 0.5, 15, 2.5, 18, 4],
-            "line-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 13, 0.5, 15, 0.8, 18, 1],
-          },
-        } as mapboxgl.LayerSpecification);
-
-        m.addLayer({
-          id: "showcase-label", type: "symbol", source: "showcase-wineries",
-          slot: "top",
-          minzoom: 13,
-          layout: {
-            "text-field": "★ {name}",
-            "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
-            "text-size": ["interpolate", ["linear"], ["zoom"], 13, 11, 16, 16],
-            "text-offset": [0, -1.8],
-            "text-anchor": "bottom",
-          },
-          paint: {
-            "text-color": "#C8A255",
-            "text-halo-color": "rgba(26,20,18,0.9)",
-            "text-halo-width": 2,
-          },
-        } as mapboxgl.LayerSpecification);
-      }
 
       // Winery click — compact wine-label card
       for (const layerId of ["wineries-featured", "wineries-regular"]) {
